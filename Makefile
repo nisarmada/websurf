@@ -73,3 +73,9 @@ re: fclean all
 # This line ensures that Make rebuilds targets when header files change.
 # The '-' suppresses errors if .d files don't exist yet (e.g., on first build).
 -include $(DEPS)
+
+# --- Run the program with test.conf ---
+run: all
+	@echo "\033[0;32mRunning $(NAME) with test.conf...\033[0m"
+	@./$(NAME) test.conf
+

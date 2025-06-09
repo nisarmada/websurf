@@ -6,18 +6,12 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/06 14:27:06 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/08 19:36:08 by stannijhuis   ########   odam.nl         */
+/*   Updated: 2025/06/09 17:25:04 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Constants.hpp"
-#include <sys/socket.h>  // For socket(), connect(), bind(), listen(), accept()
-#include <netinet/in.h>  // For sockaddr_in, htons(), htonl()
-#include <arpa/inet.h>   // For inet_addr(), inet_ntoa()
-#include <unistd.h>      // For close()
-#include <cstring>       // For memset()
-#include <iostream>      // For std::cout, std::cerr>
-#include <fstream>
+#include "../includes/Parser.hpp"
 
 //TCP is Transmission control protocol
 //check out epoll
@@ -29,22 +23,29 @@ int main (int argc, char** argv)
         std::cerr << "Usage: ./webserv configfile" << std::endl;
         return 1;
     }
-    std::ifstream configFile(argv[1]);
-    if(!configFile.is_open())
-    {
-        std::cerr << "Error could not open the config file." << std::endl;
-        return 1;
-    }
+    parsing(argv[1]);
 
-    std::string line;
-    while(std::getline(configFile, line))
-    {
-        line.erase(0, line.find_first_not_of(" \t\n"));
-        std::cout << line << std::endl;
-    }
     return 0;
 }
+
+
+
+
+
+
 //removing newlines double spaces etc. cleanup before the next step.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
