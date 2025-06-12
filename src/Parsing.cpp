@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 17:21:18 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/09 18:05:12 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/12 14:32:40 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,7 @@ void parsing(const char* path)
     std::ifstream configFile = openConfigFile(path);
     std::vector<std::string> cleanedLines = trimBeginEnd(configFile);
 
-    std::vector<std::vector<std::string>> tokens;
-    for(size_t i = 0; i < cleanedLines.size(); i++)
-        tokens.push_back(tokenizeLine(cleanedLines[i]));
+    std::vector<std::string> tokens = getAllTokens(cleanedLines);
     checkSyntax(tokens);
 }
 
@@ -78,10 +76,24 @@ std::vector<std::string> tokenizeLine(std::string line)
         tokenisedLine.push_back(currentToken);
 
     //print tokenised line
-    for(size_t i = 0; i < tokenisedLine.size(); i ++)
-        std::cout << "[" << tokenisedLine[i] << "]" << std::endl;
+    // for(size_t i = 0; i < tokenisedLine.size(); i ++)
+    //     std::cout << "[" << tokenisedLine[i] << "]" << std::endl;
 
     return tokenisedLine;
+}
+
+std::vector<std::string> getAllTokens(const std::vector<std::string>& cleanedLines)
+{
+    std::vector<std::string> tokens;
+
+    for(size_t i = 0; i < cleanedLines.size(); i++)
+    {
+        std::vector<std::string> tokenLine = tokenizeLine(cleanedLines[i]);
+        tokens.insert(tokens.end(), tokenLine.begin(), tokenLine.end()); //inserts a range of strings(where to add, what to add from where to where (vector begin end in our case))
+    }
+    for(size_t i = 0; i < tokens.size(); i ++)
+        std::cout << "[" << tokens[i] << "]" << std::endl;
+    return tokens;
 }
 
 bool isSpecialChar(char c)
@@ -89,38 +101,101 @@ bool isSpecialChar(char c)
     return c == '{' || c == '}' || c == ';';
 }
 
-bool checkSyntax(std::vector<std::vector<std::string>> tokens)
+bool checkSyntax(std::vector<std::string>tokens)
 {
     if(checkSemicolons(tokens) == false)
         exit(1);
     return false;
 }
 
-bool checkSemicolons(std::vector<std::vector<std::string>> tokens)
+bool checkSemicolons(std::vector<std::string> tokens)
 {
-    for(size_t i = 0; i < tokens.size(); i++)
+    for (size_t i = 0; i < tokens.size(); i++)
     {
-        if(needSemicolon(tokens[i]) && tokens[i].back() != ";") 
-        {
-            std::cerr << "Error: missing semicolon: " << tokens[i].back() << std::endl;
-            return false;
-        }
+        mustHaveSemicolon(tokens, i);
+        wrongPlaceSemicolon(tokens, i);
     }
     return true;
 }
 
-bool needSemicolon(std::vector<std::string> tokenLine)
+void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
 {
-    if(tokenLine.back() == "{")
-        return false;
-    if(tokenLine.size() == 1 && tokenLine[0] == "}")
-        return(false);
-    return true;
+        if(getType(tokens[i]) == STATEMENT)
+        {
+            if(i + 2 >= tokens.size() || tokens[i + 2] != ";")
+            {
+                std::cerr << "Error: missing semicolon \"" << tokens[i] << "\"" << std::endl;
+                exit(1);
+            }
+        }
 }
+
+void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
+{
+        if(tokens[i] == ";")
+        {
+            if(i == 0 || i == 1)
+            {
+                std::cerr << "Error: config file cannot start with semicolon" << std::endl;
+                exit(1);
+            }
+            if(getType(tokens[i - 2]) != STATEMENT)
+            {
+                std::cerr << "Error: invalid semicolon \"" << tokens[i - 2] << "\"" << std::endl;
+                exit(1);
+            }
+    }
+}
+
+Type getType(const std::string& token)
+{
+    static std::map<std::string, Type> typeMap = 
+    {
+        {"server", BLOCK},
+        {"location", BLOCK},
+        {"listen", STATEMENT},
+        {"server_name", STATEMENT},
+        {"root", STATEMENT},
+        {"index", STATEMENT}
+    };
+    if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map
+        return typeMap[token]; //returns the map location with the correct enum checked if it existed before otherwise it adds the token to the map as a default.
+    return UNKNOWN;
+}
+
+
+
+
+
+
+// bool checkSemicolons(std::vector<std::vector<std::string>> tokens)
+// {
+//     for(size_t i = 0; i < tokens.size(); i++)
+//     {
+//         if(needSemicolon(tokens[i]) && tokens[i].back() != ";") 
+//         {
+//             std::cerr << "Error: missing semicolon: " << tokens[i].back() << std::endl;
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+
+
+
+// bool needSemicolon(std::vector<std::string> tokenLine)
+// {
+//     if(tokenLine.back() == "{")
+//         return false;
+//     if(tokenLine.size() == 1 && tokenLine[0] == "}")
+//         return(false);
+//     return true;
+// }
+
 //make function if it needs semicolon or not. If it does check for last place is semicolon.
 //check for double semicolon in the tokens. 
 //server { works
 //server
 //{
 //doesnt work. add this functionallity to needSemicolon. For "server {"
-["server", "{"]
+// ["server", "{"]
