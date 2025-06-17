@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 14:53:27 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/12 14:34:13 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/17 13:02:08 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <stack>
 
 enum Type {
     BLOCK,
@@ -34,11 +35,11 @@ void parsing(const char* path);
 std::vector<std::string> tokenizeLine(std::string line);
 bool isSpecialChar(char c);
 bool checkSyntax(std::vector<std::string> tokens);
-bool checkSemicolons(std::vector<std::vector<std::string>> tokens);
-// bool needSemicolon(std::vector<std::string> tokenLine);
 std::vector<std::string> getAllTokens(const std::vector<std::string>& cleanedLines);
-
-bool checkSemicolons(std::vector<std::string> tokens);
+void checkBrackets(std::vector<std::string> tokens);
+void checkSemicolons(std::vector<std::string> tokens);
 Type getType(const std::string& token);
 void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i);
 void mustHaveSemicolon(std::vector<std::string> tokens, size_t i);
+void checkBracketStructure(std::vector<std::string> tokens);
+void checkValidBracketOpening(std::vector<std::string> tokens);

@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 17:21:18 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/12 14:32:40 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/17 13:07:59 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -96,6 +96,7 @@ std::vector<std::string> getAllTokens(const std::vector<std::string>& cleanedLin
     return tokens;
 }
 
+
 bool isSpecialChar(char c)
 {
     return c == '{' || c == '}' || c == ';';
@@ -103,19 +104,19 @@ bool isSpecialChar(char c)
 
 bool checkSyntax(std::vector<std::string>tokens)
 {
-    if(checkSemicolons(tokens) == false)
-        exit(1);
-    return false;
+    checkSemicolons(tokens);
+    checkBrackets(tokens);
+    
+    return false; //check if bool is still neaded
 }
 
-bool checkSemicolons(std::vector<std::string> tokens)
+void checkSemicolons(std::vector<std::string> tokens)
 {
     for (size_t i = 0; i < tokens.size(); i++)
     {
         mustHaveSemicolon(tokens, i);
-        wrongPlaceSemicolon(tokens, i);
+        wrongPlaceSemicolon(tokens, i); 
     }
-    return true;
 }
 
 void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
@@ -163,7 +164,50 @@ Type getType(const std::string& token)
     return UNKNOWN;
 }
 
+   void checkBrackets(std::vector<std::string> tokens)
+   {
+            checkBracketStructure(tokens);
+            checkValidBracketOpening(tokens);
+   }
 
+void checkBracketStructure(std::vector<std::string> tokens)
+{
+    std::stack<char> stack;
+    for(size_t i = 0; i < tokens.size(); i++)
+    {
+        if(tokens[i] == "{")
+            stack.push('{');
+        if(tokens[i] == "}")
+        {
+            if(stack.empty())
+            {
+                std::cerr << "Error: wrong bracket (TEMP)" << std::endl;
+                exit(1);
+            }
+            stack.pop();
+        }
+    }
+    if(!stack.empty())
+    {
+        std::cerr << "Error: wrong bracket (TEMP2)" << std::endl;
+        exit(1);
+    }
+}
+
+void checkValidBracketOpening(std::vector<std::string> tokens)
+{
+    for(size_t i = 0; i < tokens.size(); i++)
+    {
+        if(i == 0) //check if I miss something because of this.
+            continue;
+        if(tokens[i] == "{" && getType(tokens[i - 1]) != BLOCK)
+        {
+            std::cerr <<  "Error: opening bracket wrong place" << std::endl;
+            exit(1);
+        }
+    }
+}
+ 
 
 
 
