@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 14:53:27 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/17 13:02:08 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/17 16:30:08 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,3 +43,4 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i);
 void mustHaveSemicolon(std::vector<std::string> tokens, size_t i);
 void checkBracketStructure(std::vector<std::string> tokens);
 void checkValidBracketOpening(std::vector<std::string> tokens);
+std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::string> tokens);
