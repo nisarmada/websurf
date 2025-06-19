@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 17:21:18 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/17 16:37:21 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/19 12:28:50 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -171,7 +171,7 @@ Type getType(const std::string& token)
    void checkBrackets(std::vector<std::string> tokens)
    {
             checkBracketStructure(tokens);
-            checkValidBracketOpening(tokens);
+            // checkValidBracketOpening(tokens);
    }
 
 void checkBracketStructure(std::vector<std::string> tokens)

@@ -6,13 +6,13 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/06 14:27:06 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/09 17:25:04 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/17 16:08:21 by nsarmada      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Constants.hpp"
 #include "../includes/Parser.hpp"
-
+#include "../includes/server.hpp"
 //TCP is Transmission control protocol
 //check out epoll
 
@@ -24,7 +24,9 @@ int main (int argc, char** argv)
         return 1;
     }
     parsing(argv[1]);
-
+	
+	Server webSurv;
+	webSurv.run();
     return 0;
 }
 
