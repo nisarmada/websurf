@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/06 14:27:06 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/17 16:08:21 by nsarmada      ########   odam.nl         */
+/*   Updated: 2025/06/19 14:42:59 by nsarmada      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,13 @@ int main (int argc, char** argv)
     }
     parsing(argv[1]);
 	
-	Server webSurv;
-	webSurv.run();
+	WebServer webSurv;
+	try {
+		webSurv.run();
+	}
+	catch (std::exception& e) {
+		std::cerr << "Error: ";
+	}
     return 0;
 }
 
