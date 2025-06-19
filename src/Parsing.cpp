@@ -6,11 +6,13 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 17:21:18 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/19 12:28:50 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/19 16:39:11 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Parser.hpp"
+#include "../includes/ServerBlock.hpp"
+#include "../includes/server.hpp"
 
 
 void parsing(const char* path)
@@ -20,7 +22,11 @@ void parsing(const char* path)
 
     std::vector<std::string> tokens = getAllTokens(cleanedLines);
     checkSyntax(tokens);
-    getServerBlockTokens(tokens);
+    std::vector<std::vector<std::string>> serverBlocks = getServerBlockTokens(tokens);
+    Server test;
+    test.loadConfig(serverBlocks);
+    std::cout << std::endl << std::endl;
+    test.printServerBlocks();
 }
 
 std::ifstream openConfigFile(const char* path)
@@ -161,7 +167,8 @@ Type getType(const std::string& token)
         {"index", STATEMENT},
         {"root", STATEMENT},
         {"index", STATEMENT},
-		{"error_page", STATEMENT}
+		{"error_page", STATEMENT},
+        {"client_max_body_size", STATEMENT}
     };
     if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map
         return typeMap[token]; //returns the map location with the correct enum checked if it existed before otherwise it adds the token to the map as a default.
@@ -268,6 +275,15 @@ std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::stri
 
     return allServers;
 }
+
+
+
+
+
+
+
+
+
  
             //   if(tokens[i] == "{")
             //         bracketLevel ++;

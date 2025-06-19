@@ -1,6 +1,7 @@
 #include "../includes/Constants.hpp"
 #include "../includes/Parser.hpp"
 #include "../includes/server.hpp"
+// #include "../includes/ServerBlock.hpp"
 
 Server::Server() {}
 
@@ -60,4 +61,23 @@ int Server::run() {
 
 	//TODO here we have to make an a while (true) loop to process events
 	return 0;
+}
+
+void Server::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
+{
+
+	for(size_t i = 0; i < serverBlocks.size(); i++)
+	{
+		std::vector<std::string> tokens = serverBlocks[i];
+		this->_serverBlocks.push_back(parseServerBlock(serverBlocks[i]));
+	}
+}
+void Server::printServerBlocks()
+{
+	for(size_t i = 0; i < _serverBlocks.size(); i++)
+	{
+		std::cout << "Server: " << i << std::endl;
+		std::cout << "Server name: " << _serverBlocks[i].getServerName() << std::endl;
+		std::cout << "Port number: " << _serverBlocks[i].getPort() << std::endl;
+	}
 }

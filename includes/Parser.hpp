@@ -6,7 +6,7 @@
 /*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2025/06/09 14:53:27 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/17 16:30:08 by snijhuis      ########   odam.nl         */
+/*   Updated: 2025/06/19 17:15:31 by snijhuis      ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,9 @@
 #include <vector>
 #include <map>
 #include <stack>
+#include <limits>
+
+class ServerBlock;
 
 enum Type {
     BLOCK,
@@ -44,3 +47,11 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i);
 void checkBracketStructure(std::vector<std::string> tokens);
 void checkValidBracketOpening(std::vector<std::string> tokens);
 std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::string> tokens);
+
+
+//utils file:
+int parseListen(std::vector<std::string> tokens, size_t i);
+ServerBlock parseServerBlock (std::vector<std::string> serverBlock);
+bool stringIsDigit(std::string& str);
+size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i);
+
