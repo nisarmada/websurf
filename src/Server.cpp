@@ -3,7 +3,7 @@
 #include "../includes/server.hpp"
 #include "../includes/Client.hpp"
 
-WebServer::WebServer() {}
+WebServer::WebServer() : _events(MAX_EVENTS){}
 
 int WebServer::setNonBlocking(int fd) {
 	int flags = fcntl(fd, F_GETFL, 0);
@@ -49,11 +49,9 @@ int WebServer::setupListenerSocket(int port) {
 	return 0;
 }
 
-WebServer::~WebServer() {
-	
-}
+WebServer::~WebServer() {}
 
-int WebServer::run() {
+void WebServer::initializeServer() {
 	_epollFd = epoll_create1(0); // this fd monitors other fds for any pending activity
 	if (_epollFd == -1) {
 		throw std::runtime_error("epoll create failed");
@@ -65,44 +63,52 @@ int WebServer::run() {
 	event.events = EPOLLIN;
 	event.data.fd = _listenSocket;
 	epoll_ctl(_epollFd, EPOLL_CTL_ADD, _listenSocket, &event); //this tells _epollFd to add _listenSocket to its monitored fds
-	std::vector<epoll_event> events(MAX_EVENTS);
-	while (true) {
-		int num_events = epoll_wait(_epollFd, events.data(), MAX_EVENTS, -1);
-		for (int i = 0; i < num_events; i++) {
-			int currentFd = events[i].data.fd;
-			uint32_t eventFlags = events[i].events;
-			if (eventFlags & EPOLLIN) {
-				if (currentFd == _listenSocket) {
-					sockaddr_in clientAdress;
-					socklen_t clientAdressLen = sizeof(clientAdress);
-					int clientSocketFd = accept(_listenSocket, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
-					if (clientSocketFd == -1) {
-						if (errno == EAGAIN || errno == EWOULDBLOCK) {
-							continue;
-						}
-						else {
-							perror("accept failed");
-							continue;
-						}
-					}
-					else {
-							if (setNonBlocking(clientSocketFd) == -1){
-								throw std::runtime_error("set non blocking for client socket failed");
-							}
-							Client clientInstance;
-							_clients.insert(std::make_pair(clientSocketFd, clientInstance));
-							struct epoll_event clientEvent;
-							clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
-							clientEvent.data.fd = clientSocketFd;
-							epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent);
-							std::cout << "Client connected @!!! fuck yes" << std::endl;
-					}
-				}
-			}
-			// if (eventFlags & EPOLLOUT) {
+}
 
-			// }
+void WebServer::startListening(int num_events){
+	for (int i = 0; i < num_events; i++) {
+		int currentFd = _events[i].data.fd;
+		uint32_t eventFlags = _events[i].events;
+		if (eventFlags & EPOLLIN) {
+			if (currentFd == _listenSocket) {
+				acceptClientConnection();
+			}
 		}
+	}
+}
+
+void WebServer::acceptClientConnection(){
+	sockaddr_in clientAdress;
+	socklen_t clientAdressLen = sizeof(clientAdress);
+	int clientSocketFd = accept(_listenSocket, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
+	if (clientSocketFd == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return;
+		}
+		else {
+			perror("accept failed");
+			return;
+		}
+	}
+	else {
+			if (setNonBlocking(clientSocketFd) == -1){
+				throw std::runtime_error("set non blocking for client socket failed");
+			}
+			Client clientInstance;
+			_clients.insert(std::make_pair(clientSocketFd, clientInstance));
+			struct epoll_event clientEvent;
+			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
+			clientEvent.data.fd = clientSocketFd;
+			epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent);
+			std::cout << "Client connected @!!! fuck yes" << std::endl;
+	}
+}
+
+int WebServer::run() {
+	initializeServer();
+	while (true) {
+		int num_events = epoll_wait(_epollFd, _events.data(), MAX_EVENTS, -1);
+		startListening(num_events);
 	}
 	return 0;
 }

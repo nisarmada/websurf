@@ -12,9 +12,13 @@ class WebServer {
 		WebServer();
 		~WebServer();
 		int run();
+		void initializeServer();
+		void acceptClientConnection();
+		void startListening(int num_events);
 	private:
 		int _listenSocket;
 		int _epollFd;
+		std::vector<epoll_event> _events;
 		std::unordered_map<int, Client> _clients;
 
 		int setNonBlocking(int fd);
