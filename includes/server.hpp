@@ -29,6 +29,4 @@ class WebServer {
 		std::vector<epoll_event> _events;
 		std::unordered_map<int, Client> _clients;
 		std::vector<ServerBlock> _serverBlocks;
-
-
 };

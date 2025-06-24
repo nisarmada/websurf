@@ -107,6 +107,7 @@ bool checkSyntax(std::vector<std::string>tokens)
 
 void checkSemicolons(std::vector<std::string> tokens)
 {
+    //check if I can remove all those checks.
     for (size_t i = 0; i < tokens.size(); i++)
     {
         mustHaveSemicolon(tokens, i);
@@ -116,30 +117,35 @@ void checkSemicolons(std::vector<std::string> tokens)
 
 void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
 {
-        if(getType(tokens[i]) == STATEMENT)
+        if(getType(tokens[i]) == DIRECTIVE)
         {
+            std::cout << "in here" << std::endl;
             if(i + 2 >= tokens.size() || tokens[i + 2] != ";")
             {
-                std::cerr << "Error: missing semicolon \"" << tokens[i] << "\"" << std::endl;
+                std::cerr << "Error: missing semicolon rupss \"" << tokens[i] << "\"" << std::endl;
                 exit(1);
             }
         }
+        
 }
 
 void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
 {
-        if(tokens[i] == ";")
+    if(tokens[i] == ";")
+    {
+        if(i == 0 || i == 1)
         {
-            if(i == 0 || i == 1)
-            {
-                std::cerr << "Error: config file cannot start with semicolon" << std::endl;
-                exit(1);
-            }
-            if(getType(tokens[i - 2]) != STATEMENT)
-            {
-                std::cerr << "Error: invalid semicolon \"" << tokens[i - 2] << "\"" << std::endl;
-                exit(1);
-            }
+            std::cerr << "Error: config file cannot start with semicolon" << std::endl;
+            exit(1);
+        }
+        if(getType(tokens[i - 2]) == DIRECTIVE)
+            return;
+
+        if(i - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2)
+            return;
+        //temporary change to do correct with throw
+        std::cerr << "Error: invalid semicolon after \"" << tokens[i - 2] << "\"" << std::endl;
+        exit(1);
     }
 }
 //make statementone statementtwo etc. to indicate how much you have to go back with index for the semicolon checker. 
@@ -149,14 +155,14 @@ Type getType(const std::string& token)
     {
         {"server", BLOCK},
         {"location", BLOCK},
-        {"listen", STATEMENT},
-        {"server_name", STATEMENT},
-        {"root", STATEMENT},
-        {"index", STATEMENT},
-        {"root", STATEMENT},
-        {"index", STATEMENT},
-		{"error_page", STATEMENT},
-        {"client_max_body_size", STATEMENT}
+        {"listen", DIRECTIVE},
+        {"server_name", DIRECTIVE},
+        {"root", DIRECTIVE},
+        {"index", DIRECTIVE},
+        {"root", DIRECTIVE},
+        {"index", DIRECTIVE},
+        {"client_max_body_size", DIRECTIVE},
+        {"error_page", DIRECTIVE2}
     };
     if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map
         return typeMap[token]; //returns the map location with the correct enum checked if it existed before otherwise it adds the token to the map as a default.
@@ -166,7 +172,7 @@ Type getType(const std::string& token)
    void checkBrackets(std::vector<std::string> tokens)
    {
             checkBracketStructure(tokens);
-            // checkValidBracketOpening(tokens);
+            checkValidBracketOpening(tokens);
    }
 
 void checkBracketStructure(std::vector<std::string> tokens)

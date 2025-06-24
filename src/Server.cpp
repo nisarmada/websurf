@@ -153,8 +153,18 @@ void WebServer::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
 
 	for(size_t i = 0; i < serverBlocks.size(); i++)
 	{
-		std::vector<std::string> tokens = serverBlocks[i];
-		this->_serverBlocks.push_back(parseServerBlock(serverBlocks[i]));
+		try
+		{
+			ServerBlock tempServerBlock = parseServerBlock(serverBlocks[i]);
+			tempServerBlock.validateServerBlock();
+			this->_serverBlocks.push_back(tempServerBlock);
+		}
+		catch(const std::exception& e)
+		{
+			std::cerr << "Error in serverBlock number: " << i << ". " << e.what() << std::endl;
+			exit(1);
+		}
+		
 	}
 }
 void WebServer::printServerBlocks()

@@ -9,11 +9,20 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
     for(size_t i = 0; i < serverBlock.size(); i ++)
     {
         if(serverBlock[i] == "listen")
+        {
+            expectSemicolon(serverBlock, i + 2);
             parsedBlock.setPort(parseListen(serverBlock, i)); //set port
+        }
         else if (i + 1 < serverBlock.size() && serverBlock[i] == "server_name")
-            parsedBlock.setServerName(serverBlock[i + 1]); //make a function where you can do semicolon checks here. 
+        {
+            expectSemicolon(serverBlock, i + 2);
+            parsedBlock.setServerName(serverBlock[i + 1]); //make a function where you can do semicolon checks here.
+        } 
         else if(serverBlock[i] == "client_max_body_size")
+        {
+            expectSemicolon(serverBlock, i + 2);
             parsedBlock.setClientBodySize(parseMaxBodySize(serverBlock, i));
+        }
         else if(serverBlock[i] == "location")
         {
             LocationBlock newLocation = parseLocationBlock(serverBlock, i);
@@ -38,10 +47,12 @@ LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t i)
             break;
         if(tokens[i] == "root")
         {
+            expectSemicolon(tokens, i + 2);
             location.setRoot(tokens[i + 1]);
         }
         else if (tokens[i] == "index")
         {
+            expectSemicolon(tokens, i + 2);
             location.setIndex(tokens[i + 1]);
         }
         i++;
@@ -101,4 +112,12 @@ bool stringIsDigit(std::string& str)
             return false;
     }
     return true;
+}
+
+void expectSemicolon (const std::vector<std::string>& tokens, size_t index)
+{
+    if (index >= tokens.size() || tokens[index] != ";")
+        throw std::runtime_error("Expected ';' after all directive");
+    if (index + 1 < tokens.size() && tokens[index + 1] == ";")
+        throw std::runtime_error("Unexpected extra ';' after directive");
 }

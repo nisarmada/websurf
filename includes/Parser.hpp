@@ -18,7 +18,8 @@ class ServerBlock;
 
 enum Type {
     BLOCK,
-    STATEMENT,
+    DIRECTIVE,
+    DIRECTIVE2,
     UNKNOWN
 };
 
@@ -44,4 +45,5 @@ int parseListen(std::vector<std::string> tokens, size_t i);
 ServerBlock parseServerBlock (std::vector<std::string> serverBlock);
 bool stringIsDigit(std::string& str);
 size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i);
+void expectSemicolon (const std::vector<std::string>& tokens, size_t index);
 

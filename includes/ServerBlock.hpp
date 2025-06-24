@@ -20,4 +20,7 @@ class ServerBlock
         std::string getServerName();
         void addLocation(const LocationBlock& location);
         const std::map<std::string, LocationBlock>& getLocations() const;
+        void validateServerBlock() const;
+        void expectSemicolon (const std::vector<std::string>& tokens, size_t index);
+
 };
