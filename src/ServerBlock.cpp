@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   ServerBlock.cpp                                    :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2025/06/17 13:51:03 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/19 16:44:34 by snijhuis      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../includes/ServerBlock.hpp"
 
 
@@ -51,4 +39,16 @@ void ServerBlock::setClientBodySize(size_t maxSize)
 {
     this->client_max_body_size = maxSize;
 }
+
+void ServerBlock::addLocation(const LocationBlock& location)
+{
+    //check if the getpath already exists for the location, throw an exception then.
+    _locations[location.getPath()] = location;
+}
+
+const std::map<std::string, LocationBlock>& ServerBlock::getLocations() const
+{
+    return _locations;
+}
+
 

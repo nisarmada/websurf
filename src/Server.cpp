@@ -74,10 +74,27 @@ void Server::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
 }
 void Server::printServerBlocks()
 {
-	for(size_t i = 0; i < _serverBlocks.size(); i++)
+	for (size_t i = 0; i < _serverBlocks.size(); ++i)
 	{
-		std::cout << "Server: " << i << std::endl;
-		std::cout << "Server name: " << _serverBlocks[i].getServerName() << std::endl;
-		std::cout << "Port number: " << _serverBlocks[i].getPort() << std::endl;
+		std::cout << "=== Server Block " << i << " ===" << std::endl;
+		std::cout << "Server name:      " << _serverBlocks[i].getServerName() << std::endl;
+		std::cout << "Port number:      " << _serverBlocks[i].getPort() << std::endl;
+		std::cout << "Max body size:    " << _serverBlocks[i].getClientBodySize() << std::endl;
+
+		const std::map<std::string, LocationBlock>& locations = _serverBlocks[i].getLocations();
+		if (locations.empty())
+			std::cout << "No locations defined." << std::endl;
+		else
+		{
+			std::cout << "Locations:" << std::endl;
+			for (std::map<std::string, LocationBlock>::const_iterator it = locations.begin(); it != locations.end(); ++it)
+			{
+				std::cout << "  --Path--:           " << it->first << std::endl;
+				std::cout << "    Root:         " << it->second.getRoot() << std::endl;
+				std::cout << "    Index:        " << it->second.getIndex() << std::endl;
+			}
+		}
+		std::cout << std::endl;
 	}
 }
+

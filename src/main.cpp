@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   main.cpp                                           :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2025/06/06 14:27:06 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/17 16:08:21 by nsarmada      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../includes/Constants.hpp"
 #include "../includes/Parser.hpp"
 #include "../includes/server.hpp"

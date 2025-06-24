@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Parsing.cpp                                        :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2025/06/09 17:21:18 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/19 16:39:11 by snijhuis      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../includes/Parser.hpp"
 #include "../includes/ServerBlock.hpp"
 #include "../includes/server.hpp"
@@ -260,18 +248,18 @@ std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::stri
 
 
 	//print test 
-    std::cout << std::endl << std::endl << std::endl;
-	for (size_t j = 0; j < allServers.size(); j++)
-	{
-		std::cout << "Server Block " << j << ":" << std::endl;
+    // std::cout << std::endl << std::endl << std::endl;
+	// for (size_t j = 0; j < allServers.size(); j++)
+	// {
+	// 	std::cout << "Server Block " << j << ":" << std::endl;
 
-		for (size_t i = 0; i < allServers[j].size(); i++)
-		{
-			std::cout << allServers[j][i] << std::endl;
-		}
+	// 	for (size_t i = 0; i < allServers[j].size(); i++)
+	// 	{
+	// 		std::cout << allServers[j][i] << std::endl;
+	// 	}
 
-		std::cout << std::endl; // Add spacing between blocks
-	}
+	// 	std::cout << std::endl; // Add spacing between blocks
+	// }
 
     return allServers;
 }

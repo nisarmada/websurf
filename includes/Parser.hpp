@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Parser.hpp                                         :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2025/06/09 14:53:27 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/19 17:15:31 by snijhuis      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
 #pragma once
 
 #include <sys/socket.h>  // For socket(), connect(), bind(), listen(), accept()
@@ -24,6 +12,8 @@
 #include <stack>
 #include <limits>
 
+
+class LocationBlock;
 class ServerBlock;
 
 enum Type {
@@ -48,8 +38,8 @@ void checkBracketStructure(std::vector<std::string> tokens);
 void checkValidBracketOpening(std::vector<std::string> tokens);
 std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::string> tokens);
 
-
 //utils file:
+LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t i);
 int parseListen(std::vector<std::string> tokens, size_t i);
 ServerBlock parseServerBlock (std::vector<std::string> serverBlock);
 bool stringIsDigit(std::string& str);

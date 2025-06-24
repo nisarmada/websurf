@@ -1,6 +1,7 @@
 #include "../includes/Parser.hpp"
 #include "../includes/ServerBlock.hpp"
 #include "../includes/server.hpp"
+#include "../includes/LocationBlock.hpp"
 
 ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
 {
@@ -13,9 +14,39 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
             parsedBlock.setServerName(serverBlock[i + 1]); //make a function where you can do semicolon checks here. 
         else if(serverBlock[i] == "client_max_body_size")
             parsedBlock.setClientBodySize(parseMaxBodySize(serverBlock, i));
+        else if(serverBlock[i] == "location")
+        {
+            LocationBlock newLocation = parseLocationBlock(serverBlock, i);
+            parsedBlock.addLocation(newLocation);
+        }
 
     }
     return parsedBlock;
+}
+
+//add here later the syntax check if everything is correct as an input.
+//check if something is found i do i +=2 and t;hen else i++ instead of this. 
+LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t i)
+{
+    LocationBlock location;
+
+    location.setPath(tokens[i + 1]);
+    i += 3; //skip location, path and {
+    while(tokens[i] != "}")
+    {
+        if(i + 1 >= tokens.size())
+            break;
+        if(tokens[i] == "root")
+        {
+            location.setRoot(tokens[i + 1]);
+        }
+        else if (tokens[i] == "index")
+        {
+            location.setIndex(tokens[i + 1]);
+        }
+        i++;
+    }
+    return location;
 }
 
 size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
@@ -39,7 +70,6 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
         exit(1);
     }
     
-    std::cout << "value: " << std::numeric_limits<size_t>::max() << std::endl;
 
     size_t maxBodySize = static_cast<size_t>(std::stoull(tokens[i + 1]));
    

@@ -1,17 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   ServerBlock.hpp                                    :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2025/06/17 13:50:47 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/19 16:43:32 by snijhuis      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
 #pragma once
 #include "Parser.hpp"
+#include "LocationBlock.hpp"
 
 class ServerBlock
 {
@@ -19,7 +8,7 @@ class ServerBlock
         int port;
         std::string server_name;
         size_t client_max_body_size;
-        // std::vector<std::string> locations; //make a class for locations.
+        std::map<std::string, LocationBlock> _locations;
     public:
         ServerBlock();
         ~ServerBlock();
@@ -29,5 +18,6 @@ class ServerBlock
         size_t getClientBodySize();
         void setClientBodySize(size_t maxSize);
         std::string getServerName();
-        // std::vector<std::string> getLocation(std::string identifier);
+        void addLocation(const LocationBlock& location);
+        const std::map<std::string, LocationBlock>& getLocations() const;
 };
