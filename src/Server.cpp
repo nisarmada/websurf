@@ -89,7 +89,7 @@ void WebServer::clientRead(int clientFd){
 	}
 	else{
 		client.appendData(readBuffer, bytesRead);
-		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;git 
+		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
 		//we need to check if we have a complete http request
 		//here we use client.headerIsComplete() and then we go to response logic
 	}
