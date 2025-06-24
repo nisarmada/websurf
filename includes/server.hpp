@@ -23,6 +23,7 @@ class WebServer {
 		int setupListenerSocket(int port);
 		void loadConfig(std::vector<std::vector<std::string>>& serverBlocks);
 		void printServerBlocks();
+		void clientWrite(int clientFd);
 	private:
 		int _listenSocket;
 		int _epollFd;

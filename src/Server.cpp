@@ -73,7 +73,7 @@ void WebServer::cleanupFd(int clientFd){
 }
 
 void WebServer::clientRead(int clientFd){
-	Client& client = _clients.at(clientFd);
+	Client& clientToRead = _clients.at(clientFd);
 	char readBuffer[BUFFER_SIZE];
 	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); 
 	if (bytesRead == 0){ // client terminated the connection
@@ -89,11 +89,46 @@ void WebServer::clientRead(int clientFd){
 		}
 	}
 	else{
-		client.appendData(readBuffer, bytesRead);
+		clientToRead.appendData(readBuffer, bytesRead);
 		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
 		std::cout << "read buffer " << readBuffer << std::endl;
-		//we need to check if we have a complete http request
+		if (clientToRead.headerIsComplete()){
+			std::cout << "header is complete" << std::endl;
+			std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+			clientToRead.setResponse(httpResponseText);
+			clientWrite(clientFd);
+		}
+		//we need to check if we have a complete http request-> we do that now
 		//here we use client.headerIsComplete() and then we go to response logic
+	}
+}
+
+void WebServer::clientWrite(int clientFd){
+	Client& clientToWrite = _clients.at(clientFd);
+
+	if (!clientToWrite.hasResponseToSend()){
+		return; //we might want to remove EPOLLOUT or handle differently
+	}
+	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
+	ssize_t bytesSent = clientToWrite.getBytesSent();
+	ssize_t bytesRemaining = responseBuffer.size() - bytesSent;
+	ssize_t bytesSentThisRound = send(clientFd, responseBuffer.data() + bytesSent, bytesRemaining, 0);
+	if (bytesSentThisRound < 0){
+		if (errno == EAGAIN || errno == EWOULDBLOCK){
+			return;
+		}
+		else{
+			perror("send failed");
+			cleanupFd(clientFd);
+			return ;
+		}
+	}
+	else {
+		clientToWrite.addBytesSent(bytesSentThisRound);
+		std::cout << "We sent " << bytesSentThisRound << " bytes to client" << std::endl;
+	}
+	if (!clientToWrite.hasResponseToSend()){
+		std::cout << "Full response sent to client " << clientFd << std::endl;
 	}
 }
 
@@ -108,6 +143,9 @@ void WebServer::startListening(int num_events){
 			else { // if it's not a listen socket then it is a client
 				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map
 			}
+		}
+		else if (eventFlags & EPOLLOUT){
+			clientWrite(currentFd);
 		}
 	}
 }
