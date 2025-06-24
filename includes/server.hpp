@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Parser.hpp"
+#include "ServerBlock.hpp"
 #include "Client.hpp"
 #include <fcntl.h>
 #include <exception>
@@ -17,12 +19,16 @@ class WebServer {
 		void startListening(int num_events);
 		void clientRead(int clientFd);
 		void cleanupFd(int clientFd);
+		int setNonBlocking(int fd);
+		int setupListenerSocket(int port);
+		void loadConfig(std::vector<std::vector<std::string>>& serverBlocks);
+		void printServerBlocks();
 	private:
 		int _listenSocket;
 		int _epollFd;
 		std::vector<epoll_event> _events;
 		std::unordered_map<int, Client> _clients;
+		std::vector<ServerBlock> _serverBlocks;
 
-		int setNonBlocking(int fd);
-		int setupListenerSocket(int port);
+
 };

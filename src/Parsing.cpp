@@ -1,16 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        ::::::::            */
-/*   Parsing.cpp                                        :+:    :+:            */
-/*                                                     +:+                    */
-/*   By: snijhuis <snijhuis@student.codam.nl>         +#+                     */
-/*                                                   +#+                      */
-/*   Created: 2025/06/09 17:21:18 by snijhuis      #+#    #+#                 */
-/*   Updated: 2025/06/17 13:29:03 by nsarmada      ########   odam.nl         */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../includes/Parser.hpp"
+#include "../includes/ServerBlock.hpp"
+#include "../includes/server.hpp"
 
 
 void parsing(const char* path)
@@ -20,6 +10,11 @@ void parsing(const char* path)
 
     std::vector<std::string> tokens = getAllTokens(cleanedLines);
     checkSyntax(tokens);
+    std::vector<std::vector<std::string>> serverBlocks = getServerBlockTokens(tokens);
+    WebServer test;
+    test.loadConfig(serverBlocks);
+    std::cout << std::endl << std::endl;
+    test.printServerBlocks();
 }
 
 std::ifstream openConfigFile(const char* path)
@@ -147,7 +142,7 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
             }
     }
 }
-
+//make statementone statementtwo etc. to indicate how much you have to go back with index for the semicolon checker. 
 Type getType(const std::string& token)
 {
     static std::map<std::string, Type> typeMap = 
@@ -157,7 +152,11 @@ Type getType(const std::string& token)
         {"listen", STATEMENT},
         {"server_name", STATEMENT},
         {"root", STATEMENT},
-        {"index", STATEMENT}
+        {"index", STATEMENT},
+        {"root", STATEMENT},
+        {"index", STATEMENT},
+		{"error_page", STATEMENT},
+        {"client_max_body_size", STATEMENT}
     };
     if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map
         return typeMap[token]; //returns the map location with the correct enum checked if it existed before otherwise it adds the token to the map as a default.
@@ -198,17 +197,89 @@ void checkValidBracketOpening(std::vector<std::string> tokens)
 {
     for(size_t i = 0; i < tokens.size(); i++)
     {
-        if(i == 0) //check if I miss something because of this.
-            continue;
-        if(tokens[i] == "{" && getType(tokens[i - 1]) != BLOCK)
+        if(tokens[i] == "{")
         {
-            std::cerr <<  "Error: opening bracket wrong place" << std::endl;
-            exit(1);
+            if(i >= 1 && getType(tokens[i - 1]) == BLOCK) 
+                continue;
+            if(i >= 2 && getType(tokens[i - 2]) == BLOCK)
+                continue;
+            else
+            {
+                std::cerr << "Error: wrong placed bracked" << std::endl;
+                exit(1);
+            }
         }
     }
 }
- 
 
+std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::string> tokens)
+{
+    std::vector<std::string> serverTokens;
+	std::vector<std::vector<std::string>> allServers;
+    int bracketLevel = 0;
+    bool insideBlock = false;
+
+    for(size_t i = 0; i < tokens.size(); i++)
+    {
+        if(i + 1 < tokens.size() && tokens[i] == "server" && tokens[i + 1] == "{") //check if i + 1 could give crashes.
+		{
+			insideBlock = true;
+			bracketLevel = 1;
+			i += 2; //skip the server and the bracket for the next if block. 
+		}
+		
+        if(insideBlock == true && i < tokens.size())
+        {
+            if(tokens[i] == "{")
+                bracketLevel ++;
+            else if(tokens[i] == "}")
+                bracketLevel --;
+
+            if (bracketLevel <= 0) //check if there is still something in the severtokens before emptying it.
+			{
+                insideBlock = false;
+				allServers.push_back(serverTokens);
+				serverTokens.clear();
+				continue;
+			}
+			serverTokens.push_back(tokens[i]);
+        }   
+    }
+
+
+	//print test 
+    // std::cout << std::endl << std::endl << std::endl;
+	// for (size_t j = 0; j < allServers.size(); j++)
+	// {
+	// 	std::cout << "Server Block " << j << ":" << std::endl;
+
+	// 	for (size_t i = 0; i < allServers[j].size(); i++)
+	// 	{
+	// 		std::cout << allServers[j][i] << std::endl;
+	// 	}
+
+	// 	std::cout << std::endl; // Add spacing between blocks
+	// }
+
+    return allServers;
+}
+
+
+
+
+
+
+
+
+
+ 
+            //   if(tokens[i] == "{")
+            //         bracketLevel ++;
+            //     else if(tokens[i] == "}")
+            //         bracketLevel --;
+            //     if (bracketLevel <= 0)
+            //         break;
+            //     serverTokens.push_back(tokens[i]);
 
 
 

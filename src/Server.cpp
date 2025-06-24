@@ -1,6 +1,7 @@
 #include "../includes/Constants.hpp"
 #include "../includes/Parser.hpp"
 #include "../includes/server.hpp"
+// #include "../includes/ServerBlock.hpp"
 #include "../includes/Client.hpp"
 
 WebServer::WebServer() : _events(MAX_EVENTS){}
@@ -90,6 +91,7 @@ void WebServer::clientRead(int clientFd){
 	else{
 		client.appendData(readBuffer, bytesRead);
 		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
+		std::cout << "read buffer " << readBuffer << std::endl;
 		//we need to check if we have a complete http request
 		//here we use client.headerIsComplete() and then we go to response logic
 	}
@@ -145,3 +147,39 @@ int WebServer::run() {
 	}
 	return 0;
 }
+
+void WebServer::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
+{
+
+	for(size_t i = 0; i < serverBlocks.size(); i++)
+	{
+		std::vector<std::string> tokens = serverBlocks[i];
+		this->_serverBlocks.push_back(parseServerBlock(serverBlocks[i]));
+	}
+}
+void WebServer::printServerBlocks()
+{
+	for (size_t i = 0; i < _serverBlocks.size(); ++i)
+	{
+		std::cout << "=== Server Block " << i << " ===" << std::endl;
+		std::cout << "Server name:      " << _serverBlocks[i].getServerName() << std::endl;
+		std::cout << "Port number:      " << _serverBlocks[i].getPort() << std::endl;
+		std::cout << "Max body size:    " << _serverBlocks[i].getClientBodySize() << std::endl;
+
+		const std::map<std::string, LocationBlock>& locations = _serverBlocks[i].getLocations();
+		if (locations.empty())
+			std::cout << "No locations defined." << std::endl;
+		else
+		{
+			std::cout << "Locations:" << std::endl;
+			for (std::map<std::string, LocationBlock>::const_iterator it = locations.begin(); it != locations.end(); ++it)
+			{
+				std::cout << "  --Path--:           " << it->first << std::endl;
+				std::cout << "    Root:         " << it->second.getRoot() << std::endl;
+				std::cout << "    Index:        " << it->second.getIndex() << std::endl;
+			}
+		}
+		std::cout << std::endl;
+	}
+}
+
