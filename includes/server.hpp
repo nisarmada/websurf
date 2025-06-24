@@ -15,6 +15,8 @@ class WebServer {
 		void initializeServer();
 		void acceptClientConnection();
 		void startListening(int num_events);
+		void clientRead(int clientFd);
+		void cleanupFd(int clientFd);
 	private:
 		int _listenSocket;
 		int _epollFd;

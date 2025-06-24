@@ -65,6 +65,36 @@ void WebServer::initializeServer() {
 	epoll_ctl(_epollFd, EPOLL_CTL_ADD, _listenSocket, &event); //this tells _epollFd to add _listenSocket to its monitored fds
 }
 
+void WebServer::cleanupFd(int clientFd){
+	epoll_ctl(EPOLL_CTL_DEL, _epollFd, clientFd, NULL);
+	_clients.erase(clientFd);
+	close(clientFd);
+}
+
+void WebServer::clientRead(int clientFd){
+	Client& client = _clients.at(clientFd);
+	char readBuffer[BUFFER_SIZE];
+	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); 
+	if (bytesRead == 0){ // client terminated the connection
+		cleanupFd(clientFd);
+	}
+	else if (bytesRead < 0){
+		if (errno == EAGAIN || errno == EWOULDBLOCK){
+			return;
+		}
+		else{
+			perror("recv failed");
+			cleanupFd(clientFd);
+		}
+	}
+	else{
+		client.appendData(readBuffer, bytesRead);
+		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
+		//we need to check if we have a complete http request
+		//here we use client.headerIsComplete() and then we go to response logic
+	}
+}
+
 void WebServer::startListening(int num_events){
 	for (int i = 0; i < num_events; i++) {
 		int currentFd = _events[i].data.fd;
@@ -72,6 +102,9 @@ void WebServer::startListening(int num_events){
 		if (eventFlags & EPOLLIN) {
 			if (currentFd == _listenSocket) {
 				acceptClientConnection();
+			}
+			else { // if it's not a listen socket then it is a client
+				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map
 			}
 		}
 	}
@@ -94,7 +127,7 @@ void WebServer::acceptClientConnection(){
 			if (setNonBlocking(clientSocketFd) == -1){
 				throw std::runtime_error("set non blocking for client socket failed");
 			}
-			Client clientInstance;
+			Client clientInstance(clientSocketFd);
 			_clients.insert(std::make_pair(clientSocketFd, clientInstance));
 			struct epoll_event clientEvent;
 			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
