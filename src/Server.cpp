@@ -129,6 +129,7 @@ void WebServer::clientWrite(int clientFd){
 	}
 	if (!clientToWrite.hasResponseToSend()){
 		std::cout << "Full response sent to client " << clientFd << std::endl;
+		cleanupFd(clientFd);
 	}
 }
 
