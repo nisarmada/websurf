@@ -167,6 +167,13 @@ void WebServer::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
 		
 	}
 }
+
+
+
+
+
+
+//remove later, this is just for test purposes.
 void WebServer::printServerBlocks()
 {
 	for (size_t i = 0; i < _serverBlocks.size(); ++i)
@@ -184,12 +191,33 @@ void WebServer::printServerBlocks()
 			std::cout << "Locations:" << std::endl;
 			for (std::map<std::string, LocationBlock>::const_iterator it = locations.begin(); it != locations.end(); ++it)
 			{
-				std::cout << "  --Path--:           " << it->first << std::endl;
+				std::cout << "  --Path--:       " << it->first << std::endl;
 				std::cout << "    Root:         " << it->second.getRoot() << std::endl;
 				std::cout << "    Index:        " << it->second.getIndex() << std::endl;
+
+				const std::set<std::string>& methods = it->second.getMethods();
+				if (!methods.empty())
+				{
+					std::cout << "    Methods:      ";
+					for (std::set<std::string>::const_iterator mit = methods.begin(); mit != methods.end(); ++mit)
+						std::cout << *mit << " ";
+					std::cout << std::endl;
+				}
+
+				std::cout << "    Autoindex:    " << (it->second.getAutoindex() ? "on" : "off") << std::endl;
+
+				if (!it->second.getRedirectUrl().empty())
+					std::cout << "    Redirect:     " << it->second.getRedirectUrl() << std::endl;
+
+				if (!it->second.getUploadPath().empty())
+					std::cout << "    Upload path:  " << it->second.getUploadPath() << std::endl;
 			}
 		}
 		std::cout << std::endl;
 	}
 }
+
+
+
+
 

@@ -28,7 +28,6 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
             LocationBlock newLocation = parseLocationBlock(serverBlock, i);
             parsedBlock.addLocation(newLocation);
         }
-
     }
     return parsedBlock;
 }
@@ -41,23 +40,124 @@ LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t i)
 
     location.setPath(tokens[i + 1]);
     i += 3; //skip location, path and {
+
     while(tokens[i] != "}")
     {
+
         if(i + 1 >= tokens.size())
             break;
         if(tokens[i] == "root")
         {
-            expectSemicolon(tokens, i + 2);
-            location.setRoot(tokens[i + 1]);
-        }
+            parseRoot(tokens, i, location);
+        } //check if its valid input aka not just written bird or something?
         else if (tokens[i] == "index")
-        {
-            expectSemicolon(tokens, i + 2);
-            location.setIndex(tokens[i + 1]);
-        }
+            parseIndex(tokens, i, location);
+        else if (tokens[i] == "methods")
+            parseMethods(tokens, i, location);
+        else if (tokens[i] == "autoindex")
+            parseAutoindex(tokens, i, location);
+        else if (tokens[i] == "return")
+            parseRedirectUrl(tokens, i, location);
+        else if(tokens[i] == "upload_path")
+            parseUploadPath(tokens, i, location);
+        else if(tokens[i] == "cgi_pass")
+            parseCgiPass(tokens, i, location);
         i++;
     }
     return location;
+}
+
+void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Missing value after 'index' directive.");
+    if(!location.getIndex().empty())
+        throw std::runtime_error("Multiple definitions of 'index' directive.");
+    
+    location.setIndex(tokens[i + 1]);
+}
+
+void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    std::cout << "kjdshflkdsjfds" << std::endl;
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Missing value after 'root' directive.");
+    if(!location.getRoot().empty())
+    {
+        std::cout << "one: " << tokens[i] << std::endl << tokens[i + 1] << std::endl;
+        std::cout << "in object root: " << location.getRoot() << std::endl;;
+        throw std::runtime_error("Multile definitions of 'root' directive.");
+    }
+    location.setRoot(tokens[i + 1]);
+}
+
+void parseCgiPass(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Missing value after 'cgi_pass' directive.");
+    if(!location.getCgiPass().empty())
+        throw std::runtime_error("Multiple defenitions of 'cgi_pass'.");
+    location.setCgiPass(tokens[i + 1]);
+}
+
+void parseUploadPath(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Missing value after 'upload_path' directive.");
+    if(!location.getUploadPath().empty()) 
+        throw std::runtime_error("Multiple definitions of 'upload_path'.");
+    
+    location.setUploadPath(tokens[i + 1]);
+}
+
+void parseRedirectUrl(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Missing value after 'return' directive.");
+    if(!location.getRedirectUrl().empty())
+        throw std::runtime_error("Multiple definitions of 'return' directive.");
+    location.setRedirectUrl(tokens[i + 1]);
+}
+
+void parseAutoindex(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Missing value after 'autoindex' directive.");
+    else if(location.getAutoindexDouble()) 
+        throw std::runtime_error("Multiple definitions of 'autoindex' directive.");
+    else if(tokens[i + 1] == "on")
+    {
+        location.setAutoindexDouble(true);
+        location.setAutoindex(true);
+        return;
+    }
+    else if(tokens[i + 1] == "off")
+    {
+        location.setAutoindexDouble(true);
+        location.setAutoindex(false);
+        return;
+    }
+    else
+        throw std::runtime_error("Invalid value after 'autoindex' directive.");
+
+}
+
+void parseMethods(std::vector<std::string> tokens, size_t i, LocationBlock& location)
+{
+    std::set<std::string> allowed = {"GET", "POST", "DELETE"};
+
+    if(i + 1 >= tokens.size())
+        throw std::runtime_error("Expected HTTP method after 'methods' directive.");
+    i++; //skip the methods token itself.
+    while(tokens[i] != ";")
+    {
+        if(allowed.find(tokens[i]) == allowed.end()) //if not found it returns end.
+            throw std::runtime_error("Invalid HTTP method.");
+        location.addMethod(tokens[i]);
+        i ++;
+    }
+    if (i >= tokens.size() || tokens[i] != ";") //check that a semicolon comes after the directive
+        throw std::runtime_error("Missing semicolon after 'methods' directive.");
 }
 
 size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)

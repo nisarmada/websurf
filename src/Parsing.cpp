@@ -88,6 +88,7 @@ std::vector<std::string> getAllTokens(const std::vector<std::string>& cleanedLin
     }
     for(size_t i = 0; i < tokens.size(); i ++)
         std::cout << "[" << tokens[i] << "]" << std::endl;
+    
     return tokens;
 }
 
@@ -110,6 +111,12 @@ void checkSemicolons(std::vector<std::string> tokens)
     //check if I can remove all those checks.
     for (size_t i = 0; i < tokens.size(); i++)
     {
+        if(tokens[i] == "methods") //fix for now, might change later
+        {
+            while (i < tokens.size() && tokens[i] != ";") //skips the method for checking semicolons.
+                i ++;
+            continue;
+        }
         mustHaveSemicolon(tokens, i);
         wrongPlaceSemicolon(tokens, i); 
     }
@@ -119,7 +126,7 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
 {
         if(getType(tokens[i]) == DIRECTIVE)
         {
-            std::cout << "in here" << std::endl;
+            // std::cout << "in here" << std::endl;
             if(i + 2 >= tokens.size() || tokens[i + 2] != ";")
             {
                 std::cerr << "Error: missing semicolon rupss \"" << tokens[i] << "\"" << std::endl;
@@ -129,6 +136,8 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
         
 }
 
+
+//check if I can do minus 3, there is no check for it as of far.
 void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
 {
     if(tokens[i] == ";")
@@ -140,10 +149,11 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
         }
         if(getType(tokens[i - 2]) == DIRECTIVE)
             return;
-
+        
         if(i - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2)
             return;
         //temporary change to do correct with throw
+    
         std::cerr << "Error: invalid semicolon after \"" << tokens[i - 2] << "\"" << std::endl;
         exit(1);
     }
@@ -162,7 +172,13 @@ Type getType(const std::string& token)
         {"root", DIRECTIVE},
         {"index", DIRECTIVE},
         {"client_max_body_size", DIRECTIVE},
-        {"error_page", DIRECTIVE2}
+        {"error_page", DIRECTIVE2},
+        {"methods", IGNORE},
+        {"autoindex", DIRECTIVE},
+        {"return", DIRECTIVE},
+        {"upload_path", DIRECTIVE},
+        {"cgi_pass", DIRECTIVE}
+
     };
     if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map
         return typeMap[token]; //returns the map location with the correct enum checked if it existed before otherwise it adds the token to the map as a default.
@@ -229,7 +245,7 @@ std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::stri
     {
         if(i + 1 < tokens.size() && tokens[i] == "server" && tokens[i + 1] == "{") //check if i + 1 could give crashes.
 		{
-			insideBlock = true;
+            insideBlock = true;
 			bracketLevel = 1;
 			i += 2; //skip the server and the bracket for the next if block. 
 		}
@@ -237,18 +253,18 @@ std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::stri
         if(insideBlock == true && i < tokens.size())
         {
             if(tokens[i] == "{")
-                bracketLevel ++;
-            else if(tokens[i] == "}")
-                bracketLevel --;
-
+            bracketLevel ++;
+            if(tokens[i] == "}")
+            bracketLevel --;
+            
             if (bracketLevel <= 0) //check if there is still something in the severtokens before emptying it.
 			{
                 insideBlock = false;
 				allServers.push_back(serverTokens);
 				serverTokens.clear();
-				continue;
+                continue;
 			}
-			serverTokens.push_back(tokens[i]);
+            serverTokens.push_back(tokens[i]);
         }   
     }
 

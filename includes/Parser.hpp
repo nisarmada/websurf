@@ -11,6 +11,7 @@
 #include <map>
 #include <stack>
 #include <limits>
+#include <set>
 
 
 class LocationBlock;
@@ -18,8 +19,9 @@ class ServerBlock;
 
 enum Type {
     BLOCK,
-    DIRECTIVE,
-    DIRECTIVE2,
+    DIRECTIVE, //needs i + 2 for ;
+    DIRECTIVE2,//needs i + 3 for ;
+    IGNORE,//dont need to check immediatly for semicolon
     UNKNOWN
 };
 
@@ -46,4 +48,10 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock);
 bool stringIsDigit(std::string& str);
 size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i);
 void expectSemicolon (const std::vector<std::string>& tokens, size_t index);
-
+void parseMethods(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseRedirectUrl(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseUploadPath(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseCgiPass(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseAutoindex(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& location);
