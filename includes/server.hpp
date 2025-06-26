@@ -3,6 +3,8 @@
 #include "Parser.hpp"
 #include "ServerBlock.hpp"
 #include "Client.hpp"
+#include "HttpRequestParsing.hpp"
+#include "HttpRequest.hpp"
 #include <fcntl.h>
 #include <exception>
 #include <stdexcept>

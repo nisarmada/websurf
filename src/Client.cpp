@@ -28,8 +28,12 @@ bool Client::hasResponseToSend() {
 	return _responseBuffer.size() - _bytesSent > 0;
 }
 
-const std::vector<char> Client::getResponseBuffer(){
+const std::vector<char>& Client::getResponseBuffer(){
 	return _responseBuffer;
+}
+
+const std::vector<char>& Client::getRequestBuffer(){
+	return _requestBuffer;
 }
 
 void Client::addBytesSent(ssize_t amount){

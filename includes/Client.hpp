@@ -15,7 +15,8 @@ class Client {
 		bool headerIsComplete() const;
 		void setResponse(const std::string& response);
 		bool hasResponseToSend();
-		const std::vector<char> getResponseBuffer();
+		const std::vector<char>& getResponseBuffer();
+		const std::vector<char>& getRequestBuffer();
 		void addBytesSent(ssize_t amountOfBytes);
 		ssize_t getBytesSent();
 	private:
