@@ -1,4 +1,5 @@
 #include "../includes/Client.hpp"
+#include <string_view>
 
 Client::Client() : _bytesSent(0) {}
 

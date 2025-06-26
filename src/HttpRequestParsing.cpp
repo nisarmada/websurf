@@ -17,7 +17,7 @@ void HttpRequestParser::parseRequestLine(const std::string& line, HttpRequest& r
 	request.setUri(uri);
 	request.setHttpVersion(version);
 }
-
+//same logic we substr the host and header parts from the string and put them in the map
 void HttpRequestParser::parseHostLine(const std::string& line, HttpRequest& request){
 	size_t hostLen = line.find(":");
 	std::string hostName = line.substr(0, hostLen);

@@ -10,7 +10,6 @@ class HttpResponse {
 		void setStatusCode(const int status);
 		void setText(const std::string& text);
 		void addHeader(const std::string& key, const std::string& value);
-		
 	private:
 		std::string _httpVersion;
 		int _statusCode;

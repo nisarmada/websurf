@@ -100,7 +100,6 @@ void WebServer::clientRead(int clientFd){
 	else{
 		clientToRead.appendData(readBuffer, bytesRead);
 		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
-		// std::cout << "read buffer " << readBuffer << std::endl;
 		if (clientToRead.headerIsComplete()){
 			std::cout << "header is complete" << std::endl;
 			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());

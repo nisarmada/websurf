@@ -5,6 +5,7 @@
 #include "Client.hpp"
 #include "HttpRequestParsing.hpp"
 #include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 #include <fcntl.h>
 #include <exception>
 #include <stdexcept>
