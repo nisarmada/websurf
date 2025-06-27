@@ -13,7 +13,7 @@
 #include <limits>
 #include <set>
 
-
+class WebServer;
 class LocationBlock;
 class ServerBlock;
 
@@ -27,7 +27,7 @@ enum Type {
 
 std::vector<std::string> trimBeginEnd (std::ifstream& file);
 std::ifstream openConfigFile(const char* path);
-void parsing(const char* path);
+WebServer parsing(const char* path);
 std::vector<std::string> tokenizeLine(std::string line);
 bool isSpecialChar(char c);
 bool checkSyntax(std::vector<std::string> tokens);

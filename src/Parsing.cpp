@@ -3,7 +3,7 @@
 #include "../includes/server.hpp"
 
 
-void parsing(const char* path)
+WebServer parsing(const char* path)
 {
     std::ifstream configFile = openConfigFile(path);
     std::vector<std::string> cleanedLines = trimBeginEnd(configFile);
@@ -13,8 +13,10 @@ void parsing(const char* path)
     std::vector<std::vector<std::string>> serverBlocks = getServerBlockTokens(tokens);
     WebServer test;
     test.loadConfig(serverBlocks);
-    std::cout << std::endl << std::endl;
-    test.printServerBlocks();
+
+	return test;
+    // std::cout << std::endl << std::endl;
+    // test.printServerBlocks();
 }
 
 std::ifstream openConfigFile(const char* path)

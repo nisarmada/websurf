@@ -12,9 +12,9 @@ int main (int argc, char** argv)
         std::cerr << "Usage: ./webserv configfile" << std::endl;
         return 1;
     }
-    parsing(argv[1]);
 	
-	WebServer webSurv;
+    WebServer webSurv;
+	webSurv = parsing(argv[1]);
 	try {
 		webSurv.run();
 	}

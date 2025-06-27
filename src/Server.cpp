@@ -66,7 +66,7 @@ void WebServer::initializeServer() {
 	if (_epollFd == -1) {
 		throw std::runtime_error("epoll create failed");
 	}
-	if (setupListenerSocket(8080) == -1) {
+	if (setupListenerSocket(_serverBlocks[0].getPort()) == -1) {
 		throw std::runtime_error("setupListenerSocket failed");
 	}
 	struct epoll_event event;
