@@ -81,6 +81,10 @@ void WebServer::cleanupFd(int clientFd){
 	close(clientFd);
 }
 
+void WebServer::handleRequest(const HttpRequest& request){
+	(void)request;
+}
+
 void WebServer::clientRead(int clientFd){
 	Client& clientToRead = _clients.at(clientFd);
 	char readBuffer[BUFFER_SIZE];
@@ -103,8 +107,19 @@ void WebServer::clientRead(int clientFd){
 		if (clientToRead.headerIsComplete()){
 			std::cout << "header is complete" << std::endl;
 			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
-			std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
-			clientToRead.setResponse(httpResponseText);
+			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+			HttpResponse testResponse;
+			testResponse.setStatusCode(200);
+			testResponse.setHttpVersion("Http/1.1");
+			testResponse.setText("OK");
+			testResponse.addHeader("Content-Type", "text/plain");
+			testResponse.addHeader("Server", "MyAwesomeWebserv");
+			std::string bodyContent = "This is a test response!";
+			std::vector<char> bodyVector(bodyContent.begin(), bodyContent.end());
+			testResponse.addHeader("Content-Length", std::to_string(bodyVector.size()));
+			testResponse.setBody(bodyVector);
+			testResponse.responseToBuffer();
+			// clientToRead.setResponse(httpResponseText);
 			clientWrite(clientFd);
 		}
 		//we might need to include the request inside the client object

@@ -27,6 +27,7 @@ class WebServer {
 		void loadConfig(std::vector<std::vector<std::string>>& serverBlocks);
 		void printServerBlocks();
 		void clientWrite(int clientFd);
+		void handleRequest(const HttpRequest& request);
 	private:
 		int _listenSocket;
 		int _epollFd;
