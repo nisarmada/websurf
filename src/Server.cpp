@@ -29,6 +29,15 @@ int WebServer::setupListenerSocket(int port) {
 	}
 
 	setNonBlocking(_listenSocket);
+	//delete this block later
+	int optval = 1; // Set to 1 to enable SO_REUSEADDR
+    if (setsockopt(_listenSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+        perror("setsockopt SO_REUSEADDR failed");
+        // For simplicity, you can exit here as per your other error handling,
+        // or choose to just log and continue if this error isn't considered fatal for your project.
+        exit(EXIT_FAILURE);
+    }
+	// end of block to delete
 	sockaddr_in serverAddress;
 	std::memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
@@ -72,8 +81,12 @@ void WebServer::cleanupFd(int clientFd){
 	close(clientFd);
 }
 
+void WebServer::handleRequest(const HttpRequest& request){
+	(void)request;
+}
+
 void WebServer::clientRead(int clientFd){
-	Client& client = _clients.at(clientFd);
+	Client& clientToRead = _clients.at(clientFd);
 	char readBuffer[BUFFER_SIZE];
 	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); 
 	if (bytesRead == 0){ // client terminated the connection
@@ -89,11 +102,57 @@ void WebServer::clientRead(int clientFd){
 		}
 	}
 	else{
-		client.appendData(readBuffer, bytesRead);
+		clientToRead.appendData(readBuffer, bytesRead);
 		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
-		std::cout << "read buffer " << readBuffer << std::endl;
-		//we need to check if we have a complete http request
-		//here we use client.headerIsComplete() and then we go to response logic
+		if (clientToRead.headerIsComplete()){
+			std::cout << "header is complete" << std::endl;
+			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
+			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+			HttpResponse testResponse;
+			testResponse.setStatusCode(200);
+			testResponse.setHttpVersion("Http/1.1");
+			testResponse.setText("OK");
+			testResponse.addHeader("Content-Type", "text/plain");
+			testResponse.addHeader("Server", "MyAwesomeWebserv");
+			std::string bodyContent = "This is a test response!";
+			std::vector<char> bodyVector(bodyContent.begin(), bodyContent.end());
+			testResponse.addHeader("Content-Length", std::to_string(bodyVector.size()));
+			testResponse.setBody(bodyVector);
+			testResponse.responseToBuffer();
+			// clientToRead.setResponse(httpResponseText);
+			clientWrite(clientFd);
+		}
+		//we might need to include the request inside the client object
+	}
+}
+
+void WebServer::clientWrite(int clientFd){
+	Client& clientToWrite = _clients.at(clientFd);
+
+	if (!clientToWrite.hasResponseToSend()){
+		return; //we might want to remove EPOLLOUT or handle differently
+	}
+	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
+	ssize_t bytesSent = clientToWrite.getBytesSent();
+	ssize_t bytesRemaining = responseBuffer.size() - bytesSent;
+	ssize_t bytesSentThisRound = send(clientFd, responseBuffer.data() + bytesSent, bytesRemaining, 0);
+	if (bytesSentThisRound < 0){
+		if (errno == EAGAIN || errno == EWOULDBLOCK){
+			return;
+		}
+		else{
+			perror("send failed");
+			cleanupFd(clientFd);
+			return ;
+		}
+	}
+	else {
+		clientToWrite.addBytesSent(bytesSentThisRound);
+		std::cout << "We sent " << bytesSentThisRound << " bytes to client" << std::endl;
+	}
+	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately
+		std::cout << "Full response sent to client " << clientFd << std::endl;
+		cleanupFd(clientFd);
 	}
 }
 
@@ -109,6 +168,9 @@ void WebServer::startListening(int num_events){
 				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map
 			}
 		}
+		else if (eventFlags & EPOLLOUT){
+			clientWrite(currentFd);
+		}
 	}
 }
 
@@ -117,7 +179,7 @@ void WebServer::acceptClientConnection(){
 	socklen_t clientAdressLen = sizeof(clientAdress);
 	int clientSocketFd = accept(_listenSocket, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
 	if (clientSocketFd == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject
 			return;
 		}
 		else {
@@ -135,7 +197,7 @@ void WebServer::acceptClientConnection(){
 			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
 			clientEvent.data.fd = clientSocketFd;
 			epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent);
-			std::cout << "Client connected @!!! fuck yes" << std::endl;
+			// std::cout << "Client connected @!!! fuck yes" << std::endl;
 	}
 }
 

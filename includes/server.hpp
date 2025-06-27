@@ -3,6 +3,9 @@
 #include "Parser.hpp"
 #include "ServerBlock.hpp"
 #include "Client.hpp"
+#include "HttpRequestParsing.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
 #include <fcntl.h>
 #include <exception>
 #include <stdexcept>
@@ -23,6 +26,8 @@ class WebServer {
 		int setupListenerSocket(int port);
 		void loadConfig(std::vector<std::vector<std::string>>& serverBlocks);
 		void printServerBlocks();
+		void clientWrite(int clientFd);
+		void handleRequest(const HttpRequest& request);
 	private:
 		int _listenSocket;
 		int _epollFd;
