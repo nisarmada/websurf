@@ -49,7 +49,7 @@ std::vector<char> HttpResponse::responseToBuffer(){
 	}
 	responseString += "\r\n";
 	responseString.insert(responseString.end(), _body.begin(), _body.end());
-	// std::cout << "our response: " << responseString << std::endl;
+	std::cout << "our response: " << responseString << std::endl;
 	std::vector<char> responseBuffer(responseString.begin(), responseString.end());
 	return responseBuffer;
 }
