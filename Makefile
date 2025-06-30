@@ -77,5 +77,5 @@ re: fclean all
 # --- Run the program with test.conf ---
 run: all
 	@echo "\033[0;32mRunning $(NAME) with test.conf...\033[0m"
-	@./$(NAME) test.conf
+	@./$(NAME) original.config
 

@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <sys/epoll.h>
 #include <unordered_map>
+#include <set>
 
 class WebServer {
 	public:
@@ -18,7 +19,7 @@ class WebServer {
 		~WebServer();
 		int run();
 		void initializeServer();
-		void acceptClientConnection();
+		void acceptClientConnection(int listenerFd);
 		void startListening(int num_events);
 		void clientRead(int clientFd);
 		void cleanupFd(int clientFd);
@@ -28,8 +29,9 @@ class WebServer {
 		void printServerBlocks();
 		void clientWrite(int clientFd);
 		void handleRequest(const HttpRequest& request);
+		bool fdIsListeningSocket(int fd);
 	private:
-		int _listenSocket;
+		std::vector<int> _listenSockets;
 		int _epollFd;
 		std::vector<epoll_event> _events;
 		std::unordered_map<int, Client> _clients;

@@ -22,16 +22,17 @@ int WebServer::setNonBlocking(int fd) {
 }
 
 int WebServer::setupListenerSocket(int port) {
-	_listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-	if (_listenSocket == -1) {
+	int listeningSocket;
+	listeningSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (listeningSocket == -1) {
 		perror ("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
 
-	setNonBlocking(_listenSocket);
+	setNonBlocking(listeningSocket);
 	//delete this block later
 	int optval = 1; // Set to 1 to enable SO_REUSEADDR
-    if (setsockopt(_listenSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+    if (setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
         perror("setsockopt SO_REUSEADDR failed");
         // For simplicity, you can exit here as per your other error handling,
         // or choose to just log and continue if this error isn't considered fatal for your project.
@@ -44,19 +45,19 @@ int WebServer::setupListenerSocket(int port) {
 	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAddress.sin_port = htons(port);
 
-	if (bind(_listenSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) != 0) {
+	if (bind(listeningSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) != 0) {
 		perror ("bind failed");
 		return -1;
 	}
 
-	if (listen(_listenSocket, BACKLOG) < 0) {
+	if (listen(listeningSocket, BACKLOG) < 0) {
 		perror("listen failed");
-		close (_listenSocket);
+		close (listeningSocket);
 		return -2;
 	}
 
 	std::cout << "We are listening people !" << std::endl;
-	return 0;
+	return listeningSocket;
 }
 
 WebServer::~WebServer() {}
@@ -66,13 +67,23 @@ void WebServer::initializeServer() {
 	if (_epollFd == -1) {
 		throw std::runtime_error("epoll create failed");
 	}
-	if (setupListenerSocket(_serverBlocks[0].getPort()) == -1) {
-		throw std::runtime_error("setupListenerSocket failed");
+	std::set<int> uniquePorts;
+	for (auto& iteratingBlock : _serverBlocks){
+		uniquePorts.insert(iteratingBlock.getPort());
 	}
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = _listenSocket;
-	epoll_ctl(_epollFd, EPOLL_CTL_ADD, _listenSocket, &event); //this tells _epollFd to add _listenSocket to its monitored fds
+	for (int port : uniquePorts){
+		int currentListenFd = setupListenerSocket(port);
+		if (currentListenFd == -1){
+			throw std::runtime_error("setupListenerSocket failed for port " + std::to_string(port));
+		}
+		_listenSockets.push_back(currentListenFd);
+		struct epoll_event event;
+		event.events = EPOLLIN;
+		event.data.fd = currentListenFd;
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, currentListenFd, &event) == -1) {
+			std::cerr << "initialize server epoll ctl" << std::endl;
+		} //this tells _epollFd to add _listenSocket to its monitored fds
+	}
 }
 
 void WebServer::cleanupFd(int clientFd){
@@ -156,13 +167,23 @@ void WebServer::clientWrite(int clientFd){
 	}
 }
 
+bool WebServer::fdIsListeningSocket(int fd){
+	for (int socket : _listenSockets){
+		if (fd == socket){
+			return true;
+		}
+	}
+	return false;
+}
+
 void WebServer::startListening(int num_events){
 	for (int i = 0; i < num_events; i++) {
 		int currentFd = _events[i].data.fd;
 		uint32_t eventFlags = _events[i].events;
 		if (eventFlags & EPOLLIN) {
-			if (currentFd == _listenSocket) {
-				acceptClientConnection();
+			if (fdIsListeningSocket(currentFd)) {
+
+				acceptClientConnection(currentFd);
 			}
 			else { // if it's not a listen socket then it is a client
 				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map
@@ -174,10 +195,10 @@ void WebServer::startListening(int num_events){
 	}
 }
 
-void WebServer::acceptClientConnection(){
+void WebServer::acceptClientConnection(int listenerFd){
 	sockaddr_in clientAdress;
 	socklen_t clientAdressLen = sizeof(clientAdress);
-	int clientSocketFd = accept(_listenSocket, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
+	int clientSocketFd = accept(listenerFd, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
 	if (clientSocketFd == -1) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject
 			return;
@@ -196,8 +217,10 @@ void WebServer::acceptClientConnection(){
 			struct epoll_event clientEvent;
 			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
 			clientEvent.data.fd = clientSocketFd;
-			epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent);
-			// std::cout << "Client connected @!!! fuck yes" << std::endl;
+			if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent) == -1){
+				std::cerr << "Epoll ctllllll" << std::endl;
+			}
+			std::cout << "Client connected @!!! fuck yes" << std::endl;
 	}
 }
 
@@ -205,6 +228,7 @@ int WebServer::run() {
 	initializeServer();
 	while (true) {
 		int num_events = epoll_wait(_epollFd, _events.data(), MAX_EVENTS, -1);
+		std::cout << "hello " << std::endl;
 		startListening(num_events);
 	}
 	return 0;

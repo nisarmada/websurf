@@ -79,13 +79,12 @@ void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& locati
 
 void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& location)
 {
-    std::cout << "kjdshflkdsjfds" << std::endl;
     if(i + 1 >= tokens.size())
         throw std::runtime_error("Missing value after 'root' directive.");
     if(!location.getRoot().empty())
     {
-        std::cout << "one: " << tokens[i] << std::endl << tokens[i + 1] << std::endl;
-        std::cout << "in object root: " << location.getRoot() << std::endl;;
+        // std::cout << "one: " << tokens[i] << std::endl << tokens[i + 1] << std::endl;
+        // std::cout << "in object root: " << location.getRoot() << std::endl;;
         throw std::runtime_error("Multile definitions of 'root' directive.");
     }
     location.setRoot(tokens[i + 1]);

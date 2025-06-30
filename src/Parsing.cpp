@@ -88,8 +88,8 @@ std::vector<std::string> getAllTokens(const std::vector<std::string>& cleanedLin
         std::vector<std::string> tokenLine = tokenizeLine(cleanedLines[i]);
         tokens.insert(tokens.end(), tokenLine.begin(), tokenLine.end()); //inserts a range of strings(where to add, what to add from where to where (vector begin end in our case))
     }
-    for(size_t i = 0; i < tokens.size(); i ++)
-        std::cout << "[" << tokens[i] << "]" << std::endl;
+    // for(size_t i = 0; i < tokens.size(); i ++)
+    //     std::cout << "[" << tokens[i] << "]" << std::endl;
     
     return tokens;
 }
