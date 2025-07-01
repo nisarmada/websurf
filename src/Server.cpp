@@ -96,11 +96,21 @@ void WebServer::handleRequest(const HttpRequest& request){
 	(void)request;
 }
 
+void WebServer::clientIsReadyToWriteTo(int clientFd){
+	struct epoll_event event;
+	event.events = EPOLLIN | EPOLLOUT | EPOLLET; //we might want to remove EPOLLEt
+	event.data.fd = clientFd;
+	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
+		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here
+	}
+}
+
 void WebServer::clientRead(int clientFd){
 	Client& clientToRead = _clients.at(clientFd);
 	char readBuffer[BUFFER_SIZE];
 	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); 
 	if (bytesRead == 0){ // client terminated the connection
+		std::cout << "Cleanup crew called" << std::endl;
 		cleanupFd(clientFd);
 	}
 	else if (bytesRead < 0){
@@ -114,7 +124,7 @@ void WebServer::clientRead(int clientFd){
 	}
 	else{
 		clientToRead.appendData(readBuffer, bytesRead);
-		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
+		// std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
 		if (clientToRead.headerIsComplete()){
 			std::cout << "header is complete" << std::endl;
 			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
@@ -129,9 +139,10 @@ void WebServer::clientRead(int clientFd){
 			std::vector<char> bodyVector(bodyContent.begin(), bodyContent.end());
 			testResponse.addHeader("Content-Length", std::to_string(bodyVector.size()));
 			testResponse.setBody(bodyVector);
-			testResponse.responseToBuffer();
-			// clientToRead.setResponse(httpResponseText);
-			clientWrite(clientFd);
+			// testResponse.responseToBuffer();
+			clientToRead.setResponse(testResponse.responseToString());
+			// clientWrite(clientFd);
+			clientIsReadyToWriteTo(clientFd);
 		}
 		//we might need to include the request inside the client object
 	}
@@ -141,6 +152,7 @@ void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);
 
 	if (!clientToWrite.hasResponseToSend()){
+		std::cout << "hereee" << std::endl;
 		return; //we might want to remove EPOLLOUT or handle differently
 	}
 	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
@@ -215,7 +227,7 @@ void WebServer::acceptClientConnection(int listenerFd){
 			Client clientInstance(clientSocketFd);
 			_clients.insert(std::make_pair(clientSocketFd, clientInstance));
 			struct epoll_event clientEvent;
-			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
+			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //I removed EPOLLET not sure if that's correct
 			clientEvent.data.fd = clientSocketFd;
 			if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent) == -1){
 				std::cerr << "Epoll ctllllll" << std::endl;
@@ -228,7 +240,6 @@ int WebServer::run() {
 	initializeServer();
 	while (true) {
 		int num_events = epoll_wait(_epollFd, _events.data(), MAX_EVENTS, -1);
-		std::cout << "hello " << std::endl;
 		startListening(num_events);
 	}
 	return 0;

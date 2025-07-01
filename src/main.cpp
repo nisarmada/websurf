@@ -4,7 +4,7 @@
 #include "../includes/server.hpp"
 //TCP is Transmission control protocol
 //check out epoll
-
+//curl http://localhost:8080
 int main (int argc, char** argv)
 {
     if(argc != 2)

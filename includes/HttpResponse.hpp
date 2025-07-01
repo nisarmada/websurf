@@ -11,7 +11,7 @@ class HttpResponse {
 		void setText(const std::string& text);
 		void addHeader(const std::string& key, const std::string& value);
 		void setBody(const std::vector<char>& body);
-		std::vector<char> responseToBuffer();
+		std::string responseToString();
 		std::string& getHttpVersion();
 		int getStatusCode();
 		std::string& getText();

@@ -41,5 +41,6 @@ HttpRequest HttpRequestParser::parser(const std::vector<char>& requestBuffer){ /
 		currentPosition = endPosition + 2;
 		endPosition = rawRequest.find("\r\n", currentPosition);
 	}
+	std::cout << rawRequest << std::endl;
 	return request;
 }
