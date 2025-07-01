@@ -29,7 +29,7 @@ int WebServer::setupListenerSocket(int port) {
 		exit(EXIT_FAILURE);
 	}
 
-	setNonBlocking(listeningSocket);
+	setNonBlocking(listeningSocket); //READ ABOUT THIS WHAT IT EXACTLY IS AND DOES.
 	//delete this block later
 	int optval = 1; // Set to 1 to enable SO_REUSEADDR
     if (setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
@@ -45,12 +45,12 @@ int WebServer::setupListenerSocket(int port) {
 	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAddress.sin_port = htons(port);
 
-	if (bind(listeningSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) != 0) {
+	if (bind(listeningSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) != 0) { //CHECKOUT WHAT THIS DOES
 		perror ("bind failed");
 		return -1;
 	}
 
-	if (listen(listeningSocket, BACKLOG) < 0) {
+	if (listen(listeningSocket, BACKLOG) < 0) { //CHECKOUT WHAT THIS DOES
 		perror("listen failed");
 		close (listeningSocket);
 		return -2;
@@ -68,7 +68,7 @@ void WebServer::initializeServer() {
 		throw std::runtime_error("epoll create failed");
 	}
 	std::set<int> uniquePorts;
-	for (auto& iteratingBlock : _serverBlocks){
+	for (auto& iteratingBlock : _serverBlocks){ //STAN LOOK AT THIS HOW IT WORKS
 		uniquePorts.insert(iteratingBlock.getPort());
 	}
 	for (int port : uniquePorts){
@@ -77,10 +77,12 @@ void WebServer::initializeServer() {
 			throw std::runtime_error("setupListenerSocket failed for port " + std::to_string(port));
 		}
 		_listenSockets.push_back(currentListenFd);
+		//CHECKOUT WHAT THIS DOES
 		struct epoll_event event;
 		event.events = EPOLLIN;
 		event.data.fd = currentListenFd;
-		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, currentListenFd, &event) == -1) {
+		//CHECK UNTIL HERE
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, currentListenFd, &event) == -1) { //epoll_ctl modifies something about the epoll
 			std::cerr << "initialize server epoll ctl" << std::endl;
 		} //this tells _epollFd to add _listenSocket to its monitored fds
 	}
@@ -97,10 +99,11 @@ void WebServer::handleRequest(const HttpRequest& request){
 }
 
 void WebServer::clientRead(int clientFd){
-	Client& clientToRead = _clients.at(clientFd);
+	Client& clientToRead = _clients.at(clientFd); //.at throws an error when the client fd doesnt exist in the hashmap that we made.
 	char readBuffer[BUFFER_SIZE];
-	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); 
+	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); //recv returns how many bytes it read each itteration
 	if (bytesRead == 0){ // client terminated the connection
+		std::cout << "cleanup crew was called" << std::endl;
 		cleanupFd(clientFd);
 	}
 	else if (bytesRead < 0){
@@ -120,7 +123,7 @@ void WebServer::clientRead(int clientFd){
 			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
 			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
 			HttpResponse testResponse;
-			testResponse.setStatusCode(200);
+			testResponse.setStatusCode(200); //check the request with the config file and match it and set the correct status code. 
 			testResponse.setHttpVersion("Http/1.1");
 			testResponse.setText("OK");
 			testResponse.addHeader("Content-Type", "text/plain");
@@ -131,7 +134,7 @@ void WebServer::clientRead(int clientFd){
 			testResponse.setBody(bodyVector);
 			testResponse.responseToBuffer();
 			// clientToRead.setResponse(httpResponseText);
-			clientWrite(clientFd);
+			clientWrite(clientFd); //writes it to the client.
 		}
 		//we might need to include the request inside the client object
 	}
@@ -181,12 +184,11 @@ void WebServer::startListening(int num_events){
 		int currentFd = _events[i].data.fd;
 		uint32_t eventFlags = _events[i].events;
 		if (eventFlags & EPOLLIN) {
-			if (fdIsListeningSocket(currentFd)) {
-
+			if (fdIsListeningSocket(currentFd)) { //new connection
 				acceptClientConnection(currentFd);
 			}
 			else { // if it's not a listen socket then it is a client
-				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map
+				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map --------existing connection
 			}
 		}
 		else if (eventFlags & EPOLLOUT){
@@ -213,14 +215,14 @@ void WebServer::acceptClientConnection(int listenerFd){
 				throw std::runtime_error("set non blocking for client socket failed");
 			}
 			Client clientInstance(clientSocketFd);
-			_clients.insert(std::make_pair(clientSocketFd, clientInstance));
+			_clients.insert(std::make_pair(clientSocketFd, clientInstance)); 
 			struct epoll_event clientEvent;
-			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET;
+			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //CHECKOUT WHAT EPOLLET IS AND DOES	
 			clientEvent.data.fd = clientSocketFd;
 			if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent) == -1){
-				std::cerr << "Epoll ctllllll" << std::endl;
+				throw std::runtime_error("Epoll ctl add client failed");
 			}
-			std::cout << "Client connected @!!! fuck yes" << std::endl;
+			std::cout << "Client connected :) !!! fuck yes" << std::endl;
 	}
 }
 
@@ -228,7 +230,6 @@ int WebServer::run() {
 	initializeServer();
 	while (true) {
 		int num_events = epoll_wait(_epollFd, _events.data(), MAX_EVENTS, -1);
-		std::cout << "hello " << std::endl;
 		startListening(num_events);
 	}
 	return 0;
