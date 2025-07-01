@@ -30,6 +30,7 @@ class WebServer {
 		void clientWrite(int clientFd);
 		void handleRequest(const HttpRequest& request);
 		bool fdIsListeningSocket(int fd);
+		void clientIsReadyToWriteTo(int clientFd);
 	private:
 		std::vector<int> _listenSockets;
 		int _epollFd;

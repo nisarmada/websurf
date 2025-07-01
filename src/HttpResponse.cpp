@@ -33,7 +33,7 @@ int HttpResponse::getStatusCode() {
 	return _statusCode;
 }
 
-std::vector<char> HttpResponse::responseToBuffer(){
+std::string HttpResponse::responseToString(){
 	std::string responseString = _httpVersion;
 
 	responseString.push_back(' ');
@@ -49,7 +49,7 @@ std::vector<char> HttpResponse::responseToBuffer(){
 	}
 	responseString += "\r\n";
 	responseString.insert(responseString.end(), _body.begin(), _body.end());
-	std::cout << "our response: " << responseString << std::endl;
-	std::vector<char> responseBuffer(responseString.begin(), responseString.end());
-	return responseBuffer;
+	// std::cout << "our response: " << responseString << std::endl;
+	// std::vector<char> responseBuffer(responseString.begin(), responseString.end());
+	return responseString;
 }
