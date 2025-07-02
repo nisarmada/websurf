@@ -3,7 +3,7 @@
 
 Client::Client() : _bytesSent(0) {}
 
-Client::Client(int fd) : _clientFd(fd), _bytesSent(0) {}
+Client::Client(int fd) : _clientFd(fd), _bytesSent(0), _associatedServerBlock(nullptr) {}
 
 Client::~Client() {}
 
@@ -43,4 +43,22 @@ void Client::addBytesSent(ssize_t amount){
 
 ssize_t Client::getBytesSent() {
 	return _bytesSent;
+}
+
+void Client::connectClientToServerBlock(int fd, std::vector<ServerBlock>& serverBlocks){
+	struct sockaddr_in serverAddr;
+	socklen_t serverAddrLen = sizeof(serverAddr);
+
+	if (getsockname(fd, reinterpret_cast<sockaddr*>(&serverAddr), &serverAddrLen) == -1){
+		perror("error in association between client and server block");
+		close(fd);
+		return ;
+	}
+	int connectedPort = ntohs(serverAddr.sin_port); 
+	for (auto& iterator : serverBlocks){
+		if (iterator.getPort() == connectedPort){
+			_associatedServerBlock = &iterator;
+		}
+	}
+
 }

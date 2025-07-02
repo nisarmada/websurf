@@ -225,6 +225,7 @@ void WebServer::acceptClientConnection(int listenerFd){
 				throw std::runtime_error("set non blocking for client socket failed");
 			}
 			Client clientInstance(clientSocketFd);
+			
 			_clients.insert(std::make_pair(clientSocketFd, clientInstance));
 			struct epoll_event clientEvent;
 			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //I removed EPOLLET not sure if that's correct

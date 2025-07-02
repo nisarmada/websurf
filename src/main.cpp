@@ -30,7 +30,8 @@ int main (int argc, char** argv)
 
 
 //removing newlines double spaces etc. cleanup before the next step.
-
+//we should check how we're handling fds after they're used
+//maybe we need to close some depending on the situation
 
 
 
