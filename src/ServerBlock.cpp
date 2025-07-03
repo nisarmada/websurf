@@ -25,6 +25,10 @@ void ServerBlock::setPort(int port)
     this->port = port;
 }
 
+size_t ServerBlock::getBodySize() const {
+	return client_max_body_size;
+}
+
 void ServerBlock::setServerName(std::string serverName)
 {
     this->server_name = serverName;

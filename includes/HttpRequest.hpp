@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include "Client.hpp"
+#define MAX_URI_LENGTH 4096
 class ServerBlock;
 
 class HttpRequest {
@@ -23,15 +24,16 @@ class HttpRequest {
 		std::string& getHeader(const std::string& key);
 		void checkRequest(Client& client);
 		int checkMethod();
-		int contentLengthCheck(Client& client);
+		void contentLengthCheck(Client& client);
 		void parseRequestLine(const std::string& line);
-		void parser(const std::vector<char>& requestBuffer);
+		void parser(Client& client);
 		void parseHostLine(const std::string& line);
+		void parseBody(std::string& rawRequest, size_t headerEnd);
 	private:
 		std::string _method;
 		std::string _uri;
 		std::string _httpVersion;
 		std::unordered_map<std::string, std::string> _headers;
-		std::vector<char> body;
+		std::vector<char> _body;
 		int isError = 0;
 };

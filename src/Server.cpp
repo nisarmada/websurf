@@ -128,7 +128,11 @@ void WebServer::clientRead(int clientFd){
 		if (clientToRead.headerIsComplete()){
 			std::cout << "header is complete" << std::endl;
 			HttpRequest parsedRequest; //change name ?
-			parsedRequest.parser(clientToRead.getRequestBuffer());
+			try{ //now in case we have an Error we still send a response, I think that's what we want
+				parsedRequest.parser(clientToRead);
+			}catch(std::exception& e){
+				std::cerr << "Error: " << e.what() << std::endl;
+			}
 			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
 			// parsedRequest.checkRequest(clientToRead);
 			HttpResponse testResponse;

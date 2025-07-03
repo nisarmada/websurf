@@ -21,6 +21,15 @@ void HttpRequest::addHeader(const std::string& key, const std::string& value){
 	_headers[key] = value;
 }
 
+std::string& HttpRequest::getHeader(const std::string& key){
+	static std::string emptyString = "";
+	auto it = _headers.find(key);
+	if (it != _headers.end()){
+		return it->second;
+	}
+	return emptyString;
+}
+
 void HttpRequest::setError(int errorCode){
 	isError = errorCode;
 }
@@ -33,6 +42,7 @@ void HttpRequest::parseRequestLine(const std::string& line){
 	size_t secondSpace = line.find(" ", firstSpace + 1);
 	uri = line.substr(firstSpace + 1, secondSpace - firstSpace);
 	version = line.substr(secondSpace + 1, line.npos - secondSpace);
+
 	setMethod(method);
 	setUri(uri);
 	setHttpVersion(version);
@@ -46,40 +56,74 @@ void HttpRequest::parseHostLine(const std::string& line){
 	addHeader(hostName, header);
 }
 
-void HttpRequest::parser(const std::vector<char>& requestBuffer){ //handler that controls the parsing
+void HttpRequest::addBody(const char* data, size_t len){
+	_body.insert(_body.end(), data, data + len);
+}
+
+void HttpRequest::parseBody(std::string& rawRequest, size_t headerEnd){
+	size_t bodyStart = headerEnd + 4;
+	if (bodyStart < rawRequest.size()){
+		std::string bodyContent = rawRequest.substr(bodyStart);
+		addBody(bodyContent.data(), bodyContent.length());
+	}
+}
+
+void HttpRequest::parser(Client& client){ //handler that controls the parsing
+	const std::vector<char>& requestBuffer = client.getRequestBuffer();
 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end()); //we turn the buffer into a string from a vector
 	size_t requestLineLen = rawRequest.find("\r\n"); //finds the end of the first line 
 	std::string requestLine = rawRequest.substr(0, requestLineLen);
-	HttpRequest request;
 	parseRequestLine(requestLine); //this is always the first line
 	size_t currentPosition = requestLineLen + 2;
 	size_t headerEnd = rawRequest.find("\r\n\r\n");
 	size_t endPosition = rawRequest.find("\r\n", currentPosition);
 	while (currentPosition < headerEnd){ //splits line by line and adds the headers to a hashmap
 		std::string currentHeaderLine = rawRequest.substr(currentPosition, endPosition - currentPosition);
-		parseHostLine(currentHeaderLine);
+		parseHostLine(currentHeaderLine); //this means parseHeader
 		currentPosition = endPosition + 2;
 		endPosition = rawRequest.find("\r\n", currentPosition);
 	}
+	parseBody(rawRequest, headerEnd);
+	checkRequest(client);
 	std::cout << rawRequest << std::endl;
 }
 
 int HttpRequest::checkMethod(){
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
 		return -1;
+	if (_httpVersion != "HTTP/1.1"){
+		setError(400);
+		throw std::runtime_error("Bad request");
+	}
+	if (_uri.size() > MAX_URI_LENGTH){
+		setError(414);
+		throw std::runtime_error("URI too long");
+	}
 	return 0;
 }
 
-// int HttpRequest::contentLengthCheck(Client& client){
-// 	const ServerBlock* serverBlock = client.getServerBlock();
+void HttpRequest::contentLengthCheck(Client& client){
+	const ServerBlock* serverBlock = client.getServerBlock();
+	size_t maxSizeConfig = serverBlock->getBodySize();
+	std::string& requestSizeString = getHeader("Content-Length");
+	if (requestSizeString == ""){
+		setError(411); // I think this is the correct error code
+		throw std::runtime_error("Content Length is missing");
+	}
+	size_t requestSize = static_cast<size_t>(std::stoul(requestSizeString));
+	if (requestSize > maxSizeConfig){
+		setError(411);
+		throw std::runtime_error("Payload too large");
+	}
+}
 
-// 	//should happen in parsing.
-// }
-
-// void HttpRequest::checkRequest(Client& client){
-// 	if (checkMethod() == -1){
-// 		setError(501);
-// 	}
-// 	//we should check if _associatedBlock == nullptr
-// 	if (_method == "POST")
-// }
+void HttpRequest::checkRequest(Client& client){
+	if (checkMethod() == -1){ //we should change that to throw an exception instead of return -1
+		setError(501);
+		throw std::runtime_error("Method not allowed");
+	}
+	//we should check if _associatedBlock == nullptr
+	if (_method == "POST" || _method == "GET"){ //GET shouldnt be there, it's only for testing
+		contentLengthCheck(client);
+	}
+}
