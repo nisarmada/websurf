@@ -20,7 +20,8 @@ class Client {
 		const std::vector<char>& getRequestBuffer();
 		void addBytesSent(ssize_t amountOfBytes);
 		ssize_t getBytesSent();
-		void connectClientToServerBlock(int fd, std::vector<ServerBlock>& serverBlocks);
+		void connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks);
+		const ServerBlock* getServerBlock();
 	private:
 		int _clientFd;
 		std::vector<char> _requestBuffer;

@@ -16,7 +16,7 @@ int ServerBlock::getPort()
     return this->port;
 }
 
-std::string ServerBlock::getServerName()
+const std::string ServerBlock::getServerName() const
 {
     return this->server_name;
 }
