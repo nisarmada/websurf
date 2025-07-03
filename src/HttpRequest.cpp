@@ -20,3 +20,11 @@ void HttpRequest::addHeader(const std::string& key, const std::string& value){
 	// we might need to check if it already exists
 	_headers[key] = value;
 }
+
+const std::string& HttpRequest::getUri() const{
+	return _uri;
+}
+
+const std::string& HttpRequest::getMethod() const {
+	return _method;
+}

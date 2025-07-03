@@ -1,6 +1,8 @@
 #pragma once
 
+#include <sstream>
 #include "server.hpp"
+#include "HttpRequest.hpp"
 
 class HttpResponse {
 	public:
@@ -16,7 +18,12 @@ class HttpResponse {
 		int getStatusCode();
 		std::string& getText();
 		std::vector<char>& getBody();
+		void executeResponse(HttpRequest& request);
+		void executeGet(HttpRequest& request);
+		const std::string& getRoot() const;
+		void createBodyVector(HttpRequest& request, std::string& path);
 	private:
+		const std::string _root;
 		std::string _httpVersion;
 		int _statusCode;
 		std::string _text;
@@ -24,3 +31,4 @@ class HttpResponse {
 		std::vector<char> _body;
 		size_t _bodyLen;
 };
+

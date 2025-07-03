@@ -11,7 +11,7 @@ void HttpRequestParser::parseRequestLine(const std::string& line, HttpRequest& r
 
 	method = line.substr(0, firstSpace);
 	size_t secondSpace = line.find(" ", firstSpace + 1);
-	uri = line.substr(firstSpace + 1, secondSpace - firstSpace);
+	uri = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
 	version = line.substr(secondSpace + 1, line.npos - secondSpace);
 	request.setMethod(method);
 	request.setUri(uri);

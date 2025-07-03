@@ -132,6 +132,7 @@ void WebServer::clientRead(int clientFd){
 			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
 			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
 			HttpResponse testResponse;
+			testResponse.executeResponse(parsedRequest);
 			testResponse.setStatusCode(200); //check the request with the config file and match it and set the correct status code. 
 			testResponse.setHttpVersion("Http/1.1");
 			testResponse.setText("OK");
@@ -146,9 +147,12 @@ void WebServer::clientRead(int clientFd){
 			// clientWrite(clientFd);
 			clientIsReadyToWriteTo(clientFd);
 		}
+
 		//we might need to include the request inside the client object
 	}
 }
+
+
 
 void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);

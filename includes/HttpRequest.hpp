@@ -14,8 +14,8 @@ class HttpRequest {
 		void setHttpVersion(const std::string& httpVersion);
 		void addHeader(const std::string& key, const std::string& value);
 		void addBody(const char* data, size_t len);
-		std::string& getMethod() const;
-		std::string& getUri() const;
+		const std::string& getMethod() const;
+		const std::string& getUri() const;
 		std::string& getHttpVersion() const ;
 		std::string& getHeader(const std::string& key);
 	private:
