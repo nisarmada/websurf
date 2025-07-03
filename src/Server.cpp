@@ -127,8 +127,10 @@ void WebServer::clientRead(int clientFd){
 		// std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
 		if (clientToRead.headerIsComplete()){
 			std::cout << "header is complete" << std::endl;
-			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
+			HttpRequest parsedRequest; //change name ?
+			parsedRequest.parser(clientToRead.getRequestBuffer());
 			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+			// parsedRequest.checkRequest(clientToRead);
 			HttpResponse testResponse;
 			testResponse.setStatusCode(200);
 			testResponse.setHttpVersion("Http/1.1");
@@ -209,7 +211,7 @@ void WebServer::startListening(int num_events){
 
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
-		clientInstance.connectClientToServerBlock(_serverBlocks);
+		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there
 		std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
 				<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));

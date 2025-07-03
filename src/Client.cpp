@@ -58,6 +58,7 @@ void Client::connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks){
 	for (auto& iterator : serverBlocks){
 		if (iterator.getPort() == connectedPort){
 			_associatedServerBlock = &iterator;
+			return ;
 		}
 	}
 
