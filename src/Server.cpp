@@ -208,6 +208,21 @@ void WebServer::startListening(int num_events){
 	}
 }
 
+void WebServer::createClientAndMonitorFd(int clientSocket){
+	Client clientInstance(clientSocket);
+		clientInstance.connectClientToServerBlock(_serverBlocks);
+		std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
+				<< clientInstance.getServerBlock()->getServerName() << std::endl; 
+		_clients.insert(std::make_pair(clientSocket, clientInstance));
+		struct epoll_event clientEvent;
+		clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //I removed EPOLLET not sure if that's correct
+		clientEvent.data.fd = clientSocket;
+		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &clientEvent) == -1){
+			std::cerr << "Epoll ctllllll" << std::endl;
+		}
+		std::cout << "Client connected @!!! fuck yes" << std::endl;
+}
+
 void WebServer::acceptClientConnection(int listenerFd){
 	sockaddr_in clientAdress;
 	socklen_t clientAdressLen = sizeof(clientAdress);
@@ -225,15 +240,7 @@ void WebServer::acceptClientConnection(int listenerFd){
 			if (setNonBlocking(clientSocketFd) == -1){
 				throw std::runtime_error("set non blocking for client socket failed");
 			}
-			Client clientInstance(clientSocketFd);
-			_clients.insert(std::make_pair(clientSocketFd, clientInstance)); 
-			struct epoll_event clientEvent;
-			clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //I removed EPOLLET not sure if that's correct
-			clientEvent.data.fd = clientSocketFd;
-			if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocketFd, &clientEvent) == -1){
-				throw std::runtime_error("Epoll ctl add client failed");
-			}
-			std::cout << "Client connected :) !!! fuck yes" << std::endl;
+			createClientAndMonitorFd(clientSocketFd);
 	}
 }
 

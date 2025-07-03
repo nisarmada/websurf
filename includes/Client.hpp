@@ -4,6 +4,7 @@
 #include "Parser.hpp"
 #include <algorithm>
 #include <string_view>
+#include "ServerBlock.hpp"
 
 class Client {
 	public:
@@ -19,9 +20,12 @@ class Client {
 		const std::vector<char>& getRequestBuffer();
 		void addBytesSent(ssize_t amountOfBytes);
 		ssize_t getBytesSent();
+		void connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks);
+		const ServerBlock* getServerBlock();
 	private:
 		int _clientFd;
 		std::vector<char> _requestBuffer;
 		std::vector<char> _responseBuffer;
 		ssize_t _bytesSent;
+		ServerBlock* _associatedServerBlock;
 };

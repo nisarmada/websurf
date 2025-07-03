@@ -152,7 +152,7 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
         if(getType(tokens[i - 2]) == DIRECTIVE)
             return;
         
-        if(i - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2)
+        if(static_cast<int>(i) - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2) // broke the code so I made a patch
             return;
         //temporary change to do correct with throw
     

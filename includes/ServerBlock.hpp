@@ -17,7 +17,7 @@ class ServerBlock
         void setServerName(std::string serverName);
         size_t getClientBodySize();
         void setClientBodySize(size_t maxSize);
-        std::string getServerName();
+        const std::string getServerName() const;
         void addLocation(const LocationBlock& location);
         const std::map<std::string, LocationBlock>& getLocations() const;
         void validateServerBlock() const;
