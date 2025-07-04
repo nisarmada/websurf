@@ -60,7 +60,8 @@ void HttpRequest::addBody(const char* data, size_t len){
 	_body.insert(_body.end(), data, data + len);
 }
 
-void HttpRequest::parseBody(std::string& rawRequest, size_t headerEnd){
+void HttpRequest::parseBody(std::string& rawRequest){
+	size_t headerEnd = rawRequest.find("\r\n\r\n");
 	size_t bodyStart = headerEnd + 4;
 	if (bodyStart < rawRequest.size()){
 		std::string bodyContent = rawRequest.substr(bodyStart);
@@ -68,9 +69,23 @@ void HttpRequest::parseBody(std::string& rawRequest, size_t headerEnd){
 	}
 }
 
-void HttpRequest::parser(Client& client){ //handler that controls the parsing
+int HttpRequest::checkChunked(){
+	if (getHeader("Transfer-Encoding") != "" && getHeader("Content-Length") != ""){
+		setError(400);
+		throw std::runtime_error("Bad Request");
+	}
+	if (getHeader("Transfer-Encoding") != ""){
+		isChunked = 1;
+		return 1;
+	}
+	return 0;
+}
+
+
+std::string HttpRequest::parseExceptBody(Client& client){
 	const std::vector<char>& requestBuffer = client.getRequestBuffer();
 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end()); //we turn the buffer into a string from a vector
+	std::cout << rawRequest << std::endl;
 	size_t requestLineLen = rawRequest.find("\r\n"); //finds the end of the first line 
 	std::string requestLine = rawRequest.substr(0, requestLineLen);
 	parseRequestLine(requestLine); //this is always the first line
@@ -83,9 +98,22 @@ void HttpRequest::parser(Client& client){ //handler that controls the parsing
 		currentPosition = endPosition + 2;
 		endPosition = rawRequest.find("\r\n", currentPosition);
 	}
-	parseBody(rawRequest, headerEnd);
+	return rawRequest;
+}
+
+void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
+	
+}
+
+void HttpRequest::parser(Client& client){ //handler that controls the parsing
+	std::string firstHalfRequest = parseExceptBody(client);
+	if (checkChunked() == 1){
+
+	}else{
+		parseBody(firstHalfRequest);
+	}
 	checkRequest(client);
-	std::cout << rawRequest << std::endl;
+	std::cout << firstHalfRequest << std::endl;
 }
 
 int HttpRequest::checkMethod(){
@@ -123,7 +151,7 @@ void HttpRequest::checkRequest(Client& client){
 		throw std::runtime_error("Method not allowed");
 	}
 	//we should check if _associatedBlock == nullptr
-	if (_method == "POST" || _method == "GET"){ //GET shouldnt be there, it's only for testing
+	if ((_method == "POST" || _method == "GET") && !isChunked){ //GET shouldnt be there, it's only for testing
 		contentLengthCheck(client);
 	}
 }

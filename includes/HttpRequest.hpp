@@ -28,7 +28,10 @@ class HttpRequest {
 		void parseRequestLine(const std::string& line);
 		void parser(Client& client);
 		void parseHostLine(const std::string& line);
-		void parseBody(std::string& rawRequest, size_t headerEnd);
+		void parseBody(std::string& rawRequest);
+		int checkChunked();
+		void parseBodyChunked(std::string& rawRequest, size_t headerEnd);
+		std::string parseExceptBody(Client& client);
 	private:
 		std::string _method;
 		std::string _uri;
@@ -36,4 +39,5 @@ class HttpRequest {
 		std::unordered_map<std::string, std::string> _headers;
 		std::vector<char> _body;
 		int isError = 0;
+		int isChunked = 0;
 };
