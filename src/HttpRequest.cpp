@@ -31,7 +31,7 @@ std::string& HttpRequest::getHeader(const std::string& key){
 }
 
 void HttpRequest::setError(int errorCode){
-	isError = errorCode;
+	_isError = errorCode;
 }
 
 void HttpRequest::parseRequestLine(const std::string& line){
@@ -60,13 +60,19 @@ void HttpRequest::addBody(const char* data, size_t len){
 	_body.insert(_body.end(), data, data + len);
 }
 
-void HttpRequest::parseBody(std::string& rawRequest){
+void HttpRequest::parseBody(Client& client){
+	const std::vector<char>& requestBuffer = client.getRequestBuffer();
+	std::string rawRequest(requestBuffer.begin(), requestBuffer.end());
 	size_t headerEnd = rawRequest.find("\r\n\r\n");
 	size_t bodyStart = headerEnd + 4;
 	if (bodyStart < rawRequest.size()){
 		std::string bodyContent = rawRequest.substr(bodyStart);
 		addBody(bodyContent.data(), bodyContent.length());
+		_bodyFullyParsed = true;
+	}else{
+		_bodyFullyParsed = true;
 	}
+	std::cout << "we are in parse bodyyyy" << std::endl;
 }
 
 int HttpRequest::checkChunked(){
@@ -75,17 +81,18 @@ int HttpRequest::checkChunked(){
 		throw std::runtime_error("Bad Request");
 	}
 	if (getHeader("Transfer-Encoding") != ""){
-		isChunked = 1;
+		_isChunked = 1;
 		return 1;
 	}
 	return 0;
 }
 
 
-std::string HttpRequest::parseExceptBody(Client& client){
+const std::string HttpRequest::parseExceptBody(Client& client){
+	std::cout << "parse except bodyyyyyyy " << std::endl;
 	const std::vector<char>& requestBuffer = client.getRequestBuffer();
 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end()); //we turn the buffer into a string from a vector
-	std::cout << rawRequest << std::endl;
+	// std::cout << rawRequest << std::endl;
 	size_t requestLineLen = rawRequest.find("\r\n"); //finds the end of the first line 
 	std::string requestLine = rawRequest.substr(0, requestLineLen);
 	parseRequestLine(requestLine); //this is always the first line
@@ -98,22 +105,43 @@ std::string HttpRequest::parseExceptBody(Client& client){
 		currentPosition = endPosition + 2;
 		endPosition = rawRequest.find("\r\n", currentPosition);
 	}
+	_bodyReadPosition = headerEnd + 4;
+	std::cout << "body read position " << _bodyReadPosition << std::endl;
+	_headersComplete = true;
 	return rawRequest;
 }
 
-void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
+// void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
 	
-}
+// }
 
 void HttpRequest::parser(Client& client){ //handler that controls the parsing
+	// if (!_headersComplete){
+	// 	std::cout << "beforeeeee1" << std::endl;
+	// }
+	// Inside HttpRequest::parser or where client.headerIsComplete() is called
+	// std::cout << "Current request buffer content (hex): ";
+	// const std::vector<char>& buffer = client.getRequestBuffer();
+	// for (char c : buffer) {
+	// 	std::cout << std::hex << (int)(unsigned char)c << " ";
+	// }
+	// std::cout << std::dec << std::endl;
+	// std::cout << "Current request buffer size: " << buffer.size() << std::endl;
+
+	if (!client.headerIsComplete()) {
+		std::cout << "Headers not complete yet. Waiting for more data..." << std::endl;
+        return; // Return immediately, the client buffer needs more data
+    }
 	std::string firstHalfRequest = parseExceptBody(client);
 	if (checkChunked() == 1){
-
-	}else{
-		parseBody(firstHalfRequest);
+		std::cout << "beforeeeee" << std::endl;
+		parseBodyChunked(client);
+		std::cout << "afteeeeer" << std::endl;
+	}else if (_method == "POST"){
+		parseBody(client);
 	}
 	checkRequest(client);
-	std::cout << firstHalfRequest << std::endl;
+	// std::cout << firstHalfRequest << std::endl;
 }
 
 int HttpRequest::checkMethod(){
@@ -151,7 +179,7 @@ void HttpRequest::checkRequest(Client& client){
 		throw std::runtime_error("Method not allowed");
 	}
 	//we should check if _associatedBlock == nullptr
-	if ((_method == "POST" || _method == "GET") && !isChunked){ //GET shouldnt be there, it's only for testing
+	if ((_method == "POST") && !_isChunked){ //GET shouldnt be there, it's only for testing
 		contentLengthCheck(client);
 	}
 }

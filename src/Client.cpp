@@ -67,3 +67,4 @@ void Client::connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks){
 const ServerBlock* Client::getServerBlock(){ 
 	return _associatedServerBlock;
 }
+

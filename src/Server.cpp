@@ -98,7 +98,7 @@ void WebServer::handleRequest(const HttpRequest& request){
 
 void WebServer::clientIsReadyToWriteTo(int clientFd){
 	struct epoll_event event;
-	event.events = EPOLLIN | EPOLLOUT | EPOLLET; //we might want to remove EPOLLEt
+	event.events = EPOLLIN | EPOLLOUT; //we might want to remove EPOLLEt
 	event.data.fd = clientFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
 		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here
@@ -124,12 +124,19 @@ void WebServer::clientRead(int clientFd){
 	}
 	else{
 		clientToRead.appendData(readBuffer, bytesRead);
-		// std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
-		if (clientToRead.headerIsComplete()){
+		// HttpRequest& currentRequest = clientToRead.getCurrentRequest();
+		std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
+		std::string buffer(clientToRead.getRequestBuffer().begin(), clientToRead.getRequestBuffer().end());
+		std::cout << "string buffer " << buffer << std::endl;
+		if (clientToRead.headerIsComplete())
+		{
 			std::cout << "header is complete" << std::endl;
-			HttpRequest parsedRequest; //change name ?
 			try{ //now in case we have an Error we still send a response, I think that's what we want
+				std::cout << "beforeee parserr" << std::endl;
+				
+				HttpRequest parsedRequest; //change name ?
 				parsedRequest.parser(clientToRead);
+				std::cout << "after parserr" << std::endl;
 			}catch(std::exception& e){
 				std::cerr << "Error: " << e.what() << std::endl;
 			}
@@ -150,6 +157,8 @@ void WebServer::clientRead(int clientFd){
 			// clientWrite(clientFd);
 			clientIsReadyToWriteTo(clientFd);
 		}
+		// std::cout << "end of clientRead " << clientFd << ": " << bytesRead << std::endl;
+
 		//we might need to include the request inside the client object
 	}
 }
@@ -158,7 +167,7 @@ void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);
 
 	if (!clientToWrite.hasResponseToSend()){
-		std::cout << "hereee" << std::endl;
+		// std::cout << "hereee" << std::endl;
 		return; //we might want to remove EPOLLOUT or handle differently
 	}
 	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
@@ -220,7 +229,7 @@ void WebServer::createClientAndMonitorFd(int clientSocket){
 				<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
-		clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //I removed EPOLLET not sure if that's correct
+		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct
 		clientEvent.data.fd = clientSocket;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &clientEvent) == -1){
 			std::cerr << "Epoll ctllllll" << std::endl;
@@ -310,7 +319,7 @@ void WebServer::printServerBlocks()
 				{
 					std::cout << "    Methods:      ";
 					for (std::set<std::string>::const_iterator mit = methods.begin(); mit != methods.end(); ++mit)
-						std::cout << *mit << " ";
+						std::cout << " sdasda" << *mit << " ";
 					std::cout << std::endl;
 				}
 

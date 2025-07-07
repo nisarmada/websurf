@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <vector>
 #include "Client.hpp"
+#include <sstream>
+#include <algorithm>
 #define MAX_URI_LENGTH 4096
 class ServerBlock;
 
@@ -28,16 +30,37 @@ class HttpRequest {
 		void parseRequestLine(const std::string& line);
 		void parser(Client& client);
 		void parseHostLine(const std::string& line);
-		void parseBody(std::string& rawRequest);
+		void parseBody(Client& client);
 		int checkChunked();
-		void parseBodyChunked(std::string& rawRequest, size_t headerEnd);
-		std::string parseExceptBody(Client& client);
+		void parseBodyChunked(Client& client);
+		const std::string parseExceptBody(Client& client);
+
 	private:
 		std::string _method;
 		std::string _uri;
 		std::string _httpVersion;
 		std::unordered_map<std::string, std::string> _headers;
 		std::vector<char> _body;
-		int isError = 0;
-		int isChunked = 0;
-};
+		int _isError = 0;
+		int _isChunked = 0;
+		bool _headersComplete = false;
+		bool _bodyFullyParsed = false;
+		size_t _bodyReadPosition = 0;
+		size_t _currentChunkSize = 0;
+
+		enum ChunkParseState {
+			READING_CHUNK_SIZE,
+			READING_CHUNK_DATA,
+			READING_CHUNK_TERMINATOR,
+			READING_FINAL_CRLF,
+			CHUNK_PARSING_COMPLETE
+		};
+		ChunkParseState _chunkParseState = READING_CHUNK_SIZE;
+		size_t hexToDec(const std::string& hex) const;
+		size_t findCrlf(const std::vector<char>& buffer, size_t startPos, size_t bufferEnd) const;
+		size_t findEndChunked(const std::vector<char>& buffer, size_t startPos, size_t bufferEnd) const;
+		int readingChunkSize(const std::vector<char>& buffer, size_t bufferEnd);
+		int readingChunkData(const std::vector<char>& buffer, size_t bufferEnd);
+		int readingChunkTerminator(const std::vector<char>& buffer, size_t bufferEnd);
+		void readingFinalCRLF(const std::vector<char>& buffer, size_t bufferEnd);
+	};
