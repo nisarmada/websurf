@@ -15,6 +15,10 @@ void Client::appendData(const char* data, size_t len){
 	_requestBuffer.insert(_requestBuffer.end(), data, data + len);
 }
 
+void Client::clearRequestBuffer(){
+	_requestBuffer.clear();
+}
+
 bool Client::headerIsComplete() const {
 	std::string_view bufferCheck(_requestBuffer.data(), _requestBuffer.size());
 	return (bufferCheck.find("\r\n\r\n") != std::string_view::npos);

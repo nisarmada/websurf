@@ -24,6 +24,7 @@ class Client {
 		ssize_t getBytesSent();
 		void connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks);
 		const ServerBlock* getServerBlock();
+		void clearRequestBuffer();
 		// const HttpRequest& getCurrentRequest();
 	private:
 		int _clientFd;
