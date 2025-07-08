@@ -138,6 +138,7 @@ void HttpResponse::executeGet(HttpRequest& request)
 		uri = "/index.html";
 	std::cout << "uri: " << uri << std::endl;
 	std::string fullPath = _root + uri;
+	std::cout << "lksdjflk;dsjfkldsjf   -->" << fullPath << std::endl;
 	_path = fullPath;
 	std::cout << fullPath << std::endl;
 	createBodyVector();

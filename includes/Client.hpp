@@ -6,6 +6,8 @@
 #include <string_view>
 #include "ServerBlock.hpp"
 
+class HttpRequest;
+
 class Client {
 	public:
 		Client();
@@ -22,10 +24,13 @@ class Client {
 		ssize_t getBytesSent();
 		void connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks);
 		const ServerBlock* getServerBlock();
+		void clearRequestBuffer();
+		// const HttpRequest& getCurrentRequest();
 	private:
 		int _clientFd;
 		std::vector<char> _requestBuffer;
 		std::vector<char> _responseBuffer;
 		ssize_t _bytesSent;
 		ServerBlock* _associatedServerBlock;
+		// HttpRequest _request;
 };

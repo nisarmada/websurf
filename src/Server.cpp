@@ -100,7 +100,7 @@ void WebServer::handleRequest(const HttpRequest& request){
 
 void WebServer::clientIsReadyToWriteTo(int clientFd){
 	struct epoll_event event;
-	event.events = EPOLLIN | EPOLLOUT | EPOLLET; //we might want to remove EPOLLEt
+	event.events = EPOLLIN | EPOLLOUT; //we might want to remove EPOLLEt
 	event.data.fd = clientFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
 		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here
@@ -126,30 +126,20 @@ void WebServer::clientRead(int clientFd){
 	}
 	else{
 		clientToRead.appendData(readBuffer, bytesRead);
+		// HttpRequest& currentRequest = clientToRead.getCurrentRequest();
 		// std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
-		if (clientToRead.headerIsComplete()){
-			std::cout << "header is complete" << std::endl;
-			HttpRequest parsedRequest = HttpRequestParser::parser(clientToRead.getRequestBuffer());
-			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
-			HttpResponse testResponse;
-			testResponse.executeResponse(parsedRequest);
-			// testResponse.setStatusCode(200); //check the request with the config file and match it and set the correct status code. 
-			// testResponse.setHttpVersion("Http/1.1");
-			// testResponse.setText("OK");
-			// testResponse.addHeader("Content-Type", "text/plain");
-			// testResponse.addHeader("Server", "MyAwesomeWebserv");
-			// std::string bodyContent = "This is a test response!";
-			// std::vector<char> bodyVector(bodyContent.begin(), bodyContent.end());
-			// testResponse.addHeader("Content-Length", std::to_string(bodyVector.size()));
-			// testResponse.setBody(bodyVector);
-			// testResponse.responseToBuffer();
+		std::string buffer(clientToRead.getRequestBuffer().begin(), clientToRead.getRequestBuffer().end());
+		if (clientToRead.headerIsComplete())
+		{
+				HttpRequest parsedRequest; //change name ?
+				parsedRequest.parser(clientToRead);
+				HttpResponse testResponse;
+				testResponse.executeResponse(parsedRequest);
 			clientToRead.setResponse(testResponse.responseToString());
 			std::cout << "-----------------" << std::endl;
 			std::cout << testResponse.responseToString() << std::endl;
-			// clientWrite(clientFd);
 			clientIsReadyToWriteTo(clientFd);
 		}
-
 		//we might need to include the request inside the client object
 	}
 }
@@ -160,7 +150,7 @@ void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);
 
 	if (!clientToWrite.hasResponseToSend()){
-		std::cout << "hereee" << std::endl;
+		// std::cout << "hereee" << std::endl;
 		return; //we might want to remove EPOLLOUT or handle differently
 	}
 	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
@@ -216,12 +206,12 @@ void WebServer::startListening(int num_events){
 
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
-		clientInstance.connectClientToServerBlock(_serverBlocks);
+		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there
 		std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
 				<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
-		clientEvent.events = EPOLLIN | EPOLLOUT | EPOLLET; //I removed EPOLLET not sure if that's correct
+		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct
 		clientEvent.data.fd = clientSocket;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &clientEvent) == -1){
 			std::cerr << "Epoll ctllllll" << std::endl;
@@ -311,7 +301,7 @@ void WebServer::printServerBlocks()
 				{
 					std::cout << "    Methods:      ";
 					for (std::set<std::string>::const_iterator mit = methods.begin(); mit != methods.end(); ++mit)
-						std::cout << *mit << " ";
+						std::cout << " sdasda" << *mit << " ";
 					std::cout << std::endl;
 				}
 

@@ -20,7 +20,7 @@ int main (int argc, char** argv)
 		webSurv.run();
 	}
 	catch (std::exception& e) {
-		std::cerr << "Error: ";
+		std::cerr << "Error: " << e.what() << std::endl;
 	}
     return 0;
 }
