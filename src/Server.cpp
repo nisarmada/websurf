@@ -134,10 +134,11 @@ void WebServer::clientRead(int clientFd){
 				HttpRequest parsedRequest; //change name ?
 				parsedRequest.parser(clientToRead);
 				HttpResponse testResponse;
+				std::cout << "-----------------" << std::endl;
 				testResponse.executeResponse(parsedRequest);
-			clientToRead.setResponse(testResponse.responseToString());
-			std::cout << "-----------------" << std::endl;
-			std::cout << testResponse.responseToString() << std::endl;
+
+			clientToRead.setResponse(testResponse.createCompleteResponse());
+			// std::cout << testResponse.createCompleteResponse() << std::endl;
 			clientIsReadyToWriteTo(clientFd);
 		}
 		//we might need to include the request inside the client object

@@ -26,6 +26,7 @@ class HttpResponse {
 		void populateErrorHeaders();
 		void findContentType();
 		std::string setErrorText();
+		std::string createCompleteResponse();
 	private:
 		const std::string _root;
 		std::string _httpVersion;

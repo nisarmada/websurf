@@ -106,6 +106,7 @@ void HttpResponse::populateHeaders(HttpRequest& request)
 	std::cout << request.getHttpVersion() << std::endl;
 	setText("OK");
 	findContentType();
+	addHeader("Content-Length", std::to_string(_bodyLen));
 }
 
 void HttpResponse::findContentType()
@@ -124,21 +125,31 @@ void HttpResponse::findContentType()
 		addHeader("Content-Type", "image/png");
 	else if (extention == "gif")
 		addHeader("Content-Type", "image/gif");
-	else
-		throw std::runtime_error("findcontentype temp exception"); //remove
+	else if (extention == "ico")
+		addHeader("Content-Type", "image/x-icon");
+	// else
+	// 	throw std::runtime_error("findcontentype temp exception"); //remove
 		
+}
+std::string HttpResponse::createCompleteResponse()
+{
+	std::string response = _httpVersion;
+	std::string bodyString(_body.begin(), _body.end());
+	response +=  " " + std::to_string(_statusCode) + " " + _text + "\r\n";
+	for (auto& iterator : _headers){
+		response += iterator.first + ": " + iterator.second + "\r\n"; 
+	}
+	response += "\r\n" + bodyString;
+	return response;
 }
 
 
 void HttpResponse::executeGet(HttpRequest& request)
 {
 	std::string uri = request.getUri();
-	std::cout << "first uri get: " << uri << std::endl;
 	if(uri == "/")
 		uri = "/index.html";
-	std::cout << "uri: " << uri << std::endl;
 	std::string fullPath = _root + uri;
-	std::cout << "lksdjflk;dsjfkldsjf   -->" << fullPath << std::endl;
 	_path = fullPath;
 	std::cout << fullPath << std::endl;
 	createBodyVector();
@@ -153,12 +164,13 @@ void HttpResponse::createBodyVector()
 {
 	std::ifstream body(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	std::string content;
+	std::cout << "we are here ---------------" << std::endl;
 	if(!body.is_open())
 	{
 		content = "404 Not Found";
 		setStatusCode(404);
 		addHeader("Content-Type", "text/plain");
-		throw std::runtime_error("exception! Change this later createbodyvector");
+		// throw std::runtime_error("exception! Change this later createbodyvector");
 	}
 	std::stringstream file;
 	file << body.rdbuf();

@@ -119,6 +119,8 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	_bodyReadPosition = headerEnd + 4;
 	std::cout << "body read position " << _bodyReadPosition << std::endl;
 	_headersComplete = true;
+	std::cout << "----------------" << std::endl;
+	std::cout << rawRequest << std::endl;
 	return rawRequest;
 }
 
