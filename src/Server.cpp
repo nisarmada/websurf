@@ -133,17 +133,19 @@ void WebServer::clientRead(int clientFd){
 			// std::string httpResponseText = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
 			HttpResponse testResponse;
 			testResponse.executeResponse(parsedRequest);
-			testResponse.setStatusCode(200); //check the request with the config file and match it and set the correct status code. 
-			testResponse.setHttpVersion("Http/1.1");
-			testResponse.setText("OK");
-			testResponse.addHeader("Content-Type", "text/plain");
-			testResponse.addHeader("Server", "MyAwesomeWebserv");
-			std::string bodyContent = "This is a test response!";
-			std::vector<char> bodyVector(bodyContent.begin(), bodyContent.end());
-			testResponse.addHeader("Content-Length", std::to_string(bodyVector.size()));
-			testResponse.setBody(bodyVector);
+			// testResponse.setStatusCode(200); //check the request with the config file and match it and set the correct status code. 
+			// testResponse.setHttpVersion("Http/1.1");
+			// testResponse.setText("OK");
+			// testResponse.addHeader("Content-Type", "text/plain");
+			// testResponse.addHeader("Server", "MyAwesomeWebserv");
+			// std::string bodyContent = "This is a test response!";
+			// std::vector<char> bodyVector(bodyContent.begin(), bodyContent.end());
+			// testResponse.addHeader("Content-Length", std::to_string(bodyVector.size()));
+			// testResponse.setBody(bodyVector);
 			// testResponse.responseToBuffer();
 			clientToRead.setResponse(testResponse.responseToString());
+			std::cout << "-----------------" << std::endl;
+			std::cout << testResponse.responseToString() << std::endl;
 			// clientWrite(clientFd);
 			clientIsReadyToWriteTo(clientFd);
 		}

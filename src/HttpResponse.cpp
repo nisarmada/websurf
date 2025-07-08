@@ -49,7 +49,7 @@ std::string HttpResponse::responseToString(){
 		responseString += "\r\n";
 	}
 	responseString += "\r\n";
-	responseString.insert(responseString.end(), _body.begin(), _body.end());
+	responseString.insert(responseString.end(), _body.begin(), _body.end()); //_body is binary data.
 	// std::cout << "our response: " << responseString << std::endl;
 	// std::vector<char> responseBuffer(responseString.begin(), responseString.end());
 	return responseString;
@@ -59,9 +59,76 @@ void HttpResponse::executeResponse(HttpRequest& request)
 {
 	if (request.getMethod() == "GET")
 		executeGet(request);
-
+	
+	if(getStatusCode() == 200)
+		populateHeaders(request);
+	else
+		populateErrorHeaders();
 	return;
 }
+
+std::string HttpResponse::setErrorText(){
+	if (getStatusCode() == 404){
+		setText("Not Found");
+		return ("404 Not Found");
+	}
+	else if (getStatusCode() == 413){
+		setText("Payload Too Large");
+		return ("413 Payload Too Large");
+	}
+	else if (getStatusCode() == 405){
+		setText("Method Not Allowed");
+		return ("Method Not Allowed");
+	}
+	else if (getStatusCode() == 403){
+		setText("Forbidden");
+		return ("403 Forbidden");
+	}
+	else {
+		setText("Internal Server Error");
+		return ("500 Internal Server Error");
+	}
+}
+
+void HttpResponse::populateErrorHeaders()
+{
+	std::string htmlError = "<html><head><title>" + setErrorText() + "</title></head>"
+    "<body><h1>404 Not Found</h1></body></html>";
+	addHeader("Content-Type", "text/html");
+	addHeader("Content-Length", std::to_string(htmlError.length()));
+	setBody(std::vector<char>(htmlError.begin(), htmlError.end()));
+}
+
+
+void HttpResponse::populateHeaders(HttpRequest& request)
+{
+	setHttpVersion(request.getHttpVersion());
+	std::cout << request.getHttpVersion() << std::endl;
+	setText("OK");
+	findContentType();
+}
+
+void HttpResponse::findContentType()
+{
+	size_t index = _path.find_last_of('.');
+	std::string extention = _path.substr(index + 1);
+	if(extention == "css")
+		addHeader("Content-Type", "text/css");
+	else if(extention == "html")
+		addHeader("Content-Type", "text/html");
+	else if(extention == "js")
+		addHeader("Content-Type", "application/javascript");
+	else if(extention == "jpg" || extention == "jpeg")
+		addHeader("Content-Type", "image/jpeg");
+	else if(extention == "png")
+		addHeader("Content-Type", "image/png");
+	else if (extention == "gif")
+		addHeader("Content-Type", "image/gif");
+	else
+		throw std::runtime_error("findcontentype temp exception"); //remove
+		
+}
+
 
 void HttpResponse::executeGet(HttpRequest& request)
 {
@@ -71,8 +138,9 @@ void HttpResponse::executeGet(HttpRequest& request)
 		uri = "/index.html";
 	std::cout << "uri: " << uri << std::endl;
 	std::string fullPath = _root + uri;
+	_path = fullPath;
 	std::cout << fullPath << std::endl;
-	createBodyVector(request, fullPath);
+	createBodyVector();
 }
 
 const std::string& HttpResponse::getRoot() const
@@ -80,26 +148,21 @@ const std::string& HttpResponse::getRoot() const
 	return _root;
 }
 
-void HttpResponse::createBodyVector(HttpRequest& request, std::string& path)
+void HttpResponse::createBodyVector()
 {
-	std::cout << "in createBodyVector" << std::endl;
-	std::ifstream body(path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
+	std::ifstream body(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	std::string content;
 	if(!body.is_open())
 	{
-		std::cout << "in file not found" << std::endl;
-
 		content = "404 Not Found";
 		setStatusCode(404);
 		addHeader("Content-Type", "text/plain");
-		setBody(std::vector<char>(content.begin(), content.end()));
-		throw std::runtime_error("Change this later createbodyvector");
+		throw std::runtime_error("exception! Change this later createbodyvector");
 	}
 	std::stringstream file;
 	file << body.rdbuf();
 	content = file.str();
-	std::cout << " sssssssssss " << content << std::endl; 
-	(void)request;
-
+	setBody(std::vector<char>(content.begin(), content.end()));
+	setStatusCode(200);
 }
 

@@ -21,7 +21,11 @@ class HttpResponse {
 		void executeResponse(HttpRequest& request);
 		void executeGet(HttpRequest& request);
 		const std::string& getRoot() const;
-		void createBodyVector(HttpRequest& request, std::string& path);
+		void createBodyVector();
+		void populateHeaders(HttpRequest& request);
+		void populateErrorHeaders();
+		void findContentType();
+		std::string setErrorText();
 	private:
 		const std::string _root;
 		std::string _httpVersion;
@@ -30,5 +34,6 @@ class HttpResponse {
 		std::unordered_map<std::string, std::string> _headers;
 		std::vector<char> _body;
 		size_t _bodyLen;
+		std::string _path;
 };
 
