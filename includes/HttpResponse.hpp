@@ -3,6 +3,7 @@
 #include <sstream>
 #include "server.hpp"
 #include "HttpRequest.hpp"
+#include "Client.hpp"
 
 class HttpResponse {
 	public:
@@ -27,6 +28,8 @@ class HttpResponse {
 		void findContentType();
 		std::string setErrorText();
 		std::string createCompleteResponse();
+		static void handleResponse(Client& client);
+
 	private:
 		const std::string _root;
 		std::string _httpVersion;

@@ -126,22 +126,12 @@ void WebServer::clientRead(int clientFd){
 	}
 	else{
 		clientToRead.appendData(readBuffer, bytesRead);
-		// HttpRequest& currentRequest = clientToRead.getCurrentRequest();
-		// std::cout << "Bytes read from client " << clientFd << ": " << bytesRead << std::endl;
 		std::string buffer(clientToRead.getRequestBuffer().begin(), clientToRead.getRequestBuffer().end());
 		if (clientToRead.headerIsComplete())
 		{
-				HttpRequest parsedRequest; //change name ?
-				parsedRequest.parser(clientToRead);
-				HttpResponse testResponse;
-				std::cout << "-----------------" << std::endl;
-				testResponse.executeResponse(parsedRequest);
-
-			clientToRead.setResponse(testResponse.createCompleteResponse());
-			// std::cout << testResponse.createCompleteResponse() << std::endl;
+			HttpResponse::handleResponse(clientToRead);
 			clientIsReadyToWriteTo(clientFd);
 		}
-		//we might need to include the request inside the client object
 	}
 }
 
@@ -151,7 +141,6 @@ void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);
 
 	if (!clientToWrite.hasResponseToSend()){
-		// std::cout << "hereee" << std::endl;
 		return; //we might want to remove EPOLLOUT or handle differently
 	}
 	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();

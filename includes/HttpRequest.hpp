@@ -7,6 +7,7 @@
 #include "Client.hpp"
 #include <sstream>
 #include <algorithm>
+#include "HttpResponse.hpp"
 #define MAX_URI_LENGTH 4096
 class ServerBlock;
 

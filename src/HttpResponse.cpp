@@ -179,3 +179,13 @@ void HttpResponse::createBodyVector()
 	setStatusCode(200);
 }
 
+void HttpResponse::handleResponse(Client& client){
+	HttpRequest parsedRequest; //change name ?
+	parsedRequest.parser(client);
+	HttpResponse testResponse;
+	std::cout << "-----------------" << std::endl;
+	testResponse.executeResponse(parsedRequest);
+
+	client.setResponse(testResponse.createCompleteResponse());
+	// std::cout << testResponse.createCompleteResponse() << std::endl;
+}
