@@ -26,7 +26,7 @@ class HttpRequest {
 		std::string getHttpVersion() const ;
 		std::string& getHeader(const std::string& key);
 		void checkRequest(Client& client);
-		int checkMethod();
+		int checkMethod(Client& client);
 		void contentLengthCheck(Client& client);
 		void parseRequestLine(const std::string& line);
 		void parser(Client& client);
@@ -35,7 +35,8 @@ class HttpRequest {
 		int checkChunked();
 		void parseBodyChunked(Client& client);
 		const std::string parseExceptBody(Client& client);
-
+		const std::set<std::string> extractMethods(Client& client);
+		const std::string extractLocationVariable(Client& client, std::string identifier); //this might need to be static
 	private:
 		std::string _method;
 		std::string _uri;

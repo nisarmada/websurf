@@ -19,8 +19,8 @@ class HttpResponse {
 		int getStatusCode();
 		std::string& getText();
 		std::vector<char>& getBody();
-		void executeResponse(HttpRequest& request);
-		void executeGet(HttpRequest& request);
+		void executeResponse(HttpRequest& request, Client& client);
+		void executeGet(HttpRequest& request, Client& client);
 		const std::string& getRoot() const;
 		void createBodyVector();
 		void populateHeaders(HttpRequest& request);

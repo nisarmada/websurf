@@ -55,10 +55,10 @@ std::string HttpResponse::responseToString(){
 	return responseString;
 }
 
-void HttpResponse::executeResponse(HttpRequest& request)
+void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
 	if (request.getMethod() == "GET")
-		executeGet(request);
+		executeGet(request, client);
 	
 	if(getStatusCode() == 200)
 		populateHeaders(request);
@@ -144,11 +144,18 @@ std::string HttpResponse::createCompleteResponse()
 }
 
 
-void HttpResponse::executeGet(HttpRequest& request)
+void HttpResponse::executeGet(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
-	if(uri == "/")
-		uri = "/index.html";
+	std::string index = request.extractLocationVariable(client, "_index");
+	if (index.empty()){
+		std::cerr << "index is not found " << std::endl;
+		return ;
+	}
+	std::cout << "indexxxxxxxxxxxx " << index << std::endl;
+	if(uri == "/"){
+		uri = index;
+	}
 	std::string fullPath = _root + uri;
 	_path = fullPath;
 	std::cout << fullPath << std::endl;
@@ -170,7 +177,8 @@ void HttpResponse::createBodyVector()
 		content = "404 Not Found";
 		setStatusCode(404);
 		addHeader("Content-Type", "text/plain");
-		// throw std::runtime_error("exception! Change this later createbodyvector");
+		populateErrorHeaders();
+		return ;
 	}
 	std::stringstream file;
 	file << body.rdbuf();
@@ -184,7 +192,7 @@ void HttpResponse::handleResponse(Client& client){
 	parsedRequest.parser(client);
 	HttpResponse testResponse;
 	std::cout << "-----------------" << std::endl;
-	testResponse.executeResponse(parsedRequest);
+	testResponse.executeResponse(parsedRequest, client);
 
 	client.setResponse(testResponse.createCompleteResponse());
 	// std::cout << testResponse.createCompleteResponse() << std::endl;
