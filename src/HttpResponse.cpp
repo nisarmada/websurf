@@ -59,6 +59,10 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
 	if (request.getMethod() == "GET")
 		executeGet(request, client);
+	if (request.getMethod() == "POST")
+		executePost(request, client);
+	if (request.getMethod() == "DELETE")
+		executeDelete(request, client);
 	
 	if(getStatusCode() == 200)
 		populateHeaders(request);
@@ -156,10 +160,32 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	if(uri == "/"){
 		uri = index;
 	}
-	std::string fullPath = _root + uri;
+	std::string fullPath;
+	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
+		fullPath = _root + uri.substr(1); // avoid double slash
+	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
+		fullPath = _root + "/" + uri;
+	else
+		fullPath = _root + uri;
 	_path = fullPath;
 	std::cout << fullPath << std::endl;
 	createBodyVector();
+}
+
+void HttpResponse::executePost(HttpRequest& request, Client& client)
+{
+	std::string uri = request.getUri();
+	std::string index = request.extractLocationVariable(client, "_index");
+	if (index.empty()){
+		std::cerr << "index is not found " << std::endl;
+		return ;
+	}
+}
+
+void HttpResponse::executeDelete(HttpRequest& request, Client& client)
+{
+	std::string uri = request.getUri();
+	std::string index = request.extractLocationVariable(client, "_index");
 }
 
 const std::string& HttpResponse::getRoot() const
