@@ -1,5 +1,7 @@
 #include "../includes/HttpResponse.hpp"
 
+
+
 HttpResponse::HttpResponse() : _root("./www")
 {} 
 
@@ -174,19 +176,76 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 
 void HttpResponse::executePost(HttpRequest& request, Client& client)
 {
-	std::string uri = request.getUri();
-	std::string index = request.extractLocationVariable(client, "_index");
-	if (index.empty()){
-		std::cerr << "index is not found " << std::endl;
-		return ;
-	}
+    std::string uploadPath = request.extractLocationVariable(client, "_uploadPath");
+    if (uploadPath.empty()) {
+        setStatusCode(405);
+        return;
+    }
+    
+    const std::vector<char>& body = request.getBody();
+    std::string fileName = "uploaded_file_" + std::to_string(time(NULL));
+    std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
+    
+    std::ofstream file(fullPath, std::ios::binary);
+    if (!file.is_open()) {
+        setStatusCode(500);
+        return;
+    }
+    
+    file.write(body.data(), body.size());
+    file.close();
+    
+    setStatusCode(201);
+    setText("Created");
+    addHeader("Content-Type", "text/plain");
+    std::string responseBody = "File uploaded successfully: " + fileName;
+    setBody(std::vector<char>(responseBody.begin(), responseBody.end()));
 }
+
 
 void HttpResponse::executeDelete(HttpRequest& request, Client& client)
 {
-	std::string uri = request.getUri();
-	std::string index = request.extractLocationVariable(client, "_index");
+    std::string uploadPath = request.extractLocationVariable(client, "_uploadPath");
+    if (uploadPath.empty()) {
+        setStatusCode(405);
+        return;
+    }
+    
+    std::string uri = request.getUri();
+    size_t lastSlash = uri.find_last_of('/');
+    if (lastSlash == std::string::npos || lastSlash == uri.length() - 1) {
+        setStatusCode(400);
+        return;
+    }
+    
+    std::string fileName = uri.substr(lastSlash + 1);
+    if (fileName.empty()) {
+        setStatusCode(400);
+        return;
+    }
+    
+    std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
+    
+    std::ifstream checkFile(fullPath);
+    if (!checkFile.good()) {
+        setStatusCode(404);
+        return;
+    }
+    checkFile.close();
+    
+    if (std::remove(fullPath.c_str()) != 0) {
+        setStatusCode(500);
+        return;
+    }
+    
+    setStatusCode(200);
+    setText("OK");
+    addHeader("Content-Type", "text/plain");
+    std::string responseBody = "File deleted successfully: " + fileName;
+    setBody(std::vector<char>(responseBody.begin(), responseBody.end()));
 }
+
+
 
 const std::string& HttpResponse::getRoot() const
 {

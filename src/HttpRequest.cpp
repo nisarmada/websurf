@@ -219,3 +219,7 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
     return emptyString;
 }
 
+const std::vector<char>& HttpRequest::getBody() const {
+    return _body;
+}
+

@@ -4,6 +4,9 @@
 #include "server.hpp"
 #include "HttpRequest.hpp"
 #include "Client.hpp"
+#include <fstream>
+#include <ctime>
+#include <cstdio>
 
 class HttpResponse {
 	public:
