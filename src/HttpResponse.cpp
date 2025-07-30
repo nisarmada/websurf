@@ -182,8 +182,18 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
         return;
     }
     
-    const std::vector<char>& body = request.getBody();
-    std::string fileName = "uploaded_file_" + std::to_string(time(NULL));
+    // Get original filename from custom header
+    std::string originalFilename = request.getHeader("X-Filename");
+    std::string fileName;
+    
+    if (!originalFilename.empty()) {
+        // Use the original filename with its extension
+        fileName = originalFilename;
+    } else {
+        // Fallback to timestamp if no original filename found
+        fileName = "uploaded_file_" + std::to_string(time(NULL));
+    }
+    
     std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
     
     std::ofstream file(fullPath, std::ios::binary);
@@ -192,6 +202,7 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
         return;
     }
     
+    const std::vector<char>& body = request.getBody();
     file.write(body.data(), body.size());
     file.close();
     
