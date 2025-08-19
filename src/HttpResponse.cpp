@@ -156,7 +156,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	if(uri == "/"){
 		uri = index;
 	}
-	std::string fullPath = _root + uri;
+	std::string fullPath = _root + "/" + uri;
 	_path = fullPath;
 	std::cout << fullPath << std::endl;
 	createBodyVector();
