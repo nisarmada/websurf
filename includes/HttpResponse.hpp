@@ -4,6 +4,9 @@
 #include "server.hpp"
 #include "HttpRequest.hpp"
 #include "Client.hpp"
+#include <fstream>
+#include <ctime>
+#include <cstdio>
 
 class HttpResponse {
 	public:
@@ -21,6 +24,8 @@ class HttpResponse {
 		std::vector<char>& getBody();
 		void executeResponse(HttpRequest& request, Client& client);
 		void executeGet(HttpRequest& request, Client& client);
+		void executePost(HttpRequest& request, Client& client);
+		void executeDelete(HttpRequest& request, Client& client);
 		const std::string& getRoot() const;
 		void createBodyVector();
 		void populateHeaders(HttpRequest& request);

@@ -36,6 +36,7 @@ class HttpRequest {
 		void parseBodyChunked(Client& client);
 		const std::string parseExceptBody(Client& client);
 		const std::set<std::string> extractMethods(Client& client);
+		const std::vector<char>& getBody() const;
 		const std::string extractLocationVariable(Client& client, std::string identifier); //this might need to be static
 	private:
 		std::string _method;
