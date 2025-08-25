@@ -1,5 +1,5 @@
 #include "../includes/HttpResponse.hpp"
-
+#include "../includes/Utils.hpp"
 
 
 HttpResponse::HttpResponse() : _root("./www")

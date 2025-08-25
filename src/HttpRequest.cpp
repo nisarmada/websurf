@@ -1,4 +1,7 @@
 #include "../includes/HttpRequest.hpp"
+#include "../includes/Utils.hpp"
+#include "../includes/Utils.hpp"
+
 
 HttpRequest::HttpRequest(){}
 
@@ -124,18 +127,7 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 // void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
 	
 // }
-static const std::string findLongestMatch(std::string& uri, const std::map<std::string, LocationBlock>& locations){
-	std::string longestMatch = "";
 
-	for (const auto& locationPair : locations){
-		if (uri.rfind(locationPair.first, 0) == 0){
-			if (locationPair.first.length() > longestMatch.length()){
-				longestMatch = locationPair.first;
-			}
-		}
-	}
-	return longestMatch;
-}
 
 void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {

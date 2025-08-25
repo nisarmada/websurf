@@ -1,0 +1,12 @@
+#pragma once
+
+#include <string>
+#include <unordered_map>
+#include <vector>
+#include <sstream>
+#include <algorithm>
+#include <map>
+#include "Client.hpp"
+
+
+const std::string findLongestMatch(const std::string& uri, const std::map<std::string, LocationBlock>& locations);
