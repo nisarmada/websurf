@@ -288,7 +288,7 @@ void HttpResponse::handleResponse(Client& client){
 	HttpRequest parsedRequest; //change name ?
 	parsedRequest.parser(client);
 	HttpResponse testResponse;
-	std::cout << "-----------------" << std::endl;
+	// std::cout << "-----------------" << std::endl;
 	testResponse.executeResponse(parsedRequest, client);
 
 	client.setResponse(testResponse.createCompleteResponse());

@@ -83,7 +83,7 @@ void HttpRequest::parseBody(Client& client){
 	}else{
 		_bodyFullyParsed = true;
 	}
-	std::cout << "we are in parse bodyyyy" << std::endl;
+	// std::cout << "we are in parse bodyyyy" << std::endl;
 }
 
 int HttpRequest::checkChunked(){
@@ -116,14 +116,26 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	}
 	_bodyReadPosition = headerEnd + 4;
 	_headersComplete = true;
-	std::cout << "----------------" << std::endl;
-	std::cout << rawRequest << std::endl;
+	// std::cout << "----------------" << std::endl;
+	// std::cout << rawRequest << std::endl;
 	return rawRequest;
 }
 
 // void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
 	
 // }
+static const std::string findLongestMatch(std::string& uri, const std::map<std::string, LocationBlock>& locations){
+	std::string longestMatch = "";
+
+	for (const auto& locationPair : locations){
+		if (uri.rfind(locationPair.first, 0) == 0){
+			if (locationPair.first.length() > longestMatch.length()){
+				longestMatch = locationPair.first;
+			}
+		}
+	}
+	return longestMatch;
+}
 
 void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {
@@ -137,7 +149,7 @@ void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	}else if (_method == "POST"){
 		parseBody(client);
 	}
-	std::cout << "------>>> " << extractLocationVariable(client, "/") << std::endl;
+	extractLocationVariable(client, "/");
 	checkRequest(client);
 	// std::cout << firstHalfRequest << std::endl;
 }
@@ -191,16 +203,22 @@ void HttpRequest::checkRequest(Client& client){
 const std::set<std::string> HttpRequest::extractMethods(Client& client){
 	const ServerBlock* serverBlock = client.getServerBlock();
     const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
-    const LocationBlock& currentLocation = locations.at(_uri);
+    std::string longestMatch = findLongestMatch(_uri, locations);
+	
+	
+	const LocationBlock& currentLocation = locations.at(longestMatch);
 	std::set<std::string> methods = currentLocation.getMethods();
 	return methods;
 }
 
+
 const std::string HttpRequest::extractLocationVariable(Client& client, std::string identifier){
     const ServerBlock* serverBlock = client.getServerBlock();
     const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
-    const LocationBlock& currentLocation = locations.at(_uri);
-    std::cout << "uir: ---> " <<_uri << std::endl;
+   
+	std::string longestMatch = findLongestMatch(_uri, locations); //this finds the longet match so we don't throw an exception if the full path doesn't exist
+	const LocationBlock& currentLocation = locations.at(longestMatch);
+    // std::cout << "uir: ---> " <<_uri << std::endl;
    
     if (identifier == "_path") {
         return currentLocation.getPath();

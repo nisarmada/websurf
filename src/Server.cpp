@@ -269,10 +269,10 @@ void WebServer::printServerBlocks()
 {
 	for (size_t i = 0; i < _serverBlocks.size(); ++i)
 	{
-		std::cout << "=== Server Block " << i << " ===" << std::endl;
-		std::cout << "Server name:      " << _serverBlocks[i].getServerName() << std::endl;
-		std::cout << "Port number:      " << _serverBlocks[i].getPort() << std::endl;
-		std::cout << "Max body size:    " << _serverBlocks[i].getClientBodySize() << std::endl;
+		// std::cout << "=== Server Block " << i << " ===" << std::endl;
+		// std::cout << "Server name:      " << _serverBlocks[i].getServerName() << std::endl;
+		// std::cout << "Port number:      " << _serverBlocks[i].getPort() << std::endl;
+		// std::cout << "Max body size:    " << _serverBlocks[i].getClientBodySize() << std::endl;
 
 		const std::map<std::string, LocationBlock>& locations = _serverBlocks[i].getLocations();
 		if (locations.empty())
