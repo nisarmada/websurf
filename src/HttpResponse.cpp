@@ -192,6 +192,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 void HttpResponse::executePost(HttpRequest& request, Client& client)
 {
 	std::cout << "we are in executePost " << std::endl;
+	// std::string root = request.extractLocationVariable(client, "_root");
     std::string uploadPath = request.extractLocationVariable(client, "_uploadPath");
     if (uploadPath.empty()) {
         setStatusCode(405);
@@ -211,7 +212,7 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
     }
     
     // std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
-    std::string fullPath = "./www/upload/" + fileName;
+    std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
 
 	std::cout << "full path in post is --------> " << fullPath << std::endl;
 	std::cout << "root POST -->" << _root << std::endl;
