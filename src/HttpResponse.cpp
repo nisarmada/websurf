@@ -59,6 +59,7 @@ std::string HttpResponse::responseToString(){
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
+	std::cout << "method is -------> " << request.getMethod() << std::endl;
 	if (request.getMethod() == "GET")
 		executeGet(request, client);
 	if (request.getMethod() == "POST")
@@ -146,6 +147,7 @@ std::string HttpResponse::createCompleteResponse()
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
 	}
 	response += "\r\n" + bodyString;
+	std::cout << "response is --------> " << response << std::endl;
 	return response;
 }
 
@@ -159,6 +161,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	// if(uri == "/"){
 	// 	uri = index;
 	// }
+	std::cout << "we are in executeGet " << std::endl;
 	if (isDirectory(uri)){
 		std::string index = request.extractLocationVariable(client, "_index");
 		if (index.empty()){
@@ -188,6 +191,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 
 void HttpResponse::executePost(HttpRequest& request, Client& client)
 {
+	std::cout << "we are in executePost " << std::endl;
     std::string uploadPath = request.extractLocationVariable(client, "_uploadPath");
     if (uploadPath.empty()) {
         setStatusCode(405);
@@ -206,8 +210,11 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
         fileName = "uploaded_file_" + std::to_string(time(NULL));
     }
     
-    std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
-    
+    // std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
+    std::string fullPath = "./www/upload/" + fileName;
+
+	std::cout << "full path in post is --------> " << fullPath << std::endl;
+	std::cout << "root POST -->" << _root << std::endl;
     std::ofstream file(fullPath, std::ios::binary);
     if (!file.is_open()) {
         setStatusCode(500);
@@ -218,7 +225,7 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
     file.write(body.data(), body.size());
     file.close();
     
-    setStatusCode(201);
+    setStatusCode(200);
     setText("Created");
     addHeader("Content-Type", "text/plain");
     std::string responseBody = "File uploaded successfully: " + fileName;
