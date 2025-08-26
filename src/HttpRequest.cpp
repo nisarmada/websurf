@@ -203,15 +203,17 @@ const std::set<std::string> HttpRequest::extractMethods(Client& client){
 	return methods;
 }
 
-
 const std::string HttpRequest::extractLocationVariable(Client& client, std::string identifier){
     const ServerBlock* serverBlock = client.getServerBlock();
     const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
    
+	std::cout << "identifier is -----> " << identifier << std::endl;
+	std::cout << "uri is -------> " << _uri << std::endl;
 	std::string longestMatch = findLongestMatch(_uri, locations); //this finds the longet match so we don't throw an exception if the full path doesn't exist
+	std::cout << "longest match is ---> " << longestMatch << std::endl;
 	const LocationBlock& currentLocation = locations.at(longestMatch);
+	std::cout << "index is  -----> " << currentLocation.getIndex() << std::endl;
     // std::cout << "uir: ---> " <<_uri << std::endl;
-   
     if (identifier == "_path") {
         return currentLocation.getPath();
     } else if (identifier == "_root") {

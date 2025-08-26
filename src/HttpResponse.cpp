@@ -154,16 +154,27 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
-	if (index.empty()){
-		std::cerr << "index is not found " << std::endl;
-		return ;
+	std::string fullPath;
+
+	// if(uri == "/"){
+	// 	uri = index;
+	// }
+	if (isDirectory(uri)){
+		std::string index = request.extractLocationVariable(client, "_index");
+		if (index.empty()){
+			setStatusCode(403);
+			populateErrorHeaders();
+			std::cerr << "index is not found " << std::endl;
+			return ;
+		}
+		if (uri.back() == '/'){
+			uri += index;
+		} else {
+			uri += "/" + index;
+		}
 	}
 	std::cout << "indexxxxxxxxxxxx " << index << std::endl;
-	if(uri == "/"){
-		uri = index;
-	}
 	// std::string fullPath = _root + "/" + uri; //this is mine but too simple to be correct
-	std::string fullPath;
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
@@ -171,7 +182,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	else
 		fullPath = _root + uri;
 	_path = fullPath;
-	std::cout << fullPath << std::endl;
+	std::cout << "full path-----> " << fullPath << std::endl;
 	createBodyVector();
 }
 

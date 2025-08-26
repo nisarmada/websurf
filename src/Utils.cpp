@@ -12,3 +12,10 @@ const std::string findLongestMatch(const std::string& uri, const std::map<std::s
 	}
 	return longestMatch;
 }
+
+bool isDirectory(std::string file){
+	if (file.back() == '/' || file == "/"){
+		return true;
+	}
+	return false;
+}
