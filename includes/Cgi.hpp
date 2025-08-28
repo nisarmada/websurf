@@ -35,4 +35,8 @@ class Cgi {
 		void childProcess();
 		void parentProcess();
 		void populateEnvironmentVariables();
+		std::string findQueryString(const std::string& uri);
+		std::string findPathInfo(const std::string& uri);
+		void executeExecve();
+		std::vector<char*> createEnvironmentVariableVector();
 };
