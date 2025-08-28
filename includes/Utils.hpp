@@ -11,3 +11,4 @@
 
 const std::string findLongestMatch(const std::string& uri, const std::map<std::string, LocationBlock>& locations);
 bool isDirectory(std::string file);
+bool isCgi(const std::string& cgi);

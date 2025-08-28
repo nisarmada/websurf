@@ -34,7 +34,7 @@ class HttpResponse {
 		std::string setErrorText();
 		std::string createCompleteResponse();
 		static void handleResponse(Client& client);
-
+		void executeCgi();
 	private:
 		const std::string _root;
 		std::string _httpVersion;

@@ -158,9 +158,6 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
 
-	// if(uri == "/"){
-	// 	uri = index;
-	// }
 	std::cout << "we are in executeGet " << std::endl;
 	if (isDirectory(uri)){
 		std::string index = request.extractLocationVariable(client, "_index");
@@ -177,7 +174,6 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 		}
 	}
 	std::cout << "indexxxxxxxxxxxx " << index << std::endl;
-	// std::string fullPath = _root + "/" + uri; //this is mine but too simple to be correct
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
@@ -306,6 +302,11 @@ void HttpResponse::createBodyVector()
 void HttpResponse::handleResponse(Client& client){
 	HttpRequest parsedRequest; //change name ?
 	parsedRequest.parser(client);
+	const std::string cgi = parsedRequest.extractLocationVariable(client, "_cgiPass");
+
+	if (isCgi(cgi)){
+		std::cout << "yessss " << std::endl;
+	}
 	HttpResponse testResponse;
 	// std::cout << "-----------------" << std::endl;
 	testResponse.executeResponse(parsedRequest, client);
