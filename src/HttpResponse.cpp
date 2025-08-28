@@ -301,13 +301,19 @@ void HttpResponse::createBodyVector()
 
 void HttpResponse::handleResponse(Client& client){
 	HttpRequest parsedRequest; //change name ?
-	parsedRequest.parser(client);
-	const std::string cgi = parsedRequest.extractLocationVariable(client, "_cgiPass");
-
-	if (isCgi(cgi)){
-		std::cout << "yessss " << std::endl;
-	}
 	HttpResponse testResponse;
+	parsedRequest.parser(client);
+	const std::string cgiPass = parsedRequest.extractLocationVariable(client, "_cgiPass");
+	const std::string cgiRoot = parsedRequest.extractLocationVariable(client, "_root");
+	const std::string fullPathCgi = cgiRoot + "/" + parsedRequest.getUri();
+	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
+	// std::cout << "CGI FULLLLLL PATH------> " << fullPathCgi << std::endl;
+	// std::cout << "CGI PATH------> " << cgiRoot << std::endl;
+	// std::cout << "CGI PASS------> " << cgiPass << std::endl;
+	if (isCgi(cgiPass)){
+		std::cout << "yessss " << std::endl;
+		Cgi cgi(parsedRequest, cgiPass, fullPathCgi, serverPort);
+	}
 	// std::cout << "-----------------" << std::endl;
 	testResponse.executeResponse(parsedRequest, client);
 

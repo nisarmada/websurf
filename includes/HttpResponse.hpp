@@ -7,6 +7,7 @@
 #include <fstream>
 #include <ctime>
 #include <cstdio>
+#include "Cgi.hpp"
 
 class HttpResponse {
 	public:
