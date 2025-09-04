@@ -19,7 +19,7 @@ _cgiPath(cgiPath), _cgiPass(cgiPass), _serverPort(serverPort), _gatewayInterface
 Cgi::~Cgi() {}
 
 std::string Cgi::findQueryString(const std::string& uri){
-	std::cout << "INSIDE CGI URIII---> " << uri << std::endl;
+	// std::cout << "INSIDE CGI URIII---> " << uri << std::endl;
 	size_t questionmarkPosition = uri.find_first_of("?");
 	if (questionmarkPosition == std::string::npos){
 		return ("");
@@ -137,13 +137,51 @@ void Cgi::readCgiResponse(std::string& response){
 	char buffer[4096];
 	ssize_t bytesRead;
 	//read from the response until there's nothing left
-	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer)) > 0)){
+	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer))) > 0){
 		response.append(buffer,bytesRead);
 	}
 	if (bytesRead == -1){
 		std::cerr << "Read from cgi failed in readCgiResponse" << std::endl;
 	}
 	close(_responsePipe[0]);
+}
+
+void Cgi::putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString){
+	size_t keyEnd = headerString.find(':');
+	std::string key = headerString.substr(0, keyEnd);
+	size_t startValuePos = headerString.find_first_not_of(' ', keyEnd + 1);
+	std::string value = headerString.substr(startValuePos);
+
+	std::cout << "PARSE " << key << std::endl;
+	std::cout << "PARSE " << value << std::endl;
+	headers[key] = value;
+}
+
+
+void Cgi::parseResponse(std::string& rawResponse){
+	size_t headersEnd = rawResponse.find("\r\n\r\n");
+
+	if (headersEnd != std::string::npos){
+		std::string headersPart = rawResponse.substr(0, headersEnd);
+		std::string bodyPart = rawResponse.substr(headersEnd + 4);
+
+		std::unordered_map<std::string, std::string> headers;
+		size_t currentPosition = 0;
+		size_t nextPosition;
+		while ((nextPosition = headersPart.find("\r\n", currentPosition)) != std::string::npos){
+			std::cout << "helloooooo " << std::endl;
+			std::string headerLine = headersPart.substr(currentPosition, nextPosition - currentPosition);
+			putHeaderInMap(headers, headerLine);
+			currentPosition = nextPosition + 2;
+		}
+		if (currentPosition < headersPart.length()){
+			std::string headerLine = headersPart.substr(currentPosition);
+			putHeaderInMap(headers, headerLine);
+		}
+	}
+	else{
+		std::cout << "whyyyyyy " << std::endl;
+	}
 }
 
 void Cgi::parentProcess(){
@@ -155,7 +193,8 @@ void Cgi::parentProcess(){
 	readCgiResponse(response);
 	waitpid(_pid, &status, 0);
 
-	std::cout << "Response from Cgi has been received" << std::endl;
+	std::cout << "Response from Cgi has been received " << response << std::endl;
+	parseResponse(response);
 }
 
 void Cgi::executeCgi() {

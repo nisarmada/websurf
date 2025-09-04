@@ -42,4 +42,6 @@ class Cgi {
 		void closePipes(std::string mode);
 		void giveBodyToChild();
 		void readCgiResponse(std::string& response);
+		void parseResponse(std::string& rawResponse);
+		void putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString);
 };
