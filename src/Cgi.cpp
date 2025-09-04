@@ -88,8 +88,7 @@ void Cgi::executeExecve(){
 }
 
 void Cgi::childProcess(){
-	close(_requestPipe[1]); //write end of request pipe
-	close(_responsePipe[0]); //read end of response pipe
+	closePipes("child");
 	if (dup2(_requestPipe[0], STDIN_FILENO) == -1){
 		std::cerr << "dup2 failed for input" << std::endl;
 		exit(EXIT_FAILURE);
@@ -104,20 +103,79 @@ void Cgi::childProcess(){
 	executeExecve();
 }
 
+void Cgi::closePipes(std::string mode){
+	if (mode == "fail"){
+		close(_requestPipe[0]);
+		close(_requestPipe[1]);
+		close(_responsePipe[0]);
+		close(_responsePipe[1]);
+	}
+	else if (mode == "parent"){
+		close(_requestPipe[0]);
+		close(_responsePipe[1]);
+	}
+	else{
+		close(_requestPipe[1]); //write end of request pipe
+		close(_responsePipe[0]); //read end of response pipe
+	}
+}
+
+void Cgi::giveBodyToChild(){
+	const std::vector<char>& body = _request.getBody();
+	
+	if (!body.empty()){
+		ssize_t bytesWritten = write(_requestPipe[1], body.data(), body.size());
+		if (bytesWritten < 0){
+			std::cerr << "Write to Cgi failed in parent process" << std::endl;
+		}
+	}
+	close(_requestPipe[1]);
+
+}
+
+void Cgi::readCgiResponse(std::string& response){
+	char buffer[4096];
+	ssize_t bytesRead;
+	//read from the response until there's nothing left
+	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer)) > 0)){
+		response.append(buffer,bytesRead);
+	}
+	if (bytesRead == -1){
+		std::cerr << "Read from cgi failed in readCgiResponse" << std::endl;
+	}
+	close(_responsePipe[0]);
+}
+
+void Cgi::parentProcess(){
+	std::string response;
+	int status;
+
+	closePipes("parent");
+	giveBodyToChild();
+	readCgiResponse(response);
+	waitpid(_pid, &status, 0);
+
+	std::cout << "Response from Cgi has been received" << std::endl;
+}
+
 void Cgi::executeCgi() {
 	if (pipe(_requestPipe) == -1){
 		std::cerr << "ERROR WITH REQUEST PIPE" << std::endl; //first stage errors
 	}
 	if (pipe(_responsePipe) == -1){
 		std::cerr << "ERROR WITH RESPONSE PIPE" << std::endl;
-		close(_requestPipe[0]);
-		close(_requestPipe[1]);
+		
 	}
 	_pid = fork();
-	if (_pid == 0){ //child process
+	if (_pid == -1){
+		closePipes("fail");
+	}
+	else if (_pid == 0){ //child process
 		childProcess();
+		exit(EXIT_FAILURE); //if it reaches here execve failed
 	} else { //parent process
 		std::cout << "PARENT PROCESSSS" << std::endl;
+		parentProcess();
 	}
 
 }

@@ -39,4 +39,7 @@ class Cgi {
 		std::string findPathInfo(const std::string& uri);
 		void executeExecve();
 		std::vector<char*> createEnvironmentVariableVector();
+		void closePipes(std::string mode);
+		void giveBodyToChild();
+		void readCgiResponse(std::string& response);
 };
