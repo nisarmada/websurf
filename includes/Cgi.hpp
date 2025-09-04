@@ -9,11 +9,13 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+class HttpResponse;
+
 class Cgi {
 	private:
-		HttpRequest&	_request;
-		const std::string			_cgiPath;
-		const std::string			_cgiPass;
+		HttpRequest&		_request;
+		const std::string	_cgiPath;
+		const std::string	_cgiPass;
 		int					_requestPipe[2];
 		int					_responsePipe[2];
 		pid_t				_pid;
@@ -31,9 +33,9 @@ class Cgi {
 		Cgi(HttpRequest& request, const std::string cgiPath, const std::string cgiPass,\
 			 const std::string serverPort);
 		~Cgi();
-		void executeCgi();
+		void executeCgi(HttpResponse& response);
 		void childProcess();
-		void parentProcess();
+		void parentProcess(HttpResponse& response);
 		void populateEnvironmentVariables();
 		std::string findQueryString(const std::string& uri);
 		std::string findPathInfo(const std::string& uri);
@@ -42,6 +44,6 @@ class Cgi {
 		void closePipes(std::string mode);
 		void giveBodyToChild();
 		void readCgiResponse(std::string& response);
-		void parseResponse(std::string& rawResponse);
+		void parseResponse(std::string& rawResponse, HttpResponse& response);
 		void putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString);
 };

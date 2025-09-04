@@ -152,13 +152,11 @@ void Cgi::putHeaderInMap(std::unordered_map<std::string, std::string>& headers, 
 	size_t startValuePos = headerString.find_first_not_of(' ', keyEnd + 1);
 	std::string value = headerString.substr(startValuePos);
 
-	std::cout << "PARSE " << key << std::endl;
-	std::cout << "PARSE " << value << std::endl;
 	headers[key] = value;
 }
 
 
-void Cgi::parseResponse(std::string& rawResponse){
+void Cgi::parseResponse(std::string& rawResponse, HttpResponse& response){
 	size_t headersEnd = rawResponse.find("\r\n\r\n");
 
 	if (headersEnd != std::string::npos){
@@ -169,7 +167,6 @@ void Cgi::parseResponse(std::string& rawResponse){
 		size_t currentPosition = 0;
 		size_t nextPosition;
 		while ((nextPosition = headersPart.find("\r\n", currentPosition)) != std::string::npos){
-			std::cout << "helloooooo " << std::endl;
 			std::string headerLine = headersPart.substr(currentPosition, nextPosition - currentPosition);
 			putHeaderInMap(headers, headerLine);
 			currentPosition = nextPosition + 2;
@@ -178,26 +175,34 @@ void Cgi::parseResponse(std::string& rawResponse){
 			std::string headerLine = headersPart.substr(currentPosition);
 			putHeaderInMap(headers, headerLine);
 		}
+		for (const auto& pair : headers) {
+			response.addHeader(pair.first, pair.second);
+		}
+		response.setBody(std::vector<char>(bodyPart.begin(), bodyPart.end()));
+		response.setStatusCode(200);
+		response.setHttpVersion(_request.getHttpVersion());
+		response.setText("OK");
 	}
 	else{
-		std::cout << "whyyyyyy " << std::endl;
+		response.setStatusCode(500);
+		response.populateErrorHeaders();
 	}
 }
 
-void Cgi::parentProcess(){
-	std::string response;
+void Cgi::parentProcess(HttpResponse& response){
+	std::string responseString;
 	int status;
 
 	closePipes("parent");
 	giveBodyToChild();
-	readCgiResponse(response);
+	readCgiResponse(responseString);
 	waitpid(_pid, &status, 0);
 
-	std::cout << "Response from Cgi has been received " << response << std::endl;
-	parseResponse(response);
+	std::cout << "Response from Cgi has been received " << responseString << std::endl;
+	parseResponse(responseString, response);
 }
 
-void Cgi::executeCgi() {
+void Cgi::executeCgi(HttpResponse& response) {
 	if (pipe(_requestPipe) == -1){
 		std::cerr << "ERROR WITH REQUEST PIPE" << std::endl; //first stage errors
 	}
@@ -214,7 +219,7 @@ void Cgi::executeCgi() {
 		exit(EXIT_FAILURE); //if it reaches here execve failed
 	} else { //parent process
 		std::cout << "PARENT PROCESSSS" << std::endl;
-		parentProcess();
+		parentProcess(response);
 	}
 
 }

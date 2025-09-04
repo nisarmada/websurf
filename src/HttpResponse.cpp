@@ -313,11 +313,11 @@ void HttpResponse::handleResponse(Client& client){
 	if (isCgi(cgiPass)){
 		std::cout << "yessss " << std::endl;
 		Cgi cgi(parsedRequest, fullPathCgi, cgiPass, serverPort);
-		cgi.executeCgi();
-		return ;
+		cgi.executeCgi(testResponse);
 	}
-	// std::cout << "-----------------" << std::endl;
-	testResponse.executeResponse(parsedRequest, client);
+	else{
+		testResponse.executeResponse(parsedRequest, client);
+	}
 
 	client.setResponse(testResponse.createCompleteResponse());
 	// std::cout << testResponse.createCompleteResponse() << std::endl;
