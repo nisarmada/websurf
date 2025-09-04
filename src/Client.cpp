@@ -72,3 +72,13 @@ const ServerBlock* Client::getServerBlock(){
 	return _associatedServerBlock;
 }
 
+// void Client::handleResponse(){
+// 	HttpRequest parsedRequest; //change name ?
+// 	parsedRequest.parser(*this);
+// 	HttpResponse testResponse;
+// 	std::cout << "-----------------" << std::endl;
+// 	testResponse.executeResponse(parsedRequest);
+
+// 	this->setResponse(testResponse.createCompleteResponse());
+// 	// std::cout << testResponse.createCompleteResponse() << std::endl;
+// }

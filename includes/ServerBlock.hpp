@@ -13,7 +13,7 @@ class ServerBlock
         ServerBlock();
         ~ServerBlock();
         void setPort(int port);
-        int getPort();
+        int getPort() const;
 		size_t getBodySize() const;
         void setServerName(std::string serverName);
         size_t getClientBodySize();

@@ -3,6 +3,11 @@
 #include <sstream>
 #include "server.hpp"
 #include "HttpRequest.hpp"
+#include "Client.hpp"
+#include <fstream>
+#include <ctime>
+#include <cstdio>
+#include "Cgi.hpp"
 
 class HttpResponse {
 	public:
@@ -18,8 +23,10 @@ class HttpResponse {
 		int getStatusCode();
 		std::string& getText();
 		std::vector<char>& getBody();
-		void executeResponse(HttpRequest& request);
-		void executeGet(HttpRequest& request);
+		void executeResponse(HttpRequest& request, Client& client);
+		void executeGet(HttpRequest& request, Client& client);
+		void executePost(HttpRequest& request, Client& client);
+		void executeDelete(HttpRequest& request, Client& client);
 		const std::string& getRoot() const;
 		void createBodyVector();
 		void populateHeaders(HttpRequest& request);
@@ -27,6 +34,8 @@ class HttpResponse {
 		void findContentType();
 		std::string setErrorText();
 		std::string createCompleteResponse();
+		static void handleResponse(Client& client);
+		void executeCgi();
 	private:
 		const std::string _root;
 		std::string _httpVersion;

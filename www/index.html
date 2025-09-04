@@ -2,143 +2,146 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to webserv!</title>
+  <title>Webserv File Upload & Delete Demo</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #e0eafc, #cfdef3);
+      min-height: 100vh;
             margin: 0;
-            padding: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
             display: flex;
+      align-items: center;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #6dd5ed, #2193b0); /* Modern blue gradient */
-            color: #fff;
-            text-align: center;
-            overflow: hidden;
-        }
-
+    }
         .container {
-            background-color: rgba(255, 255, 255, 0.15); /* Slightly transparent white */
-            padding: 40px 60px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(10px); /* Frosted glass effect */
-            -webkit-backdrop-filter: blur(10px); /* For Safari */
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            animation: fadeIn 1s ease-out;
-            max-width: 800px;
-            width: 90%;
-            box-sizing: border-box;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 32px 28px 24px 28px;
+      max-width: 400px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
         }
-
         h1 {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            font-weight: 700;
-            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
-            letter-spacing: 1px;
+      font-size: 1.6em;
+      color: #2d3a4b;
+      margin: 0 0 12px 0;
+      text-align: center;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
         }
-
-        p {
-            font-size: 1.3em;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .button-container {
-            margin-top: 30px;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: #f7b731; /* Vibrant orange */
-            color: #333;
-            padding: 15px 30px;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    label {
+      font-size: 1em;
+      color: #3a4a5d;
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="file"] {
+      padding: 8px 10px;
+      border: 1px solid #cfd8dc;
+      border-radius: 6px;
+      font-size: 1em;
+      background: #f7fafc;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus, input[type="file"]:focus {
+      border: 1.5px solid #7ea6e0;
+      outline: none;
+    }
+    button {
+      background: linear-gradient(90deg, #7ea6e0 0%, #5d8be3 100%);
+      color: #fff;
             border: none;
+      border-radius: 6px;
+      padding: 10px 0;
+      font-size: 1em;
+      font-weight: 600;
             cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(93,139,227,0.08);
         }
-
-        .btn:hover {
-            background-color: #fbd364; /* Lighter orange on hover */
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .footer {
-            margin-top: 40px;
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
+    button:hover {
+      background: linear-gradient(90deg, #5d8be3 0%, #7ea6e0 100%);
+      box-shadow: 0 4px 16px rgba(93,139,227,0.13);
             }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5em;
-            }
-            p {
-                font-size: 1.1em;
-            }
+    @media (max-width: 500px) {
             .container {
-                padding: 30px 40px;
-            }
-            .btn {
-                padding: 12px 25px;
-                font-size: 1em;
-            }
-        }
-
-        @media (max-width: 480px) {
+        padding: 18px 6px 14px 6px;
+        max-width: 98vw;
+      }
             h1 {
-                font-size: 2em;
-            }
-            p {
-                font-size: 1em;
-            }
-            .container {
-                padding: 20px 25px;
-            }
-            .btn {
-                padding: 10px 20px;
-                font-size: 0.9em;
+        font-size: 1.2em;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to webserv!</h1>
-        <p>
-            This is your custom web server, crafted with care and precision. We're excited for you to explore its capabilities and unleash your projects.
-        </p>
-        <p>
-            Whether you're hosting static files, building dynamic applications, or simply experimenting, **webserv** provides a robust and reliable foundation.
-        </p>
-        <div class="button-container">
-            <a href="/about.html" class="btn">Learn More About webserv</a>
+    <h1>File Upload (POST)</h1>
+    <form id="uploadForm" method="POST" enctype="multipart/form-data" onsubmit="return false;">
+      <input type="file" id="fileInput" name="file" required>
+      <button type="button" onclick="uploadFile()">Upload</button>
+    </form>
+
+    <h1>File Delete (DELETE)</h1>
+    <form id="deleteForm" method="POST" onsubmit="return false;">
+      <label for="deleteFilename">Filename to delete (e.g. myfile.txt):</label>
+      <input type="text" id="deleteFilename" name="deleteFilename" required>
+      <button type="button" onclick="deleteFile()">Delete</button>
+    </form>
         </div>
-        <div class="footer">
-            <p>&copy; 2025 webserv. All rights reserved.</p>
-        </div>
-    </div>
+  <script>
+    // Upload file using POST to /upload
+    function uploadFile() {
+      const fileInput = document.getElementById('fileInput');
+      if (!fileInput.files.length) {
+        alert('Please select a file.');
+        return;
+      }
+      
+      const file = fileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      fetch('/upload', {
+        method: 'POST',
+        headers: {
+          'X-Filename': file.name // Send filename in custom header
+        },
+        body: file // send raw file data as body
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('File uploaded successfully!');
+        } else {
+          alert('Upload failed: ' + response.status);
+        }
+      });
+    }
+
+    // Delete file using DELETE to /upload/filename
+    function deleteFile() {
+      const filename = document.getElementById('deleteFilename').value;
+      if (!filename) {
+        alert('Please enter a filename to delete.');
+        return;
+      }
+      fetch('/upload/' + encodeURIComponent(filename), {
+        method: 'DELETE'
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('File deleted successfully!');
+        } else {
+          alert('Delete failed: ' + response.status);
+        }
+      });
+    }
+  </script>
 </body>
 </html>

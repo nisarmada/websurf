@@ -11,7 +11,7 @@ ServerBlock::~ServerBlock()
 {
 }
 
-int ServerBlock::getPort()
+int ServerBlock::getPort() const
 {
     return this->port;
 }
@@ -24,6 +24,7 @@ void ServerBlock::setPort(int port)
 {
     this->port = port;
 }
+
 
 size_t ServerBlock::getBodySize() const {
 	return client_max_body_size;

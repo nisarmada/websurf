@@ -1,4 +1,7 @@
 #include "../includes/HttpRequest.hpp"
+#include "../includes/Utils.hpp"
+#include "../includes/Utils.hpp"
+
 
 HttpRequest::HttpRequest(){}
 
@@ -83,7 +86,7 @@ void HttpRequest::parseBody(Client& client){
 	}else{
 		_bodyFullyParsed = true;
 	}
-	std::cout << "we are in parse bodyyyy" << std::endl;
+	// std::cout << "we are in parse bodyyyy" << std::endl;
 }
 
 int HttpRequest::checkChunked(){
@@ -100,10 +103,8 @@ int HttpRequest::checkChunked(){
 
 
 const std::string HttpRequest::parseExceptBody(Client& client){
-	std::cout << "parse except bodyyyyyyy " << std::endl;
 	const std::vector<char>& requestBuffer = client.getRequestBuffer();
 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end()); //we turn the buffer into a string from a vector
-	// std::cout << rawRequest << std::endl;
 	size_t requestLineLen = rawRequest.find("\r\n"); //finds the end of the first line 
 	std::string requestLine = rawRequest.substr(0, requestLineLen);
 	parseRequestLine(requestLine); //this is always the first line
@@ -117,10 +118,9 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 		endPosition = rawRequest.find("\r\n", currentPosition);
 	}
 	_bodyReadPosition = headerEnd + 4;
-	std::cout << "body read position " << _bodyReadPosition << std::endl;
 	_headersComplete = true;
-	std::cout << "----------------" << std::endl;
-	std::cout << rawRequest << std::endl;
+	// std::cout << "----------------" << std::endl;
+	// std::cout << rawRequest << std::endl;
 	return rawRequest;
 }
 
@@ -128,36 +128,30 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	
 // }
 
-void HttpRequest::parser(Client& client){ //handler that controls the parsing
-	// if (!_headersComplete){
-	// 	std::cout << "beforeeeee1" << std::endl;
-	// }
-	// Inside HttpRequest::parser or where client.headerIsComplete() is called
-	// std::cout << "Current request buffer content (hex): ";
-	// const std::vector<char>& buffer = client.getRequestBuffer();
-	// for (char c : buffer) {
-	// 	std::cout << std::hex << (int)(unsigned char)c << " ";
-	// }
-	// std::cout << std::dec << std::endl;
-	// std::cout << "Current request buffer size: " << buffer.size() << std::endl;
 
+void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {
 		std::cout << "Headers not complete yet. Waiting for more data..." << std::endl;
         return; // Return immediately, the client buffer needs more data
     }
 	std::string firstHalfRequest = parseExceptBody(client);
 	if (checkChunked() == 1){
-		std::cout << "beforeeeee" << std::endl;
 		parseBodyChunked(client);
 		std::cout << "afteeeeer" << std::endl;
 	}else if (_method == "POST"){
 		parseBody(client);
 	}
+	extractLocationVariable(client, "/");
 	checkRequest(client);
 	// std::cout << firstHalfRequest << std::endl;
 }
 
-int HttpRequest::checkMethod(){
+int HttpRequest::checkMethod(Client& client){
+	std::set<std::string> methods = extractMethods(client);
+	if (methods.find(_method) == methods.end()){
+		std::cout << "we are in check method" << std::endl;
+		return -1;
+	}
 	if (_method != "GET" && _method != "POST" && _method != "DELETE")
 		return -1;
 	if (_httpVersion != "HTTP/1.1"){
@@ -175,6 +169,7 @@ void HttpRequest::contentLengthCheck(Client& client){
 	const ServerBlock* serverBlock = client.getServerBlock();
 	size_t maxSizeConfig = serverBlock->getBodySize();
 	std::string& requestSizeString = getHeader("Content-Length");
+	
 	if (requestSizeString == ""){
 		setError(411); // I think this is the correct error code
 		throw std::runtime_error("Content Length is missing");
@@ -187,7 +182,7 @@ void HttpRequest::contentLengthCheck(Client& client){
 }
 
 void HttpRequest::checkRequest(Client& client){
-	if (checkMethod() == -1){ //we should change that to throw an exception instead of return -1
+	if (checkMethod(client) == -1){ //we should change that to throw an exception instead of return -1
 		setError(501);
 		throw std::runtime_error("Method not allowed");
 	}
@@ -196,3 +191,49 @@ void HttpRequest::checkRequest(Client& client){
 		contentLengthCheck(client);
 	}
 }
+
+const std::set<std::string> HttpRequest::extractMethods(Client& client){
+	const ServerBlock* serverBlock = client.getServerBlock();
+    const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
+    std::string longestMatch = findLongestMatch(_uri, locations);
+	
+	
+	const LocationBlock& currentLocation = locations.at(longestMatch);
+	std::set<std::string> methods = currentLocation.getMethods();
+	return methods;
+}
+
+const std::string HttpRequest::extractLocationVariable(Client& client, std::string identifier){
+    const ServerBlock* serverBlock = client.getServerBlock();
+    const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
+   
+	std::cout << "identifier is -----> " << identifier << std::endl;
+	std::cout << "uri is -------> " << _uri << std::endl;
+	std::string longestMatch = findLongestMatch(_uri, locations); //this finds the longet match so we don't throw an exception if the full path doesn't exist
+	std::cout << "longest match is ---> " << longestMatch << std::endl;
+	const LocationBlock& currentLocation = locations.at(longestMatch);
+	std::cout << "index is  -----> " << currentLocation.getIndex() << std::endl;
+    // std::cout << "uir: ---> " <<_uri << std::endl;
+    if (identifier == "_path") {
+        return currentLocation.getPath();
+    } else if (identifier == "_root") {
+        return currentLocation.getRoot();
+    } else if (identifier == "_index") {
+        return currentLocation.getIndex();
+    } else if (identifier == "_redirectUrl") {
+        return currentLocation.getRedirectUrl();
+    } else if (identifier == "_uploadPath") {
+        return currentLocation.getUploadPath();
+    } else if (identifier == "_cgiPass") {
+        return currentLocation.getCgiPass();
+	}
+	const std::string emptyString = "";
+    return emptyString;
+}
+
+const std::vector<char>& HttpRequest::getBody() const {
+    return _body;
+}
+
+
+

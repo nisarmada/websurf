@@ -75,7 +75,6 @@ void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& locati
         throw std::runtime_error("Multiple definitions of 'index' directive.");
     
     location.setIndex(tokens[i + 1]);
-    // std::cout << "-/-/-/--/-/-/-/" << location.getIndex() << std::endl;
 }
 
 void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& location)

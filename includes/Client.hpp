@@ -26,6 +26,7 @@ class Client {
 		const ServerBlock* getServerBlock();
 		void clearRequestBuffer();
 		// const HttpRequest& getCurrentRequest();
+		void handleResponse();
 	private:
 		int _clientFd;
 		std::vector<char> _requestBuffer;
