@@ -38,6 +38,7 @@ class HttpRequest {
 		const std::set<std::string> extractMethods(Client& client);
 		const std::vector<char>& getBody() const;
 		const std::string extractLocationVariable(Client& client, std::string identifier); //this might need to be static
+		int getError();
 	private:
 		std::string _method;
 		std::string _uri;

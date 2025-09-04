@@ -156,11 +156,11 @@ int HttpRequest::checkMethod(Client& client){
 		return -1;
 	if (_httpVersion != "HTTP/1.1"){
 		setError(400);
-		throw std::runtime_error("Bad request");
+		// throw std::runtime_error("Bad request");
 	}
 	if (_uri.size() > MAX_URI_LENGTH){
 		setError(414);
-		throw std::runtime_error("URI too long");
+		// throw std::runtime_error("URI too long");
 	}
 	return 0;
 }
@@ -184,7 +184,9 @@ void HttpRequest::contentLengthCheck(Client& client){
 void HttpRequest::checkRequest(Client& client){
 	if (checkMethod(client) == -1){ //we should change that to throw an exception instead of return -1
 		setError(501);
-		throw std::runtime_error("Method not allowed");
+		
+		// throw std::runtime_error("Method not allowed");
+		return;
 	}
 	//we should check if _associatedBlock == nullptr
 	if ((_method == "POST") && !_isChunked){ //GET shouldnt be there, it's only for testing
@@ -235,5 +237,9 @@ const std::vector<char>& HttpRequest::getBody() const {
     return _body;
 }
 
+int HttpRequest::getError()
+{
+	return _isError;
+}
 
 
