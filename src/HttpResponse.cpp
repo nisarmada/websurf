@@ -97,6 +97,7 @@ std::string HttpResponse::setErrorText(){
 	}
 }
 
+//shouldnt this be changed so its not always 404 not found?
 void HttpResponse::populateErrorHeaders()
 {
 	std::string htmlError = "<html><head><title>" + setErrorText() + "</title></head>"
@@ -162,7 +163,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	if (isDirectory(uri)){
 		std::string index = request.extractLocationVariable(client, "_index");
 		if (index.empty()){
-			setStatusCode(403);
+			setStatusCode(404);
 			populateErrorHeaders();
 			std::cerr << "index is not found " << std::endl;
 			return ;
@@ -182,7 +183,14 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 		fullPath = _root + uri;
 	_path = fullPath;
 	std::cout << "full path-----> " << fullPath << std::endl;
-	createBodyVector();
+	std::ifstream testFile(fullPath.c_str()); //change it
+	if (!testFile.is_open()) {
+		setStatusCode(404);
+		populateErrorHeaders();
+		std::cerr << "File not found: " << fullPath << std::endl;
+		// return;
+	}
+	createBodyVector(client, request);
 }
 
 void HttpResponse::executePost(HttpRequest& request, Client& client)
@@ -279,8 +287,18 @@ const std::string& HttpResponse::getRoot() const
 	return _root;
 }
 
-void HttpResponse::createBodyVector()
+void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
+	std::cout << "----------------------------> " << _statusCode << std::endl;
+	if(request.getError() != 0)
+		_statusCode = request.getError();
+		
+	if(_statusCode >= 400 && client.getServerBlock()->hasErrorPage(_statusCode))
+	{
+		_path =   client.getServerBlock()->getErrorPagePath(_statusCode);
+		std::string extension = request.extractLocationVariable(client, "_root");
+		_path = extension + _path;
+	}
 	std::ifstream body(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	std::string content;
 	std::cout << "we are here ---------------" << std::endl;
@@ -299,26 +317,27 @@ void HttpResponse::createBodyVector()
 	setStatusCode(200);
 }
 
+
 void HttpResponse::handleResponse(Client& client){
-	HttpRequest parsedRequest; //change name ?
-	HttpResponse testResponse;
-	parsedRequest.parser(client);
-	const std::string cgiPass = parsedRequest.extractLocationVariable(client, "_cgiPass");
-	const std::string cgiRoot = parsedRequest.extractLocationVariable(client, "_root");
-	const std::string fullPathCgi = cgiRoot + parsedRequest.getUri();
+	HttpRequest request;
+	HttpResponse response;
+	request.parser(client);
+	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
+	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
+	const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 	std::cout << "CGI FULLLLLL PATH------> " << fullPathCgi << std::endl;
 	// std::cout << "CGI PATH------> " << cgiRoot << std::endl;
 	// std::cout << "CGI PASS------> " << cgiPass << std::endl;
 	if (isCgi(cgiPass)){
 		std::cout << "yessss " << std::endl;
-		Cgi cgi(parsedRequest, fullPathCgi, cgiPass, serverPort);
-		cgi.executeCgi(testResponse);
+		Cgi cgi(request, fullPathCgi, cgiPass, serverPort);
+		cgi.executeCgi(response);
 	}
 	else{
-		testResponse.executeResponse(parsedRequest, client);
+		response.executeResponse(request, client);
 	}
 
-	client.setResponse(testResponse.createCompleteResponse());
+	client.setResponse(response.createCompleteResponse());
 	// std::cout << testResponse.createCompleteResponse() << std::endl;
 }

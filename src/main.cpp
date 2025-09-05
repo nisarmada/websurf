@@ -16,6 +16,7 @@ int main (int argc, char** argv)
 	
     WebServer webSurv;
 	parsing(argv[1], webSurv);
+    // webSurv.printServerBlocks();
 	try {
 		webSurv.run();
 	}

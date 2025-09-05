@@ -7,7 +7,7 @@
 WebServer::WebServer() : _events(MAX_EVENTS){}
 
 int WebServer::setNonBlocking(int fd) {
-	int flags = fcntl(fd, F_GETFL, 0);
+	int flags = fcntl(fd, F_GETFL, 0); //get this away NIKOS Illigal bussiness detected
 
 	if (flags == -1) {
 		perror("fcntl GETFL failed");
@@ -274,6 +274,17 @@ void WebServer::printServerBlocks()
 		// std::cout << "Port number:      " << _serverBlocks[i].getPort() << std::endl;
 		// std::cout << "Max body size:    " << _serverBlocks[i].getClientBodySize() << std::endl;
 
+		// ✅ Check and print 404 error page if it exists
+		if (_serverBlocks[i].hasErrorPage(404))
+		{
+			std::cout << "Error page for 404: " << _serverBlocks[i].getErrorPagePath(404) << std::endl;
+		}
+		if (_serverBlocks[i].hasErrorPage(500))
+		{
+			std::cout << "Error page for 500: " << _serverBlocks[i].getErrorPagePath(500) << std::endl;
+		}
+
+		// Print location blocks
 		const std::map<std::string, LocationBlock>& locations = _serverBlocks[i].getLocations();
 		if (locations.empty())
 			std::cout << "No locations defined." << std::endl;
@@ -291,7 +302,7 @@ void WebServer::printServerBlocks()
 				{
 					std::cout << "    Methods:      ";
 					for (std::set<std::string>::const_iterator mit = methods.begin(); mit != methods.end(); ++mit)
-						std::cout << " sdasda" << *mit << " ";
+						std::cout << *mit << " ";
 					std::cout << std::endl;
 				}
 
@@ -304,9 +315,11 @@ void WebServer::printServerBlocks()
 					std::cout << "    Upload path:  " << it->second.getUploadPath() << std::endl;
 			}
 		}
+
 		std::cout << std::endl;
 	}
 }
+
 
 
 

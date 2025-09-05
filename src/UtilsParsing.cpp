@@ -23,10 +23,15 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
             expectSemicolon(serverBlock, i + 2);
             parsedBlock.setClientBodySize(parseMaxBodySize(serverBlock, i));
         }
-        else if(serverBlock[i] == "location")
+        else if(serverBlock[i] == "location") //check that there is no error page inside
         {
             LocationBlock newLocation = parseLocationBlock(serverBlock, i);
             parsedBlock.addLocation(newLocation);
+        }
+        else if(serverBlock[i] == "error_page")
+        {
+            expectSemicolon(serverBlock, i + 3);
+            parsedBlock.setErrorPage(serverBlock[i + 1], serverBlock[i + 2]);
         }
     }
     return parsedBlock;

@@ -9,6 +9,7 @@ class ServerBlock
         std::string server_name;
         size_t client_max_body_size;
         std::map<std::string, LocationBlock> _locations;
+        std::map<int, std::string> _errorPages;
     public:
         ServerBlock();
         ~ServerBlock();
@@ -23,5 +24,7 @@ class ServerBlock
         const std::map<std::string, LocationBlock>& getLocations() const;
         void validateServerBlock() const;
         void expectSemicolon (const std::vector<std::string>& tokens, size_t index);
-
-};
+        void setErrorPage(const std::string& code_str, const std::string& path);
+        std::string getErrorPagePath(int code) const;
+		bool hasErrorPage(int code) const;
+    };

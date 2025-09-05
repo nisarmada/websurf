@@ -28,7 +28,7 @@ class HttpResponse {
 		void executePost(HttpRequest& request, Client& client);
 		void executeDelete(HttpRequest& request, Client& client);
 		const std::string& getRoot() const;
-		void createBodyVector();
+		void createBodyVector(Client& client, HttpRequest& request);
 		void populateHeaders(HttpRequest& request);
 		void populateErrorHeaders();
 		void findContentType();

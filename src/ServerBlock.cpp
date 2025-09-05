@@ -73,5 +73,20 @@ void ServerBlock::validateServerBlock() const
         throw std::runtime_error("Missing 'location block' in server block");
 }
 
+void ServerBlock::setErrorPage(const std::string& code_str, const std::string& path)
+{
+	int code = std::atoi(code_str.c_str());
+     _errorPages[code] = path;
+}
+
+std::string ServerBlock::getErrorPagePath(int code) const
+{
+	return _errorPages.at(code);
+}
+
+bool ServerBlock::hasErrorPage(int code) const
+{
+	return _errorPages.find(code) != _errorPages.end();
+}
 
 
