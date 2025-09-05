@@ -290,6 +290,9 @@ const std::string& HttpResponse::getRoot() const
 void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
 	std::cout << "----------------------------> " << _statusCode << std::endl;
+	if(request.getError() != 0)
+		_statusCode = request.getError();
+		
 	if(_statusCode >= 400 && client.getServerBlock()->hasErrorPage(_statusCode))
 	{
 		_path =   client.getServerBlock()->getErrorPagePath(_statusCode);
@@ -340,8 +343,6 @@ void HttpResponse::handleResponse(Client& client){
 	}
 
 	response.executeResponse(parsedRequest, client);
-
-
 	client.setResponse(response.createCompleteResponse());
 	// std::cout << testResponse.createCompleteResponse() << std::endl;
 }
