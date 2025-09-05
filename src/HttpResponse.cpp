@@ -319,32 +319,25 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 
 
 void HttpResponse::handleResponse(Client& client){
-	HttpRequest parsedRequest; //change name ?
+	HttpRequest request;
 	HttpResponse response;
-	parsedRequest.parser(client);
-	const std::string cgiPass = parsedRequest.extractLocationVariable(client, "_cgiPass");
-	const std::string cgiRoot = parsedRequest.extractLocationVariable(client, "_root");
-	const std::string fullPathCgi = cgiRoot + parsedRequest.getUri();
+	request.parser(client);
+	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
+	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
+	const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 	std::cout << "CGI FULLLLLL PATH------> " << fullPathCgi << std::endl;
 	// std::cout << "CGI PATH------> " << cgiRoot << std::endl;
 	// std::cout << "CGI PASS------> " << cgiPass << std::endl;
 	if (isCgi(cgiPass)){
 		std::cout << "yessss " << std::endl;
-		Cgi cgi(parsedRequest, fullPathCgi, cgiPass, serverPort);
-		cgi.executeCgi();
-		return ;
+		Cgi cgi(request, fullPathCgi, cgiPass, serverPort);
+		cgi.executeCgi(response);
 	}
-	// std::cout << "-----------------" << std::endl;
-	// response.setStatusCode(parsedRequest.getError());
-	if(parsedRequest.getError() > 200)
-	{
-
+	else{
+		response.executeResponse(request, client);
 	}
 
-	response.executeResponse(parsedRequest, client);
 	client.setResponse(response.createCompleteResponse());
 	// std::cout << testResponse.createCompleteResponse() << std::endl;
 }
-
-

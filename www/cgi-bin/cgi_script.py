@@ -5,7 +5,9 @@ import sys
 
 # Print the required HTTP header.
 # This must be the first thing printed to stdout.
-print("Content-Type: text/html\n")
+# Use '\r\n' for the line endings.
+print("Content-Type: text/html\r\n", end='')
+print("\r\n", end='') # This creates the blank line
 
 # Start the HTML document
 print("<!DOCTYPE html>")
