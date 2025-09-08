@@ -13,6 +13,8 @@
 
 class HttpResponse;
 
+class HttpResponse;
+
 class Cgi {
 	private:
 		HttpRequest&		_request;

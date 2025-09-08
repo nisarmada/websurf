@@ -55,6 +55,7 @@ void HttpRequest::parseRequestLine(const std::string& line){
 	method = line.substr(0, firstSpace);
 	size_t secondSpace = line.find(" ", firstSpace + 1);
 	uri = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
+	std::cout << "URI IS----> " << uri << std::endl;
 	version = line.substr(secondSpace + 1, line.npos - secondSpace);
 
 	setMethod(method);
@@ -161,19 +162,25 @@ void HttpRequest::parser(Client& client){ //handler that controls the parsing
 
 int HttpRequest::checkMethod(Client& client){
 	std::set<std::string> methods = extractMethods(client);
-	if (methods.find(_method) == methods.end()){
-		std::cout << "we are in check method" << std::endl;
+	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+	{
+		setError(501);
 		return -1;
 	}
-	if (_method != "GET" && _method != "POST" && _method != "DELETE")
+	if (methods.find(_method) == methods.end())
+	{
+		setError(405);
 		return -1;
+	}
 	if (_httpVersion != "HTTP/1.1"){
 		setError(400);
-		// throw std::runtime_error("Bad request");
+		return -1;
 	}
+	std::cout << "URI:  " << _uri << std::endl;
 	if (_uri.size() > MAX_URI_LENGTH){
 		setError(414);
-		// throw std::runtime_error("URI too long");
+		std::cout << "HELKJFELKJFLKEJLKEJFLKJEFLKJELKFJEJFE" << std::endl;
+		return -1;
 	}
 	return 0;
 }
@@ -185,26 +192,28 @@ void HttpRequest::contentLengthCheck(Client& client){
 	
 	if (requestSizeString == ""){
 		setError(411); // I think this is the correct error code
-		throw std::runtime_error("Content Length is missing");
+		return;
+		// throw std::runtime_error("Content Length is missing");
 	}
 	size_t requestSize = static_cast<size_t>(std::stoul(requestSizeString));
 	if (requestSize > maxSizeConfig){
-		setError(411);
-		throw std::runtime_error("Payload too large");
+		setError(413);
+		return;
+		// throw std::runtime_error("Payload too large");
 	}
 }
 
 void HttpRequest::checkRequest(Client& client){
-	if (checkMethod(client) == -1){ //we should change that to throw an exception instead of return -1
-		setError(501);
-		
-		// throw std::runtime_error("Method not allowed");
+	if (checkMethod(client) == -1) 
+	{ 
+		std::cout << "MINUS ONE" << std::endl;
 		return;
 	}
+		 std::cout << "PLUS ONE" << std::endl;
 	//we should check if _associatedBlock == nullptr
-	if ((_method == "POST") && !_isChunked){ //GET shouldnt be there, it's only for testing
+	if ((_method == "POST") && !_isChunked) 
 		contentLengthCheck(client);
-	}
+	
 }
 
 const std::set<std::string> HttpRequest::extractMethods(Client& client){
@@ -222,12 +231,12 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
     const ServerBlock* serverBlock = client.getServerBlock();
     const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
    
-	std::cout << "identifier is -----> " << identifier << std::endl;
-	std::cout << "uri is -------> " << _uri << std::endl;
+	// std::cout << "identifier is -----> " << identifier << std::endl;
+	// std::cout << "uri is -------> " << _uri << std::endl;
 	std::string longestMatch = findLongestMatch(_uri, locations); //this finds the longet match so we don't throw an exception if the full path doesn't exist
-	std::cout << "longest match is ---> " << longestMatch << std::endl;
+	// std::cout << "longest match is ---> " << longestMatch << std::endl;
 	const LocationBlock& currentLocation = locations.at(longestMatch);
-	std::cout << "index is  -----> " << currentLocation.getIndex() << std::endl;
+	// std::cout << "index is  -----> " << currentLocation.getIndex() << std::endl;
     // std::cout << "uir: ---> " <<_uri << std::endl;
     if (identifier == "_path") {
         return currentLocation.getPath();

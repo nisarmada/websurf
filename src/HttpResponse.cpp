@@ -59,18 +59,24 @@ std::string HttpResponse::responseToString(){
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
-	// std::cout << "method is -------> " << request.getMethod() << std::endl;
-	if (request.getMethod() == "GET")
+	std::cout << "method is ------->" << request.getMethod() << std::endl;
+	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
-	if (request.getMethod() == "POST")
+	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST"))
 		executePost(request, client);
-	if (request.getMethod() == "DELETE")
+	if (request.getMethod() == "DELETE" && checkAllowedMethods(client, "DELETE"))
 		executeDelete(request, client);
 	
-	if(getStatusCode() == 200)
+
+	if(getStatusCode() == 200) //check how it goes with the getError is not checked now.
 		populateHeaders(request);
-	else
-		populateErrorHeaders();
+	
+	else if(_body.empty())
+	{
+		std::cout << "WE NEED TO KNOW THIS ARE WE HERE LETS SEE" << std::endl;
+		// populateErrorHeaders();
+		createBodyVector(client, request);
+	}
 	return;
 }
 
@@ -97,23 +103,36 @@ std::string HttpResponse::setErrorText(){
 	}
 }
 
-//shouldnt this be changed so its not always 404 not found?
+//change this to the correct messages.  //check if the status code is correct or not. 
 void HttpResponse::populateErrorHeaders()
 {
-	std::string htmlError = "<html><head><title>" + setErrorText() + "</title></head>"
-    "<body><h1>404 Not Found</h1></body></html>";
+	std::string errorMessage = setErrorText();
+	std::stringstream html;
+
+	html << "<html><head><title>" << _statusCode << " " << errorMessage << "</title></head>"
+		<< "<body><h1>" << _statusCode << " " << errorMessage << "</h1></body></html>";
+
+	std::string htmlStr = html.str();
+
 	addHeader("Content-Type", "text/html");
-	addHeader("Content-Length", std::to_string(htmlError.length()));
-	setBody(std::vector<char>(htmlError.begin(), htmlError.end()));
+	addHeader("Content-Length", std::to_string(htmlStr.length()));
+	setBody(std::vector<char>(htmlStr.begin(), htmlStr.end()));
 }
 
 
 void HttpResponse::populateHeaders(HttpRequest& request)
 {
+	std::cout << "HTTP VERSION GET--------------------------: " << request.getHttpVersion() << std::endl;
 	setHttpVersion(request.getHttpVersion());
+	if (_statusCode == 200){
+		setText("OK");
+		findContentType();
+
+	}
+	else {
+		setErrorText();
+	}
 	std::cout << request.getHttpVersion() << std::endl;
-	setText("OK");
-	findContentType();
 	addHeader("Content-Length", std::to_string(_bodyLen));
 }
 
@@ -147,6 +166,7 @@ void HttpResponse::findContentType()
 std::string HttpResponse::createCompleteResponse()
 {
 	std::string response = _httpVersion;
+	std::cout << "HTTP VERSIONNNN-->" << _httpVersion << std::endl;
 	std::string bodyString(_body.begin(), _body.end());
 	response +=  " " + std::to_string(_statusCode) + " " + _text + "\r\n";
 	for (auto& iterator : _headers){
@@ -163,13 +183,13 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
+	std::cout << "we are in executeGet " << std::endl;
 
-	// std::cout << "we are in executeGet " << std::endl;
 	if (isDirectory(uri)){
 		std::string index = request.extractLocationVariable(client, "_index");
 		if (index.empty()){
 			setStatusCode(404);
-			populateErrorHeaders();
+			populateErrorHeaders(); //check if this needs to be here
 			std::cerr << "index is not found " << std::endl;
 			return ;
 		}
@@ -179,7 +199,6 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 			uri += "/" + index;
 		}
 	}
-	// std::cout << "indexxxxxxxxxxxx " << index << std::endl;
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
@@ -191,12 +210,28 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	std::ifstream testFile(fullPath.c_str()); //change it
 	if (!testFile.is_open()) {
 		setStatusCode(404);
-		populateErrorHeaders();
+		// populateErrorHeaders(); //check if this needs to be here
 		std::cerr << "File not found: " << fullPath << std::endl;
 		// return;
 	}
+	setStatusCode(200);
 	createBodyVector(client, request);
 }
+
+bool HttpResponse::checkAllowedMethods(Client& client, std::string check)
+{
+	std::set<std::string> methods = client.getServerBlock()->getLocations().find("/")->second.getMethods();
+	if (methods.find(check) == methods.end())
+	{
+		std::cout << "123456789098654 INNNNNNNN IF NOT FOUND" << std::endl;
+		setStatusCode(405);
+		return false;
+	}
+		std::cout << "123456789098654 innnnnnnnnnnnnnnn FOUNDDDDD" << std::endl;
+	return true;
+}
+
+
 
 void HttpResponse::executePost(HttpRequest& request, Client& client)
 {
@@ -207,7 +242,7 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
         uploadPath.pop_back();
     }
     if (uploadPath.empty()) {
-        setStatusCode(405);
+        setStatusCode(500);
         return;
     }
     
@@ -295,36 +330,62 @@ const std::string& HttpResponse::getRoot() const
 	return _root;
 }
 
+//check for path if I have to add / if not specified or should I just say file not exist. 
 void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
-	// std::cout << "----------------------------> " << _statusCode << std::endl;
-	if(request.getError() != 0)
-		_statusCode = request.getError();
-		
-	if(_statusCode >= 400 && client.getServerBlock()->hasErrorPage(_statusCode))
+	if(request.getError() != 0)	//change this logic maybe here. 
+		_statusCode = request.getError(); //maybe change this logic here. 
+
+	if(_statusCode >= 400)
 	{
-		_path =   client.getServerBlock()->getErrorPagePath(_statusCode);
-		std::string extension = request.extractLocationVariable(client, "_root");
-		_path = extension + _path;
+		handleError(client, request);
+		return;
 	}
-	std::ifstream body(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
+	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	std::string content;
-	// std::cout << "we are here ---------------" << std::endl;
-	if(!body.is_open())
+	if(!file.is_open())
 	{
-		content = "404 Not Found";
-		setStatusCode(404);
-		addHeader("Content-Type", "text/plain");
-		populateErrorHeaders();
+		_statusCode = 404;
+		handleError(client, request);
 		return ;
 	}
-	std::stringstream file;
-	file << body.rdbuf();
-	content = file.str();
+	std::stringstream buf;
+	buf << file.rdbuf();
+	content = buf.str();
 	setBody(std::vector<char>(content.begin(), content.end()));
 	setStatusCode(200);
 }
 
+
+
+void HttpResponse::handleError(Client& client, HttpRequest& request)
+{
+	if(client.getServerBlock()->hasErrorPage(_statusCode))
+	{
+		_path =   client.getServerBlock()->getErrorPagePath(_statusCode);
+		std::string extension = request.extractLocationVariable(client, "_root");
+		std::cout << "WRITEEEE" << extension << std::endl;
+		_path = extension + _path;
+		std::cout << "THIS IS THE PATH AND VERY IMPORTANT TO KNOW: " << _path << std::endl;
+		std::ifstream file(_path.c_str(), std::ios::binary);
+		if(!file.is_open())
+		{
+			std::cout << "------------------------------------- CHECK HERE" << std::endl;
+			// _statusCode = 404; //should I do this or not?
+			populateErrorHeaders();
+			return;
+		}
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		std::string content = buffer.str();
+		setBody(std::vector<char>(content.begin(), content.end()));
+		addHeader("Content-Type", "text/html");
+		// addHeader("Content-Length", std::to_string(content.size()));
+		populateHeaders(request);
+		return;
+	}
+	populateErrorHeaders();
+}
 
 void HttpResponse::handleResponse(Client& client, WebServer& server){
 	HttpRequest request;

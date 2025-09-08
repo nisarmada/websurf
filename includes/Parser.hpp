@@ -42,7 +42,7 @@ void checkValidBracketOpening(std::vector<std::string> tokens);
 std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::string> tokens);
 
 //utils file:
-LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t i);
+LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i);
 int parseListen(std::vector<std::string> tokens, size_t i);
 ServerBlock parseServerBlock (std::vector<std::string> serverBlock);
 bool stringIsDigit(std::string& str);
