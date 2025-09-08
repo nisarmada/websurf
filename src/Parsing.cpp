@@ -131,7 +131,7 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
             // std::cout << "in here" << std::endl;
             if(i + 2 >= tokens.size() || tokens[i + 2] != ";")
             {
-                std::cerr << "Error: missing semicolon rupss \"" << tokens[i] << "\"" << std::endl;
+                std::cerr << "Error: missing semicolon: " << tokens[i] << std::endl;
                 exit(1);
             }
         }

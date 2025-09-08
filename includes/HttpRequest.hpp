@@ -9,6 +9,7 @@
 #include "HttpResponse.hpp"
 #include "Client.hpp"
 #define MAX_URI_LENGTH 4096
+
 class ServerBlock;
 
 class HttpRequest {

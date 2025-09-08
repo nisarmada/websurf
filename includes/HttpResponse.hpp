@@ -36,6 +36,9 @@ class HttpResponse {
 		std::string createCompleteResponse();
 		static void handleResponse(Client& client);
 		void executeCgi();
+		bool checkAllowedMethods(Client& client, std::string check);
+		void handleError(Client& client, HttpRequest& request);
+
 	private:
 		const std::string _root;
 		std::string _httpVersion;
