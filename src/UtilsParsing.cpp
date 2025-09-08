@@ -39,7 +39,7 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
 
 //add here later the syntax check if everything is correct as an input.
 //check if something is found i do i +=2 and t;hen else i++ instead of this. 
-LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t i)
+LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
 {
     LocationBlock location;
 
@@ -185,11 +185,8 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
         exit(1);
     }
     
-
     size_t maxBodySize = static_cast<size_t>(std::stoull(tokens[i + 1]));
-   
     return maxBodySize;
-
 }
 
 int parseListen(std::vector<std::string> tokens, size_t i) //do a check if i + 1 is smaller then tokens.size !!!!!!!!!!!!!
