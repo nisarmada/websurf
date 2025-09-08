@@ -129,8 +129,18 @@ void WebServer::clientRead(int clientFd){
 		std::string buffer(clientToRead.getRequestBuffer().begin(), clientToRead.getRequestBuffer().end());
 		if (clientToRead.headerIsComplete())
 		{
-			HttpResponse::handleResponse(clientToRead);
-			clientIsReadyToWriteTo(clientFd);
+			HttpRequest tempRequest;
+			tempRequest.parser(clientToRead);
+			if (tempRequest.getMethod() == "POST" && tempRequest.isBodyComplete()){
+				if (tempRequest.isBodyComplete()){
+					HttpResponse::handleResponse(clientToRead);
+					clientIsReadyToWriteTo(clientFd);
+				}
+			}
+			else if (tempRequest.getMethod() != "POST"){
+				HttpResponse::handleResponse(clientToRead);
+				clientIsReadyToWriteTo(clientFd);
+			}
 		}
 	}
 }

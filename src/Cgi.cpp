@@ -196,13 +196,10 @@ void Cgi::parentProcess(HttpResponse& response){
 	closePipes("parent");
 	giveBodyToChild();
 	readCgiResponse(responseString);
-	waitpid(_pid, &status, 0);
-
-	std::cout << "Response from Cgi has been received " << responseString << std::endl;
 	parseResponse(responseString, response);
 }
 
-void Cgi::executeCgi(HttpResponse& response) {
+int Cgi::executeCgi(HttpResponse& response) {
 	if (pipe(_requestPipe) == -1){
 		std::cerr << "ERROR WITH REQUEST PIPE" << std::endl; //first stage errors
 	}
@@ -218,9 +215,11 @@ void Cgi::executeCgi(HttpResponse& response) {
 		childProcess();
 		exit(EXIT_FAILURE); //if it reaches here execve failed
 	} else { //parent process
-		std::cout << "PARENT PROCESSSS" << std::endl;
-		parentProcess(response);
+		closePipes("parent");
+		giveBodyToChild();
+		return _responsePipe[0]; //read-end of the pipe so it can be added to epoll
+		// parentProcess(response);
 	}
-
+	return -1;
 }
 

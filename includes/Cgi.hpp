@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 class HttpResponse;
 
@@ -33,7 +34,7 @@ class Cgi {
 		Cgi(HttpRequest& request, const std::string cgiPath, const std::string cgiPass,\
 			 const std::string serverPort);
 		~Cgi();
-		void executeCgi(HttpResponse& response);
+		int executeCgi(HttpResponse& response);
 		void childProcess();
 		void parentProcess(HttpResponse& response);
 		void populateEnvironmentVariables();

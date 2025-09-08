@@ -59,7 +59,7 @@ std::string HttpResponse::responseToString(){
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
-	std::cout << "method is -------> " << request.getMethod() << std::endl;
+	// std::cout << "method is -------> " << request.getMethod() << std::endl;
 	if (request.getMethod() == "GET")
 		executeGet(request, client);
 	if (request.getMethod() == "POST")
@@ -135,6 +135,11 @@ void HttpResponse::findContentType()
 		addHeader("Content-Type", "image/gif");
 	else if (extention == "ico")
 		addHeader("Content-Type", "image/x-icon");
+	else if (extention == "pdf")
+	{
+		addHeader("Content-Type", "application/pdf");
+		addHeader("Content-Disposition", "inline");
+	}
 	// else
 	// 	throw std::runtime_error("findcontentype temp exception"); //remove
 		
@@ -148,7 +153,7 @@ std::string HttpResponse::createCompleteResponse()
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
 	}
 	response += "\r\n" + bodyString;
-	std::cout << "response is --------> " << response << std::endl;
+	// std::cout << "response is --------> " << response << std::endl;
 	return response;
 }
 
@@ -159,7 +164,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
 
-	std::cout << "we are in executeGet " << std::endl;
+	// std::cout << "we are in executeGet " << std::endl;
 	if (isDirectory(uri)){
 		std::string index = request.extractLocationVariable(client, "_index");
 		if (index.empty()){
@@ -174,7 +179,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 			uri += "/" + index;
 		}
 	}
-	std::cout << "indexxxxxxxxxxxx " << index << std::endl;
+	// std::cout << "indexxxxxxxxxxxx " << index << std::endl;
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
@@ -182,7 +187,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	else
 		fullPath = _root + uri;
 	_path = fullPath;
-	std::cout << "full path-----> " << fullPath << std::endl;
+	// std::cout << "full path-----> " << fullPath << std::endl;
 	std::ifstream testFile(fullPath.c_str()); //change it
 	if (!testFile.is_open()) {
 		setStatusCode(404);
@@ -195,9 +200,12 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 
 void HttpResponse::executePost(HttpRequest& request, Client& client)
 {
-	std::cout << "we are in executePost " << std::endl;
+	// std::cout << "we are in executePost " << std::endl;
 	// std::string root = request.extractLocationVariable(client, "_root");
     std::string uploadPath = request.extractLocationVariable(client, "_uploadPath");
+	if (!uploadPath.empty() && uploadPath.back() == '/') {
+        uploadPath.pop_back();
+    }
     if (uploadPath.empty()) {
         setStatusCode(405);
         return;
@@ -218,8 +226,8 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
     // std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
     std::string fullPath = _root + "/" + uploadPath + "/" + fileName;
 
-	std::cout << "full path in post is --------> " << fullPath << std::endl;
-	std::cout << "root POST -->" << _root << std::endl;
+	// std::cout << "full path in post is --------> " << fullPath << std::endl;
+	// std::cout << "root POST -->" << _root << std::endl;
     std::ofstream file(fullPath, std::ios::binary);
     if (!file.is_open()) {
         setStatusCode(500);
@@ -289,7 +297,7 @@ const std::string& HttpResponse::getRoot() const
 
 void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
-	std::cout << "----------------------------> " << _statusCode << std::endl;
+	// std::cout << "----------------------------> " << _statusCode << std::endl;
 	if(request.getError() != 0)
 		_statusCode = request.getError();
 		
@@ -301,7 +309,7 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 	}
 	std::ifstream body(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	std::string content;
-	std::cout << "we are here ---------------" << std::endl;
+	// std::cout << "we are here ---------------" << std::endl;
 	if(!body.is_open())
 	{
 		content = "404 Not Found";
@@ -326,7 +334,7 @@ void HttpResponse::handleResponse(Client& client){
 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
 	const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
-	std::cout << "CGI FULLLLLL PATH------> " << fullPathCgi << std::endl;
+	// std::cout << "CGI FULLLLLL PATH------> " << fullPathCgi << std::endl;
 	// std::cout << "CGI PATH------> " << cgiRoot << std::endl;
 	// std::cout << "CGI PASS------> " << cgiPass << std::endl;
 	if (isCgi(cgiPass)){

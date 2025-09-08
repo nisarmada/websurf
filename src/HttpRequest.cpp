@@ -31,7 +31,7 @@ const std::string& HttpRequest::getUri() const{
 const std::string& HttpRequest::getMethod() const {
 	return _method;
 }
-std::string& HttpRequest::getHeader(const std::string& key){
+const std::string& HttpRequest::getHeader(const std::string& key) const{
 	static std::string emptyString = "";
 	auto it = _headers.find(key);
 	if (it != _headers.end()){
@@ -79,6 +79,7 @@ void HttpRequest::parseBody(Client& client){
 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end());
 	size_t headerEnd = rawRequest.find("\r\n\r\n");
 	size_t bodyStart = headerEnd + 4;
+
 	if (bodyStart < rawRequest.size()){
 		std::string bodyContent = rawRequest.substr(bodyStart);
 		addBody(bodyContent.data(), bodyContent.length());
@@ -86,7 +87,6 @@ void HttpRequest::parseBody(Client& client){
 	}else{
 		_bodyFullyParsed = true;
 	}
-	// std::cout << "we are in parse bodyyyy" << std::endl;
 }
 
 int HttpRequest::checkChunked(){
@@ -124,10 +124,17 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	return rawRequest;
 }
 
-// void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
-	
-// }
+bool HttpRequest::isBodyComplete() const {
+	const std::string& contentLengthStr = getHeader("Content-Length");
+		if (contentLengthStr.empty()){
+			return true;
+		}
 
+		size_t expectedBodySize = std::stoul(contentLengthStr);
+		size_t actualBodySize = _body.size();
+
+		return actualBodySize >= expectedBodySize;
+}
 
 void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {
@@ -141,6 +148,12 @@ void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	}else if (_method == "POST"){
 		parseBody(client);
 	}
+	//only go there when we have the complete body
+	if(_method == "POST" && !isBodyComplete()){
+		// std::cout << "Body is not complete yet" << std::endl;
+		return;
+	}
+
 	extractLocationVariable(client, "/");
 	checkRequest(client);
 	// std::cout << firstHalfRequest << std::endl;
@@ -168,7 +181,7 @@ int HttpRequest::checkMethod(Client& client){
 void HttpRequest::contentLengthCheck(Client& client){
 	const ServerBlock* serverBlock = client.getServerBlock();
 	size_t maxSizeConfig = serverBlock->getBodySize();
-	std::string& requestSizeString = getHeader("Content-Length");
+	const std::string& requestSizeString = getHeader("Content-Length");
 	
 	if (requestSizeString == ""){
 		setError(411); // I think this is the correct error code
