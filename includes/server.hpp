@@ -14,6 +14,8 @@
 #include <set>
 #include <iomanip>
 
+class Cgi;
+
 class WebServer {
 	public:
 		WebServer();
@@ -33,10 +35,16 @@ class WebServer {
 		bool fdIsListeningSocket(int fd);
 		void clientIsReadyToWriteTo(int clientFd);
 		void createClientAndMonitorFd(int clientSocket);
+		void monitorCgiFd(int cgiReadFd, int clientFd, Cgi* cgiInstance);
+		void cgiResponse(int cgiFd);
+		void cgiWaitAndCleanup(int cgiFd, Cgi* cgi, int clientFd);
+		void readCgiData(int cgiFd);
 	private:
 		std::vector<int> _listenSockets;
 		int _epollFd;
 		std::vector<epoll_event> _events;
 		std::unordered_map<int, Client> _clients;
 		std::vector<ServerBlock> _serverBlocks;
+		std::unordered_map<int, int> _cgiFdsToClientFds;
+		std::unordered_map<int, Cgi*> _activeCgis;
 };

@@ -5,9 +5,6 @@ import os
 import sys
 import time
 
-# Wait for 6 seconds to ensure a timeout on a 5-second alarm.
-time.sleep(6)
-
 # Print the HTTP header
 print("Content-Type: text/html\r\n", end='')
 print("\r\n", end='')

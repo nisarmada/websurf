@@ -326,7 +326,7 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 }
 
 
-void HttpResponse::handleResponse(Client& client){
+void HttpResponse::handleResponse(Client& client, WebServer& server){
 	HttpRequest request;
 	HttpResponse response;
 	request.parser(client);
@@ -338,14 +338,21 @@ void HttpResponse::handleResponse(Client& client){
 	// std::cout << "CGI PATH------> " << cgiRoot << std::endl;
 	// std::cout << "CGI PASS------> " << cgiPass << std::endl;
 	if (isCgi(cgiPass)){
-		std::cout << "yessss " << std::endl;
-		Cgi cgi(request, fullPathCgi, cgiPass, serverPort);
-		cgi.executeCgi(response);
+		// std::cout << "yessss " << std::endl;
+		Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
+		int cgiReadFd = cgi->executeCgi();
+		if (cgiReadFd != -1){
+			server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
+		}
+		else {
+			std::cout << "HANDLE RESPONSE ERROR" << std::endl;
+			response.setStatusCode(500);
+		}
 	}
 	else{
 		response.executeResponse(request, client);
+		client.setResponse(response.createCompleteResponse());
 	}
 
-	client.setResponse(response.createCompleteResponse());
 	// std::cout << testResponse.createCompleteResponse() << std::endl;
 }

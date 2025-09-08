@@ -68,7 +68,7 @@ std::vector<char*> Cgi::createEnvironmentVariableVector(){
     envStr.push_back("SERVER_PORT=" + _serverPort);
 	std::vector<char*> envp;
 	for (const auto& iterator : envStr){
-		envp.push_back(const_cast<char*>(iterator.c_str()));
+		envp.push_back(strdup(iterator.c_str()));
 	}
 	envp.push_back(nullptr);
 	return envp;
@@ -83,6 +83,9 @@ void Cgi::executeExecve(){
 	std::vector<char*> envp = createEnvironmentVariableVector();
 	if (execve(const_cast<char*>(_cgiPass.c_str()), argv, envp.data()) == -1){
 		std::cerr << "Execve failed:(" << std::endl;
+		for (const auto& iterator : envp){
+			free(iterator);
+		}
 		exit(EXIT_FAILURE);
 	}
 }
@@ -133,18 +136,22 @@ void Cgi::giveBodyToChild(){
 
 }
 
-void Cgi::readCgiResponse(std::string& response){
-	char buffer[4096];
-	ssize_t bytesRead;
-	//read from the response until there's nothing left
-	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer))) > 0){
-		response.append(buffer,bytesRead);
-	}
-	if (bytesRead == -1){
-		std::cerr << "Read from cgi failed in readCgiResponse" << std::endl;
-	}
-	close(_responsePipe[0]);
+std::string& Cgi::getResponseString(){
+	return _cgiResponse;
 }
+
+// void Cgi::readCgiResponse(std::string& response){
+// 	char buffer[4096];
+// 	ssize_t bytesRead;
+// 	//read from the response until there's nothing left
+// 	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer))) > 0){
+// 		response.append(buffer,bytesRead);
+// 	}
+// 	if (bytesRead == -1){
+// 		std::cerr << "Read from cgi failed in readCgiResponse" << std::endl;
+// 	}
+// 	close(_responsePipe[0]);
+// }
 
 void Cgi::putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString){
 	size_t keyEnd = headerString.find(':');
@@ -180,7 +187,7 @@ void Cgi::parseResponse(std::string& rawResponse, HttpResponse& response){
 		}
 		response.setBody(std::vector<char>(bodyPart.begin(), bodyPart.end()));
 		response.setStatusCode(200);
-		response.setHttpVersion(_request.getHttpVersion());
+		response.setHttpVersion("HTTP/1.1");
 		response.setText("OK");
 	}
 	else{
@@ -189,17 +196,7 @@ void Cgi::parseResponse(std::string& rawResponse, HttpResponse& response){
 	}
 }
 
-void Cgi::parentProcess(HttpResponse& response){
-	std::string responseString;
-	int status;
-
-	closePipes("parent");
-	giveBodyToChild();
-	readCgiResponse(responseString);
-	parseResponse(responseString, response);
-}
-
-int Cgi::executeCgi(HttpResponse& response) {
+int Cgi::executeCgi() {
 	if (pipe(_requestPipe) == -1){
 		std::cerr << "ERROR WITH REQUEST PIPE" << std::endl; //first stage errors
 	}
@@ -223,3 +220,6 @@ int Cgi::executeCgi(HttpResponse& response) {
 	return -1;
 }
 
+pid_t Cgi::getPid(){
+	return _pid;
+}

@@ -89,7 +89,9 @@ void WebServer::initializeServer() {
 }
 
 void WebServer::cleanupFd(int clientFd){
-	epoll_ctl(EPOLL_CTL_DEL, _epollFd, clientFd, NULL);
+	struct epoll_event event{};
+	event.data.fd = clientFd;
+	epoll_ctl(EPOLL_CTL_DEL, _epollFd, clientFd, &event);
 	_clients.erase(clientFd);
 	close(clientFd);
 }
@@ -106,6 +108,24 @@ void WebServer::clientIsReadyToWriteTo(int clientFd){
 		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here
 	}
 }
+
+void WebServer::monitorCgiFd(int cgiReadFd, int clientFd, Cgi* cgiInstance){
+	setNonBlocking(cgiReadFd);
+
+	std::cout << "MONITOR CGI FD " << std::endl;
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = cgiReadFd;
+	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, cgiReadFd, &event) == -1){
+		//here we send an error 500 and kill child process
+		delete cgiInstance;
+		return ;
+	}
+
+	_cgiFdsToClientFds[cgiReadFd] = clientFd;
+	_activeCgis[clientFd] = cgiInstance;
+}
+
 
 void WebServer::clientRead(int clientFd){
 	Client& clientToRead = _clients.at(clientFd); //.at throws an error when the client fd doesnt exist in the hashmap that we made.
@@ -133,12 +153,12 @@ void WebServer::clientRead(int clientFd){
 			tempRequest.parser(clientToRead);
 			if (tempRequest.getMethod() == "POST" && tempRequest.isBodyComplete()){
 				if (tempRequest.isBodyComplete()){
-					HttpResponse::handleResponse(clientToRead);
+					HttpResponse::handleResponse(clientToRead, *this);
 					clientIsReadyToWriteTo(clientFd);
 				}
 			}
 			else if (tempRequest.getMethod() != "POST"){
-				HttpResponse::handleResponse(clientToRead);
+				HttpResponse::handleResponse(clientToRead, *this);
 				clientIsReadyToWriteTo(clientFd);
 			}
 		}
@@ -186,11 +206,61 @@ bool WebServer::fdIsListeningSocket(int fd){
 	return false;
 }
 
+void WebServer::cgiWaitAndCleanup(int cgiFd, Cgi* cgi, int clientFd){
+	epoll_ctl(_epollFd, EPOLL_CTL_DEL, cgiFd, NULL);
+	close (cgiFd);
+	waitpid(cgi->getPid(), NULL, 0);
+	_cgiFdsToClientFds.erase(cgiFd);
+	_activeCgis.erase(clientFd);
+	delete cgi;
+}
+
+
+void WebServer::cgiResponse(int cgiFd){
+	int clientFd = _cgiFdsToClientFds.at(cgiFd);
+	Cgi* cgi = _activeCgis.at(clientFd);
+	std::cout << "when response is done it looks like his--> " << cgi->getResponseString() << std::endl;
+	HttpResponse httpResponse;
+	cgi->parseResponse(cgi->getResponseString(), httpResponse);
+	_clients.at(clientFd).setResponse(httpResponse.responseToString());
+
+	clientIsReadyToWriteTo(clientFd); //check what happens if that's not here
+
+	cgiWaitAndCleanup(cgiFd, cgi, clientFd);
+}
+
+void WebServer::readCgiData(int cgiFd){
+	int clientFd = _cgiFdsToClientFds.at(cgiFd);
+	Cgi* cgi = _activeCgis.at(clientFd);
+	char buffer[BUFFER_SIZE];
+	ssize_t bytesRead = read(cgiFd, buffer, BUFFER_SIZE);
+
+	if (bytesRead > 0){
+		
+		cgi->getResponseString().append(buffer, bytesRead);
+		std::cout << "WE ARE IN CGI RESPONSE " << cgi->getResponseString() << std::endl;
+	}
+	else {
+		return ;
+	}
+}
+
 void WebServer::startListening(int num_events){
 	for (int i = 0; i < num_events; i++) {
 		int currentFd = _events[i].data.fd;
 		uint32_t eventFlags = _events[i].events;
-		if (eventFlags & EPOLLIN) {
+		if (_cgiFdsToClientFds.count(currentFd)){
+			if (eventFlags & (EPOLLHUP | EPOLLERR)){
+				//this is a Cgi response and we need to handle it
+				std::cout << " START LISTENING 1" << std::endl;
+				cgiResponse(currentFd);
+			}
+			else if (eventFlags & EPOLLIN){ //IMPORTANT put a check here to see if the read() has finished first
+				std::cout << "START LISTENING 2 " << std::endl;
+				readCgiData(currentFd);
+			}
+		}
+		else if (eventFlags & EPOLLIN) {
 			if (fdIsListeningSocket(currentFd)) { //new connection
 				acceptClientConnection(currentFd);
 			}

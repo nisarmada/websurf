@@ -34,7 +34,7 @@ class HttpResponse {
 		void findContentType();
 		std::string setErrorText();
 		std::string createCompleteResponse();
-		static void handleResponse(Client& client);
+		static void handleResponse(Client& client, WebServer& server);
 		void executeCgi();
 	private:
 		const std::string _root;
