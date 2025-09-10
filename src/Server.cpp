@@ -1,13 +1,12 @@
 #include "../includes/Constants.hpp"
 #include "../includes/Parser.hpp"
 #include "../includes/server.hpp"
-// #include "../includes/ServerBlock.hpp"
 #include "../includes/Client.hpp"
 
 WebServer::WebServer() : _events(MAX_EVENTS){}
 
 int WebServer::setNonBlocking(int fd) {
-	int flags = fcntl(fd, F_GETFL, 0); //get this away NIKOS Illigal bussiness detected
+	int flags = fcntl(fd, F_GETFL, 0); //get this away NIKOS Illigal bussiness detected CHECK
 
 	if (flags == -1) {
 		perror("fcntl GETFL failed");
@@ -29,8 +28,8 @@ int WebServer::setupListenerSocket(int port) {
 		exit(EXIT_FAILURE);
 	}
 
-	setNonBlocking(listeningSocket); //READ ABOUT THIS WHAT IT EXACTLY IS AND DOES.
-	//delete this block later
+	setNonBlocking(listeningSocket); 
+	//delete this block later CHECK
 	int optval = 1; // Set to 1 to enable SO_REUSEADDR
     if (setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
         perror("setsockopt SO_REUSEADDR failed");
@@ -38,7 +37,7 @@ int WebServer::setupListenerSocket(int port) {
         // or choose to just log and continue if this error isn't considered fatal for your project.
         exit(EXIT_FAILURE);
     }
-	// end of block to delete
+	// end of block to delete CHECK
 	sockaddr_in serverAddress;
 	std::memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
@@ -50,7 +49,7 @@ int WebServer::setupListenerSocket(int port) {
 		return -1;
 	}
 
-	if (listen(listeningSocket, BACKLOG) < 0) { //CHECKOUT WHAT THIS DOES
+	if (listen(listeningSocket, BACKLOG) < 0) { 
 		perror("listen failed");
 		close (listeningSocket);
 		return -2;
@@ -68,7 +67,7 @@ void WebServer::initializeServer() {
 		throw std::runtime_error("epoll create failed");
 	}
 	std::set<int> uniquePorts;
-	for (auto& iteratingBlock : _serverBlocks){ //STAN LOOK AT THIS HOW IT WORKS
+	for (auto& iteratingBlock : _serverBlocks){ 
 		uniquePorts.insert(iteratingBlock.getPort());
 	}
 	for (int port : uniquePorts){
@@ -77,11 +76,9 @@ void WebServer::initializeServer() {
 			throw std::runtime_error("setupListenerSocket failed for port " + std::to_string(port));
 		}
 		_listenSockets.push_back(currentListenFd);
-		//CHECKOUT WHAT THIS DOES
 		struct epoll_event event;
 		event.events = EPOLLIN;
 		event.data.fd = currentListenFd;
-		//CHECK UNTIL HERE
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, currentListenFd, &event) == -1) { //epoll_ctl modifies something about the epoll
 			std::cerr << "initialize server epoll ctl" << std::endl;
 		} //this tells _epollFd to add _listenSocket to its monitored fds
@@ -102,10 +99,10 @@ void WebServer::handleRequest(const HttpRequest& request){
 
 void WebServer::clientIsReadyToWriteTo(int clientFd){
 	struct epoll_event event;
-	event.events = EPOLLIN | EPOLLOUT; //we might want to remove EPOLLEt
+	event.events = EPOLLIN | EPOLLOUT; //we might want to remove EPOLLET CHECK
 	event.data.fd = clientFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
-		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here
+		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here CHECK
 	}
 }
 
@@ -117,7 +114,7 @@ void WebServer::monitorCgiFd(int cgiReadFd, int clientFd, Cgi* cgiInstance){
 	event.events = EPOLLIN;
 	event.data.fd = cgiReadFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, cgiReadFd, &event) == -1){
-		//here we send an error 500 and kill child process
+		//here we send an error 500 and kill child process CHECK
 		delete cgiInstance;
 		return ;
 	}
@@ -165,13 +162,11 @@ void WebServer::clientRead(int clientFd){
 	}
 }
 
-
-
 void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);
 
 	if (!clientToWrite.hasResponseToSend()){
-		return; //we might want to remove EPOLLOUT or handle differently
+		return; //we might want to remove EPOLLOUT or handle differently CHECK
 	}
 	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
 	ssize_t bytesSent = clientToWrite.getBytesSent();
@@ -191,7 +186,7 @@ void WebServer::clientWrite(int clientFd){
 		clientToWrite.addBytesSent(bytesSentThisRound);
 		std::cout << "We sent " << bytesSentThisRound << " bytes to client" << std::endl;
 	}
-	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately
+	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately CHECK
 		std::cout << "Full response sent to client " << clientFd << std::endl;
 		cleanupFd(clientFd);
 	}
@@ -224,8 +219,7 @@ void WebServer::cgiResponse(int cgiFd){
 	cgi->parseResponse(cgi->getResponseString(), httpResponse);
 	_clients.at(clientFd).setResponse(httpResponse.responseToString());
 
-	clientIsReadyToWriteTo(clientFd); //check what happens if that's not here
-
+	clientIsReadyToWriteTo(clientFd);
 	cgiWaitAndCleanup(cgiFd, cgi, clientFd);
 }
 
@@ -236,9 +230,7 @@ void WebServer::readCgiData(int cgiFd){
 	ssize_t bytesRead = read(cgiFd, buffer, BUFFER_SIZE);
 
 	if (bytesRead > 0){
-		
 		cgi->getResponseString().append(buffer, bytesRead);
-		std::cout << "WE ARE IN CGI RESPONSE " << cgi->getResponseString() << std::endl;
 	}
 	else {
 		return ;
@@ -251,12 +243,10 @@ void WebServer::startListening(int num_events){
 		uint32_t eventFlags = _events[i].events;
 		if (_cgiFdsToClientFds.count(currentFd)){
 			if (eventFlags & (EPOLLHUP | EPOLLERR)){
-				//this is a Cgi response and we need to handle it
-				std::cout << " START LISTENING 1" << std::endl;
+				//this is a Cgi response and we need to handle it CHECK
 				cgiResponse(currentFd);
 			}
-			else if (eventFlags & EPOLLIN){ //IMPORTANT put a check here to see if the read() has finished first
-				std::cout << "START LISTENING 2 " << std::endl;
+			else if (eventFlags & EPOLLIN){ //IMPORTANT put a check here to see if the read() has finished first CHECK
 				readCgiData(currentFd);
 			}
 		}
@@ -265,7 +255,7 @@ void WebServer::startListening(int num_events){
 				acceptClientConnection(currentFd);
 			}
 			else { // if it's not a listen socket then it is a client
-				clientRead(currentFd); //we may need to use try-catch here in case the fd doesn't exist in our client map --------existing connection
+				clientRead(currentFd); //CHECK we may need to use try-catch here in case the fd doesn't exist in our client map --------existing connection
 			}
 		}
 		else if (eventFlags & EPOLLOUT){
@@ -276,12 +266,12 @@ void WebServer::startListening(int num_events){
 
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
-		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there
+		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there CHECK
 		std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
 				<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
-		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct
+		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct CHECK
 		clientEvent.data.fd = clientSocket;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &clientEvent) == -1){
 			std::cerr << "Epoll ctllllll" << std::endl;
@@ -294,7 +284,7 @@ void WebServer::acceptClientConnection(int listenerFd){
 	socklen_t clientAdressLen = sizeof(clientAdress);
 	int clientSocketFd = accept(listenerFd, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
 	if (clientSocketFd == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject
+		if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject CHECK ILLIGAL NIKOS
 			return;
 		}
 		else {
@@ -349,12 +339,6 @@ void WebServer::printServerBlocks()
 {
 	for (size_t i = 0; i < _serverBlocks.size(); ++i)
 	{
-		// std::cout << "=== Server Block " << i << " ===" << std::endl;
-		// std::cout << "Server name:      " << _serverBlocks[i].getServerName() << std::endl;
-		// std::cout << "Port number:      " << _serverBlocks[i].getPort() << std::endl;
-		// std::cout << "Max body size:    " << _serverBlocks[i].getClientBodySize() << std::endl;
-
-		// ✅ Check and print 404 error page if it exists
 		if (_serverBlocks[i].hasErrorPage(404))
 		{
 			std::cout << "Error page for 404: " << _serverBlocks[i].getErrorPagePath(404) << std::endl;

@@ -4,7 +4,7 @@ HttpRequestParser::HttpRequestParser() {}
 
 HttpRequestParser::~HttpRequestParser() {}
 //it only works for the basic type of response like the second one that I include in the httprequest_test
-//we need to handle any potential errors and add extra stuff like body in case it exists.
+//we need to handle any potential errors and add extra stuff like body in case it exists. CHECK
 void HttpRequestParser::parseRequestLine(const std::string& line, HttpRequest& request) {
 	std::string method, uri, version;
 	size_t firstSpace = line.find(" ");
@@ -17,7 +17,7 @@ void HttpRequestParser::parseRequestLine(const std::string& line, HttpRequest& r
 	request.setUri(uri);
 	request.setHttpVersion(version);
 }
-//same logic we substr the host and header parts from the string and put them in the map
+
 void HttpRequestParser::parseHostLine(const std::string& line, HttpRequest& request){
 	size_t hostLen = line.find(":");
 	std::string hostName = line.substr(0, hostLen);

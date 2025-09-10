@@ -47,9 +47,8 @@ void ServerBlock::setClientBodySize(size_t maxSize)
 
 void ServerBlock::addLocation(const LocationBlock& location)
 {
-    //check if the getpath already exists for the location, throw an exception then.
     const std::string& path = location.getPath();
-    if(_locations.find(path) != _locations.end()) //if founds returns iterator at right position if not returns end for indication not found.
+    if(_locations.find(path) != _locations.end()) //if found returns iterator at right position if not returns end for indication not found.
         throw std::runtime_error("Duplicate location path: " + path);
     _locations[location.getPath()] = location;
 }

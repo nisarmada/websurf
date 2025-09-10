@@ -43,7 +43,7 @@ int HttpRequest::readingChunkSize(const std::vector<char>& buffer, size_t buffer
 		setError(400);
 		throw std::runtime_error("Error in chunked size");
 	}
-	// _bodyReadPosition +=q 2; // not sure if needed.
+	// _bodyReadPosition +=q 2; // not sure if needed. CHECK
 	if (_currentChunkSize == 0){
 		_chunkParseState = READING_FINAL_CRLF;
 	} else{
@@ -63,12 +63,12 @@ int HttpRequest::readingChunkData(const std::vector<char>& buffer, size_t buffer
 	if (_currentChunkSize == 0){
 		_chunkParseState = READING_CHUNK_TERMINATOR;
 	} else {
-		return -1; //not sure if realistically we ever go here, we should check
+		return -1; //not sure if realistically we ever go here, we should check. CHECK
 	}
 	return 0;
 }
 
-//if problems look here
+
 int HttpRequest::readingChunkTerminator(const std::vector<char>& buffer, size_t bufferEnd){
 	if (bufferEnd - _bodyReadPosition < 2){
 		return -1;

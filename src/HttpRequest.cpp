@@ -20,7 +20,7 @@ void HttpRequest::setHttpVersion(const std::string& httpVersion){
 }
 
 void HttpRequest::addHeader(const std::string& key, const std::string& value){ 
-	// we might need to check if it already exists
+	// we might need to check if it already exists CHECK
 	_headers[key] = value;
 }
 
@@ -120,8 +120,6 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	}
 	_bodyReadPosition = headerEnd + 4;
 	_headersComplete = true;
-	// std::cout << "----------------" << std::endl;
-	// std::cout << rawRequest << std::endl;
 	return rawRequest;
 }
 
@@ -149,15 +147,12 @@ void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	}else if (_method == "POST"){
 		parseBody(client);
 	}
-	//only go there when we have the complete body
 	if(_method == "POST" && !isBodyComplete()){
-		// std::cout << "Body is not complete yet" << std::endl;
 		return;
 	}
 
 	extractLocationVariable(client, "/");
 	checkRequest(client);
-	// std::cout << firstHalfRequest << std::endl;
 }
 
 int HttpRequest::checkMethod(Client& client){
@@ -176,10 +171,8 @@ int HttpRequest::checkMethod(Client& client){
 		setError(400);
 		return -1;
 	}
-	std::cout << "URI:  " << _uri << std::endl;
 	if (_uri.size() > MAX_URI_LENGTH){
 		setError(414);
-		std::cout << "HELKJFELKJFLKEJLKEJFLKJEFLKJELKFJEJFE" << std::endl;
 		return -1;
 	}
 	return 0;
@@ -191,15 +184,13 @@ void HttpRequest::contentLengthCheck(Client& client){
 	const std::string& requestSizeString = getHeader("Content-Length");
 	
 	if (requestSizeString == ""){
-		setError(411); // I think this is the correct error code
+		setError(411); 
 		return;
-		// throw std::runtime_error("Content Length is missing");
 	}
 	size_t requestSize = static_cast<size_t>(std::stoul(requestSizeString));
 	if (requestSize > maxSizeConfig){
 		setError(413);
 		return;
-		// throw std::runtime_error("Payload too large");
 	}
 }
 
@@ -210,7 +201,7 @@ void HttpRequest::checkRequest(Client& client){
 		return;
 	}
 		 std::cout << "PLUS ONE" << std::endl;
-	//we should check if _associatedBlock == nullptr
+	//we should check if _associatedBlock == nullptr CHECK
 	if ((_method == "POST") && !_isChunked) 
 		contentLengthCheck(client);
 	
@@ -231,13 +222,8 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
     const ServerBlock* serverBlock = client.getServerBlock();
     const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
    
-	// std::cout << "identifier is -----> " << identifier << std::endl;
-	// std::cout << "uri is -------> " << _uri << std::endl;
-	std::string longestMatch = findLongestMatch(_uri, locations); //this finds the longet match so we don't throw an exception if the full path doesn't exist
-	// std::cout << "longest match is ---> " << longestMatch << std::endl;
+	std::string longestMatch = findLongestMatch(_uri, locations); 
 	const LocationBlock& currentLocation = locations.at(longestMatch);
-	// std::cout << "index is  -----> " << currentLocation.getIndex() << std::endl;
-    // std::cout << "uir: ---> " <<_uri << std::endl;
     if (identifier == "_path") {
         return currentLocation.getPath();
     } else if (identifier == "_root") {
