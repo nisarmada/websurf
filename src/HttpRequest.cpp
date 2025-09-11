@@ -237,6 +237,15 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
     } else if (identifier == "_cgiPass") {
         return currentLocation.getCgiPass();
 	}
+	else if (identifier == "_autoindex")
+	{
+		bool autoindex =  currentLocation.getAutoindex(); //CHECK  this is very ugly.
+		if (autoindex == true)
+			return("true");
+		else
+			return("false");
+	}
+	
 	const std::string emptyString = "";
     return emptyString;
 }

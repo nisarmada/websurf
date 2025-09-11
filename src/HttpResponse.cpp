@@ -203,7 +203,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << fullPath << std::endl;
 	}
-	setStatusCode(200);
+	setStatusCode(200); 
 	createBodyVector(client, request);
 }
 
@@ -318,9 +318,14 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 
 	if(_statusCode >= 400)
 	{
+		std::cout << "WE ARE HANDLINE ERROR RIGHT NOW SHEESHT" << std::endl;
 		handleError(client, request);
 		return;
 	}
+
+	if(handleAutoindex(request, client) == true)
+		return;
+
 	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	std::string content;
 	if(!file.is_open())
@@ -334,6 +339,17 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 	content = buf.str();
 	setBody(std::vector<char>(content.begin(), content.end()));
 	setStatusCode(200);
+}
+bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
+{
+	struct stat checkPath;
+	if(stat(_path.c_str(), &checkPath) != 0 || !S_ISDIR(checkPath.st_mode))//does something exist at the file and check if its a directory. 
+	return false;
+	std::string indexFileName = request.extractLocationVariable(client, "_index");
+	std::string indexPath = _path + "/" + indexFileName;
+	std::cout << "THIS IS A TEST DO i HAVE CORRECT PATH? : " << indexPath << std::endl;
+
+	return true;
 }
 
 

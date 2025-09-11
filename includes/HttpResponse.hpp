@@ -8,6 +8,7 @@
 #include <ctime>
 #include <cstdio>
 #include "Cgi.hpp"
+#include <sys/stat.h>
 
 class HttpResponse {
 	public:
@@ -38,6 +39,7 @@ class HttpResponse {
 		void executeCgi();
 		bool checkAllowedMethods(Client& client, std::string check);
 		void handleError(Client& client, HttpRequest& request);
+		bool handleAutoindex(HttpRequest& request, Client& client);
 
 	private:
 		const std::string _root;

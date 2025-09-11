@@ -90,7 +90,11 @@ void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& locatio
     {
         throw std::runtime_error("Multile definitions of 'root' directive.");
     }
-    location.setRoot(tokens[i + 1]);
+    std::string root = tokens[i + 1];
+    if(root[0] != '.')
+        root = "." + root;
+
+    location.setRoot(root);
 }
 
 void parseCgiPass(std::vector<std::string> tokens, size_t i, LocationBlock& location)

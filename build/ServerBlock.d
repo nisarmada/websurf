@@ -1,5 +1,8 @@
 build/ServerBlock.o: src/ServerBlock.cpp src/../includes/ServerBlock.hpp \
- src/../includes/Parser.hpp src/../includes/LocationBlock.hpp
+  includes/Parser.hpp includes/LocationBlock.hpp
+
 src/../includes/ServerBlock.hpp:
-src/../includes/Parser.hpp:
-src/../includes/LocationBlock.hpp:
+
+includes/Parser.hpp:
+
+includes/LocationBlock.hpp:

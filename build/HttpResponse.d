@@ -1,16 +1,28 @@
 build/HttpResponse.o: src/HttpResponse.cpp \
- src/../includes/HttpResponse.hpp src/../includes/server.hpp \
- src/../includes/Parser.hpp src/../includes/ServerBlock.hpp \
- src/../includes/LocationBlock.hpp src/../includes/Client.hpp \
- src/../includes/HttpRequestParsing.hpp src/../includes/HttpRequest.hpp \
- src/../includes/Cgi.hpp src/../includes/Utils.hpp
+  src/../includes/HttpResponse.hpp includes/server.hpp \
+  includes/Parser.hpp includes/ServerBlock.hpp \
+  includes/LocationBlock.hpp includes/Client.hpp \
+  includes/HttpRequestParsing.hpp includes/HttpRequest.hpp \
+  includes/HttpResponse.hpp includes/Cgi.hpp src/../includes/Utils.hpp
+
 src/../includes/HttpResponse.hpp:
-src/../includes/server.hpp:
-src/../includes/Parser.hpp:
-src/../includes/ServerBlock.hpp:
-src/../includes/LocationBlock.hpp:
-src/../includes/Client.hpp:
-src/../includes/HttpRequestParsing.hpp:
-src/../includes/HttpRequest.hpp:
-src/../includes/Cgi.hpp:
+
+includes/server.hpp:
+
+includes/Parser.hpp:
+
+includes/ServerBlock.hpp:
+
+includes/LocationBlock.hpp:
+
+includes/Client.hpp:
+
+includes/HttpRequestParsing.hpp:
+
+includes/HttpRequest.hpp:
+
+includes/HttpResponse.hpp:
+
+includes/Cgi.hpp:
+
 src/../includes/Utils.hpp:

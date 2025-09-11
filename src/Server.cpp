@@ -322,7 +322,7 @@ void WebServer::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
 		}
 		catch(const std::exception& e)
 		{
-			std::cerr << "Error in serverBlock number: " << i << ". " << e.what() << std::endl;
+			std::cerr << "Error: " << e.what() << std::endl;
 			exit(1);
 		}
 		
