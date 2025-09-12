@@ -1,5 +1,6 @@
 #include "../includes/Cgi.hpp"
 
+
 Cgi::Cgi(HttpRequest& request) : _request(request) {
 	_requestPipe[0] = -1;
 	_requestPipe[1] = -1;
@@ -79,6 +80,8 @@ void Cgi::executeExecve(){
 		const_cast<char*>(_cgiPath.c_str()),
 		NULL
 	};
+	std::cout << "cgi pass: " << _cgiPass << std::endl;
+	std::cout << "cgi path: " << _cgiPath << std::endl;
 	std::vector<char*> envp = createEnvironmentVariableVector();
 	if (execve(const_cast<char*>(_cgiPass.c_str()), argv, envp.data()) == -1){
 		std::cerr << "Execve failed:(" << std::endl;
@@ -138,19 +141,6 @@ void Cgi::giveBodyToChild(){
 std::string& Cgi::getResponseString(){
 	return _cgiResponse;
 }
-
-// void Cgi::readCgiResponse(std::string& response){
-// 	char buffer[4096];
-// 	ssize_t bytesRead;
-// 	//read from the response until there's nothing left
-// 	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer))) > 0){
-// 		response.append(buffer,bytesRead);
-// 	}
-// 	if (bytesRead == -1){
-// 		std::cerr << "Read from cgi failed in readCgiResponse" << std::endl;
-// 	}
-// 	close(_responsePipe[0]);
-// }
 
 void Cgi::putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString){
 	size_t keyEnd = headerString.find(':');
@@ -212,6 +202,8 @@ int Cgi::executeCgi() {
 		exit(EXIT_FAILURE); //if it reaches here execve failed
 	} else { //parent process
 		closePipes("parent");
+		cgi_pid_to_kill = _pid;
+		alarm(3);
 		giveBodyToChild();
 		return _responsePipe[0]; //read-end of the pipe so it can be added to epoll
 		// parentProcess(response);

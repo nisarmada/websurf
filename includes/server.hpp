@@ -13,6 +13,7 @@
 #include <unordered_map>
 #include <set>
 #include <iomanip>
+#include <signal.h>
 
 class Cgi;
 
@@ -48,3 +49,5 @@ class WebServer {
 		std::unordered_map<int, int> _cgiFdsToClientFds;
 		std::unordered_map<int, Cgi*> _activeCgis;
 };
+
+void cleanupZombieChildren();
