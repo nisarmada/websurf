@@ -23,7 +23,7 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
             expectSemicolon(serverBlock, i + 2);
             parsedBlock.setClientBodySize(parseMaxBodySize(serverBlock, i));
         }
-        else if(serverBlock[i] == "location") //check that there is no error page inside
+        else if(serverBlock[i] == "location") 
         {
             LocationBlock newLocation = parseLocationBlock(serverBlock, i);
             parsedBlock.addLocation(newLocation);
@@ -37,7 +37,7 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
     return parsedBlock;
 }
 
-//add here later the syntax check if everything is correct as an input.
+//add here later the syntax check if everything is correct as an input. CHECK
 //check if something is found i do i +=2 and t;hen else i++ instead of this. 
 LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
 {
@@ -54,7 +54,7 @@ LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
         if(tokens[i] == "root")
         {
             parseRoot(tokens, i, location);
-        } //check if its valid input aka not just written bird or something?
+        } 
         else if (tokens[i] == "index")
             parseIndex(tokens, i, location);
         else if (tokens[i] == "methods")
@@ -88,11 +88,13 @@ void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& locatio
         throw std::runtime_error("Missing value after 'root' directive.");
     if(!location.getRoot().empty())
     {
-        // std::cout << "one: " << tokens[i] << std::endl << tokens[i + 1] << std::endl;
-        // std::cout << "in object root: " << location.getRoot() << std::endl;;
         throw std::runtime_error("Multile definitions of 'root' directive.");
     }
-    location.setRoot(tokens[i + 1]);
+    std::string root = tokens[i + 1];
+    if(root[0] != '.')
+        root = "." + root;
+
+    location.setRoot(root);
 }
 
 void parseCgiPass(std::vector<std::string> tokens, size_t i, LocationBlock& location)
@@ -178,7 +180,7 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
     }
     unsigned long long overflowCheck = std::stoull(tokens[i + 1]);
    
-    //for my future: catch the exeption instead of this, stoull throws exception by overflow.
+    //for my future: catch the exeption instead of this, stoull throws exception by overflow. CHECK
     if(overflowCheck > std::numeric_limits<size_t>::max())
     {
         std::cerr << "Error invalid client_max_body_size: " << tokens[i + 1] << std::endl;
@@ -189,7 +191,7 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
     return maxBodySize;
 }
 
-int parseListen(std::vector<std::string> tokens, size_t i) //do a check if i + 1 is smaller then tokens.size !!!!!!!!!!!!!
+int parseListen(std::vector<std::string> tokens, size_t i) //CHECK if i + 1 is smaller then tokens.size !!!!!!!!!!!!!
 {
     if(!stringIsDigit(tokens[i + 1]))
     {
@@ -209,7 +211,7 @@ bool stringIsDigit(std::string& str)
 {
     for(size_t i = 0; i < str.size(); i++)
     {
-        if(!std::isdigit(static_cast<unsigned char>(str[i]))) //cast for if a char is minus like special characters so it doesnt crash.
+        if(!std::isdigit(static_cast<unsigned char>(str[i]))) 
             return false;
     }
     return true;

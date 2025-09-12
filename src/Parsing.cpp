@@ -13,9 +13,6 @@ void parsing(const char* path, WebServer& webServ)
     std::vector<std::vector<std::string>> serverBlocks = getServerBlockTokens(tokens);
     
     webServ.loadConfig(serverBlocks);
-
-	
-    // std::cout << std::endl << std::endl;
     // test.printServerBlocks();
 }
 
@@ -30,7 +27,6 @@ std::ifstream openConfigFile(const char* path)
     return configFile;
 }
 
-//check which whitespaces I have to trim.
 std::vector<std::string> trimBeginEnd (std::ifstream& file)
 {
     std::vector<std::string> cleanedLines;
@@ -72,10 +68,6 @@ std::vector<std::string> tokenizeLine(std::string line)
     if(!currentToken.empty()) //there be a token left which the loop didnt push yet.
         tokenisedLine.push_back(currentToken);
 
-    //print tokenised line
-    // for(size_t i = 0; i < tokenisedLine.size(); i ++)
-    //     std::cout << "[" << tokenisedLine[i] << "]" << std::endl;
-
     return tokenisedLine;
 }
 
@@ -88,9 +80,6 @@ std::vector<std::string> getAllTokens(const std::vector<std::string>& cleanedLin
         std::vector<std::string> tokenLine = tokenizeLine(cleanedLines[i]);
         tokens.insert(tokens.end(), tokenLine.begin(), tokenLine.end()); //inserts a range of strings(where to add, what to add from where to where (vector begin end in our case))
     }
-    // for(size_t i = 0; i < tokens.size(); i ++)
-    //     std::cout << "[" << tokens[i] << "]" << std::endl;
-    
     return tokens;
 }
 
@@ -105,15 +94,14 @@ bool checkSyntax(std::vector<std::string>tokens)
     checkSemicolons(tokens);
     checkBrackets(tokens);
     
-    return false; //check if bool is still neaded
+    return false; 
 }
 
 void checkSemicolons(std::vector<std::string> tokens)
 {
-    //check if I can remove all those checks.
     for (size_t i = 0; i < tokens.size(); i++)
     {
-        if(tokens[i] == "methods") //fix for now, might change later
+        if(tokens[i] == "methods") 
         {
             while (i < tokens.size() && tokens[i] != ";") //skips the method for checking semicolons.
                 i ++;
@@ -128,7 +116,6 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
 {
         if(getType(tokens[i]) == DIRECTIVE)
         {
-            // std::cout << "in here" << std::endl;
             if(i + 2 >= tokens.size() || tokens[i + 2] != ";")
             {
                 std::cerr << "Error: missing semicolon: " << tokens[i] << std::endl;
@@ -138,8 +125,6 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
         
 }
 
-
-//check if I can do minus 3, there is no check for it as of far.
 void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
 {
     if(tokens[i] == ";")
@@ -152,15 +137,14 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
         if(getType(tokens[i - 2]) == DIRECTIVE)
             return;
         
-        if(static_cast<int>(i) - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2) // broke the code so I made a patch
+        if(static_cast<int>(i) - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2) 
             return;
-        //temporary change to do correct with throw
     
         std::cerr << "Error: invalid semicolon after \"" << tokens[i - 2] << "\"" << std::endl;
-        exit(1);
+        exit(1); //exit? should we exit at any point? CHECK
     }
 }
-//make statementone statementtwo etc. to indicate how much you have to go back with index for the semicolon checker. 
+
 Type getType(const std::string& token)
 {
     static std::map<std::string, Type> typeMap = 
@@ -204,7 +188,7 @@ void checkBracketStructure(std::vector<std::string> tokens)
         {
             if(stack.empty())
             {
-                std::cerr << "Error: wrong bracket (TEMP)" << std::endl;
+                std::cerr << "Error: wrong bracket" << std::endl;
                 exit(1);
             }
             stack.pop();
@@ -212,7 +196,7 @@ void checkBracketStructure(std::vector<std::string> tokens)
     }
     if(!stack.empty())
     {
-        std::cerr << "Error: wrong bracket (TEMP2)" << std::endl;
+        std::cerr << "Error: wrong bracket" << std::endl;
         exit(1);
     }
 }
@@ -245,7 +229,7 @@ std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::stri
 
     for(size_t i = 0; i < tokens.size(); i++)
     {
-        if(i + 1 < tokens.size() && tokens[i] == "server" && tokens[i + 1] == "{") //check if i + 1 could give crashes.
+        if(i + 1 < tokens.size() && tokens[i] == "server" && tokens[i + 1] == "{") 
 		{
             insideBlock = true;
 			bracketLevel = 1;
@@ -269,72 +253,5 @@ std::vector<std::vector<std::string>> getServerBlockTokens(std::vector<std::stri
             serverTokens.push_back(tokens[i]);
         }   
     }
-
-
-	//print test 
-    // std::cout << std::endl << std::endl << std::endl;
-	// for (size_t j = 0; j < allServers.size(); j++)
-	// {
-	// 	std::cout << "Server Block " << j << ":" << std::endl;
-
-	// 	for (size_t i = 0; i < allServers[j].size(); i++)
-	// 	{
-	// 		std::cout << allServers[j][i] << std::endl;
-	// 	}
-
-	// 	std::cout << std::endl; // Add spacing between blocks
-	// }
-
     return allServers;
 }
-
-
-
-
-
-
-
-
-
- 
-            //   if(tokens[i] == "{")
-            //         bracketLevel ++;
-            //     else if(tokens[i] == "}")
-            //         bracketLevel --;
-            //     if (bracketLevel <= 0)
-            //         break;
-            //     serverTokens.push_back(tokens[i]);
-
-
-
-// bool checkSemicolons(std::vector<std::vector<std::string>> tokens)
-// {
-//     for(size_t i = 0; i < tokens.size(); i++)
-//     {
-//         if(needSemicolon(tokens[i]) && tokens[i].back() != ";") 
-//         {
-//             std::cerr << "Error: missing semicolon: " << tokens[i].back() << std::endl;
-//             return false;
-//         }
-//     }
-//     return true;
-// }
-
-
-
-// bool needSemicolon(std::vector<std::string> tokenLine)
-// {
-//     if(tokenLine.back() == "{")
-//         return false;
-//     if(tokenLine.size() == 1 && tokenLine[0] == "}")
-//         return(false);
-//     return true;
-// }
-
-//make function if it needs semicolon or not. If it does check for last place is semicolon.
-//check for double semicolon in the tokens. 
-//server { works
-//server
-//{
-//doesnt work. add this functionallity to needSemicolon. For "server {"
-// ["server", "{"]

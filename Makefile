@@ -4,7 +4,7 @@
 # --- Project Configuration ---
 NAME            = webserv
 CXX             = c++
-CXXFLAGS        = -Wall -Wextra -Werror -std=c++17
+CXXFLAGS        = -Wall -Wextra -Werror -std=c++17 -g
 
 # --- Directory Paths ---
 SRC_DIR         = src

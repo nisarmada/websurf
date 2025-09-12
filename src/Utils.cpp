@@ -21,8 +21,6 @@ bool isDirectory(std::string file){
 }
 
 bool isCgi(const std::string& cgi){
-	std::cout << "we are in is cgiiiiiiiiiiiiiiiiiiiii ---> "<< cgi << std::endl;
-
 	if (cgi.empty()){
 		return false;
 	}

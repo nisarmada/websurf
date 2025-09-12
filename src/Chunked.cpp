@@ -43,7 +43,7 @@ int HttpRequest::readingChunkSize(const std::vector<char>& buffer, size_t buffer
 		setError(400);
 		throw std::runtime_error("Error in chunked size");
 	}
-	// _bodyReadPosition +=q 2; // not sure if needed.
+	// _bodyReadPosition +=q 2; // not sure if needed. CHECK
 	if (_currentChunkSize == 0){
 		_chunkParseState = READING_FINAL_CRLF;
 	} else{
@@ -57,18 +57,17 @@ int HttpRequest::readingChunkData(const std::vector<char>& buffer, size_t buffer
 	size_t bytesToRead = std::min(bytesAvailable, _currentChunkSize);
 	
 	_body.insert(buffer.end(), buffer.begin() + _bodyReadPosition, buffer.begin() + _bodyReadPosition + bytesToRead);
-	std::cout << "it goes in here broooooo" << std::endl;
 	_bodyReadPosition += bytesToRead;
 	_currentChunkSize -= bytesToRead;
 	if (_currentChunkSize == 0){
 		_chunkParseState = READING_CHUNK_TERMINATOR;
 	} else {
-		return -1; //not sure if realistically we ever go here, we should check
+		return -1; //not sure if realistically we ever go here, we should check. CHECK
 	}
 	return 0;
 }
 
-//if problems look here
+
 int HttpRequest::readingChunkTerminator(const std::vector<char>& buffer, size_t bufferEnd){
 	if (bufferEnd - _bodyReadPosition < 2){
 		return -1;
@@ -104,7 +103,6 @@ void HttpRequest::parseBodyChunked(Client& client){
 				if (readingChunkSize(requestBuffer, bufferSize) == -1){
 					return;
 				}else{
-					std::cout << "111" << std::endl;
 
 					break;
 				}
@@ -114,7 +112,6 @@ void HttpRequest::parseBodyChunked(Client& client){
 					
 					return ;
 				} else {
-					std::cout << "222" << std::endl;
 					break;
 				}
 			}
@@ -123,18 +120,15 @@ void HttpRequest::parseBodyChunked(Client& client){
 					
 					return ;
 				} else {
-					std::cout << "333" << std::endl;
 					break;
 				}
 			}
 			case READING_FINAL_CRLF : {
 				readingFinalCRLF(requestBuffer, bufferSize);
-				std::cout << "444" << std::endl;
 
 				return;
 			}
 			case CHUNK_PARSING_COMPLETE : {
-				std::cout << "555" << std::endl;
 
 				return ;
 			}

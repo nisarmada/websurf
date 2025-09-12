@@ -25,7 +25,7 @@ class HttpRequest {
 		const std::string& getMethod() const;
 		const std::string& getUri() const;
 		std::string getHttpVersion() const ;
-		std::string& getHeader(const std::string& key);
+		const std::string& getHeader(const std::string& key) const;
 		void checkRequest(Client& client);
 		int checkMethod(Client& client);
 		void contentLengthCheck(Client& client);
@@ -40,6 +40,7 @@ class HttpRequest {
 		const std::vector<char>& getBody() const;
 		const std::string extractLocationVariable(Client& client, std::string identifier); //this might need to be static
 		int getError();
+		bool isBodyComplete() const;
 	private:
 		std::string _method;
 		std::string _uri;

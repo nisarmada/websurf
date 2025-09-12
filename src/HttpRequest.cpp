@@ -20,7 +20,7 @@ void HttpRequest::setHttpVersion(const std::string& httpVersion){
 }
 
 void HttpRequest::addHeader(const std::string& key, const std::string& value){ 
-	// we might need to check if it already exists
+	// we might need to check if it already exists CHECK
 	_headers[key] = value;
 }
 
@@ -31,7 +31,7 @@ const std::string& HttpRequest::getUri() const{
 const std::string& HttpRequest::getMethod() const {
 	return _method;
 }
-std::string& HttpRequest::getHeader(const std::string& key){
+const std::string& HttpRequest::getHeader(const std::string& key) const{
 	static std::string emptyString = "";
 	auto it = _headers.find(key);
 	if (it != _headers.end()){
@@ -55,7 +55,6 @@ void HttpRequest::parseRequestLine(const std::string& line){
 	method = line.substr(0, firstSpace);
 	size_t secondSpace = line.find(" ", firstSpace + 1);
 	uri = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
-	std::cout << "URI IS----> " << uri << std::endl;
 	version = line.substr(secondSpace + 1, line.npos - secondSpace);
 
 	setMethod(method);
@@ -80,6 +79,7 @@ void HttpRequest::parseBody(Client& client){
 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end());
 	size_t headerEnd = rawRequest.find("\r\n\r\n");
 	size_t bodyStart = headerEnd + 4;
+
 	if (bodyStart < rawRequest.size()){
 		std::string bodyContent = rawRequest.substr(bodyStart);
 		addBody(bodyContent.data(), bodyContent.length());
@@ -87,7 +87,6 @@ void HttpRequest::parseBody(Client& client){
 	}else{
 		_bodyFullyParsed = true;
 	}
-	// std::cout << "we are in parse bodyyyy" << std::endl;
 }
 
 int HttpRequest::checkChunked(){
@@ -120,31 +119,37 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	}
 	_bodyReadPosition = headerEnd + 4;
 	_headersComplete = true;
-	// std::cout << "----------------" << std::endl;
-	// std::cout << rawRequest << std::endl;
 	return rawRequest;
 }
 
-// void HttpRequest::parseBodyChunked(std::string& rawRequest, size_t headerEnd){
-	
-// }
+bool HttpRequest::isBodyComplete() const {
+	const std::string& contentLengthStr = getHeader("Content-Length");
+		if (contentLengthStr.empty()){
+			return true;
+		}
 
+		size_t expectedBodySize = std::stoul(contentLengthStr);
+		size_t actualBodySize = _body.size();
+
+		return actualBodySize >= expectedBodySize;
+}
 
 void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {
-		std::cout << "Headers not complete yet. Waiting for more data..." << std::endl;
         return; // Return immediately, the client buffer needs more data
     }
 	std::string firstHalfRequest = parseExceptBody(client);
 	if (checkChunked() == 1){
 		parseBodyChunked(client);
-		std::cout << "afteeeeer" << std::endl;
 	}else if (_method == "POST"){
 		parseBody(client);
 	}
+	if(_method == "POST" && !isBodyComplete()){
+		return;
+	}
+
 	extractLocationVariable(client, "/");
 	checkRequest(client);
-	// std::cout << firstHalfRequest << std::endl;
 }
 
 int HttpRequest::checkMethod(Client& client){
@@ -163,10 +168,8 @@ int HttpRequest::checkMethod(Client& client){
 		setError(400);
 		return -1;
 	}
-	std::cout << "URI:  " << _uri << std::endl;
 	if (_uri.size() > MAX_URI_LENGTH){
 		setError(414);
-		std::cout << "HELKJFELKJFLKEJLKEJFLKJEFLKJELKFJEJFE" << std::endl;
 		return -1;
 	}
 	return 0;
@@ -175,29 +178,25 @@ int HttpRequest::checkMethod(Client& client){
 void HttpRequest::contentLengthCheck(Client& client){
 	const ServerBlock* serverBlock = client.getServerBlock();
 	size_t maxSizeConfig = serverBlock->getBodySize();
-	std::string& requestSizeString = getHeader("Content-Length");
+	const std::string& requestSizeString = getHeader("Content-Length");
 	
 	if (requestSizeString == ""){
-		setError(411); // I think this is the correct error code
+		setError(411); 
 		return;
-		// throw std::runtime_error("Content Length is missing");
 	}
 	size_t requestSize = static_cast<size_t>(std::stoul(requestSizeString));
 	if (requestSize > maxSizeConfig){
 		setError(413);
 		return;
-		// throw std::runtime_error("Payload too large");
 	}
 }
 
 void HttpRequest::checkRequest(Client& client){
 	if (checkMethod(client) == -1) 
 	{ 
-		std::cout << "MINUS ONE" << std::endl;
 		return;
 	}
-		 std::cout << "PLUS ONE" << std::endl;
-	//we should check if _associatedBlock == nullptr
+	//we should check if _associatedBlock == nullptr CHECK
 	if ((_method == "POST") && !_isChunked) 
 		contentLengthCheck(client);
 	
@@ -218,13 +217,8 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
     const ServerBlock* serverBlock = client.getServerBlock();
     const std::map<std::string, LocationBlock>& locations = serverBlock->getLocations();
    
-	// std::cout << "identifier is -----> " << identifier << std::endl;
-	// std::cout << "uri is -------> " << _uri << std::endl;
-	std::string longestMatch = findLongestMatch(_uri, locations); //this finds the longet match so we don't throw an exception if the full path doesn't exist
-	// std::cout << "longest match is ---> " << longestMatch << std::endl;
+	std::string longestMatch = findLongestMatch(_uri, locations); 
 	const LocationBlock& currentLocation = locations.at(longestMatch);
-	// std::cout << "index is  -----> " << currentLocation.getIndex() << std::endl;
-    // std::cout << "uir: ---> " <<_uri << std::endl;
     if (identifier == "_path") {
         return currentLocation.getPath();
     } else if (identifier == "_root") {
@@ -238,6 +232,15 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
     } else if (identifier == "_cgiPass") {
         return currentLocation.getCgiPass();
 	}
+	else if (identifier == "_autoindex")
+	{
+		bool autoindex =  currentLocation.getAutoindex(); //CHECK  this is very ugly.
+		if (autoindex == true)
+			return("true");
+		else
+			return("false");
+	}
+	
 	const std::string emptyString = "";
     return emptyString;
 }

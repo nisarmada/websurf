@@ -8,6 +8,10 @@
 #include <cstdio>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <unordered_map>
+
+class HttpResponse;
 
 class HttpResponse;
 
@@ -28,12 +32,14 @@ class Cgi {
 		std::string			_serverProtocol;
 		std::string			_serverPort;
 		std::string			_gatewayInterface;
+		std::string 		_cgiResponse;
 	public:
 		Cgi(HttpRequest& request);
 		Cgi(HttpRequest& request, const std::string cgiPath, const std::string cgiPass,\
 			 const std::string serverPort);
 		~Cgi();
-		void executeCgi(HttpResponse& response);
+		int executeCgi();
+		pid_t getPid();
 		void childProcess();
 		void parentProcess(HttpResponse& response);
 		void populateEnvironmentVariables();
@@ -46,4 +52,5 @@ class Cgi {
 		void readCgiResponse(std::string& response);
 		void parseResponse(std::string& rawResponse, HttpResponse& response);
 		void putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString);
+		std::string& getResponseString();
 };

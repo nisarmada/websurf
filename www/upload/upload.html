@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2em; background: #f9f9f9; }
+    h1 { color: #333; }
+    form { background: #fff; padding: 1em; border-radius: 8px; box-shadow: 0 0 6px rgba(0,0,0,0.1); }
+    input[type="file"] { margin-bottom: 1em; }
+    button { padding: 0.5em 1em; border: none; background: #4CAF50; color: white; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+  <h1>Upload a File</h1>
+  <form action="/upload" method="POST" enctype="multipart/form-data">
+    <input type="file" name="file"><br>
+    <button type="submit">Upload</button>
+  </form>
+</body>
+</html>
