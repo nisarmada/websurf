@@ -26,3 +26,11 @@ bool isCgi(const std::string& cgi){
 	}
 	return true;
 }
+
+bool cgiPathIsValid(const std::string& fullPath){
+	std::ifstream cgiFile(fullPath.c_str());
+	if (!cgiFile.is_open()){
+		return false;
+	}
+	return true;
+}

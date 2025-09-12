@@ -40,7 +40,6 @@ class HttpResponse {
 		bool checkAllowedMethods(Client& client, std::string check);
 		void handleError(Client& client, HttpRequest& request);
 		bool handleAutoindex(HttpRequest& request, Client& client);
-
 	private:
 		const std::string _root;
 		std::string _httpVersion;

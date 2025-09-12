@@ -383,15 +383,18 @@ void HttpResponse::handleResponse(Client& client, WebServer& server){
 	const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 
-	if (isCgi(cgiPass)){
+	if (isCgi(cgiPass) && cgiPathIsValid(fullPathCgi)){
 		Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
 		int cgiReadFd = cgi->executeCgi();
 		if (cgiReadFd != -1){
 			server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
 		}
 		else {
-			//CHECK error handling not done for response
-			response.setStatusCode(500);
+			if (cgiPathIsValid(fullPathCgi))
+				response.setStatusCode(404);
+			else{
+				response.setStatusCode(500);
+			}
 		}
 	}
 	else{

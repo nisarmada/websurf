@@ -216,6 +216,7 @@ bool WebServer::fdIsListeningSocket(int fd){
 
 void WebServer::cgiWaitAndCleanup(int cgiFd, Cgi* cgi, int clientFd){
 	alarm(0);
+	cgi_pid_to_kill = -1;
 	epoll_ctl(_epollFd, EPOLL_CTL_DEL, cgiFd, NULL);
 	close (cgiFd);
 	waitpid(cgi->getPid(), NULL, 0);
