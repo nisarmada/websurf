@@ -1,5 +1,5 @@
 -post and delete seem not to be working properly (try max boxy size 1)
 -autoindexing
--stress test the server
+-stress test the server (apparently checked on eval sheet)
 -check for leaks
 -remove illigal stuff that are not allowed by the subject.

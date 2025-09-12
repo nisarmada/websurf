@@ -55,7 +55,6 @@ void HttpRequest::parseRequestLine(const std::string& line){
 	method = line.substr(0, firstSpace);
 	size_t secondSpace = line.find(" ", firstSpace + 1);
 	uri = line.substr(firstSpace + 1, secondSpace - firstSpace - 1);
-	std::cout << "URI IS----> " << uri << std::endl;
 	version = line.substr(secondSpace + 1, line.npos - secondSpace);
 
 	setMethod(method);
@@ -137,13 +136,11 @@ bool HttpRequest::isBodyComplete() const {
 
 void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {
-		std::cout << "Headers not complete yet. Waiting for more data..." << std::endl;
         return; // Return immediately, the client buffer needs more data
     }
 	std::string firstHalfRequest = parseExceptBody(client);
 	if (checkChunked() == 1){
 		parseBodyChunked(client);
-		std::cout << "afteeeeer" << std::endl;
 	}else if (_method == "POST"){
 		parseBody(client);
 	}
@@ -197,10 +194,8 @@ void HttpRequest::contentLengthCheck(Client& client){
 void HttpRequest::checkRequest(Client& client){
 	if (checkMethod(client) == -1) 
 	{ 
-		std::cout << "MINUS ONE" << std::endl;
 		return;
 	}
-		 std::cout << "PLUS ONE" << std::endl;
 	//we should check if _associatedBlock == nullptr CHECK
 	if ((_method == "POST") && !_isChunked) 
 		contentLengthCheck(client);

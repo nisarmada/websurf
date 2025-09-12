@@ -19,7 +19,6 @@ _cgiPath(cgiPath), _cgiPass(cgiPass), _serverPort(serverPort), _gatewayInterface
 Cgi::~Cgi() {}
 
 std::string Cgi::findQueryString(const std::string& uri){
-	// std::cout << "INSIDE CGI URIII---> " << uri << std::endl;
 	size_t questionmarkPosition = uri.find_first_of("?");
 	if (questionmarkPosition == std::string::npos){
 		return ("");

@@ -7,7 +7,6 @@
 
 int main (int argc, char** argv)
 {
-    std::cout << "THIS IS A VERY IMPORTANT TEST LETS SEE IF THIS SHOWS UP" << std::endl;
     if(argc != 2)
     {
         std::cerr << "Usage: ./webserv configfile" << std::endl;

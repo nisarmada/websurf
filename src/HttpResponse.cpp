@@ -57,7 +57,6 @@ std::string HttpResponse::responseToString(){
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
-	std::cout << "method is ------->" << request.getMethod() << std::endl;
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
 	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST"))
@@ -71,8 +70,6 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 	
 	else if(_body.empty())
 	{
-		std::cout << "WE NEED TO KNOW THIS ARE WE HERE LETS SEE" << std::endl;
-		// populateErrorHeaders();
 		createBodyVector(client, request);
 	}
 	return;
@@ -128,7 +125,6 @@ void HttpResponse::populateHeaders(HttpRequest& request)
 	else {
 		setErrorText();
 	}
-	std::cout << request.getHttpVersion() << std::endl;
 	addHeader("Content-Length", std::to_string(_bodyLen));
 }
 
@@ -159,7 +155,6 @@ void HttpResponse::findContentType()
 std::string HttpResponse::createCompleteResponse()
 {
 	std::string response = _httpVersion;
-	std::cout << "HTTP VERSIONNNN-->" << _httpVersion << std::endl;
 	std::string bodyString(_body.begin(), _body.end());
 	response +=  " " + std::to_string(_statusCode) + " " + _text + "\r\n";
 	for (auto& iterator : _headers){
@@ -175,19 +170,21 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
-	std::cout << "we are in executeGet " << std::endl;
 
-	if (isDirectory(uri)){
+	if (isDirectory(uri)){ //what in the world is this?
 		std::string index = request.extractLocationVariable(client, "_index");
 		if (index.empty()){
+			std::cout << "in index.empty()!" << std::endl;
 			setStatusCode(404);
 			populateErrorHeaders(); //check if this needs to be here change to createBodyVecto? CHECK
 			std::cerr << "index is not found " << std::endl;
 			return ;
 		}
 		if (uri.back() == '/'){
+			std::cout << "in uri back == / !" << std::endl;
 			uri += index;
 		} else {
+			std::cout << "in else ! " << std::endl;
 			uri += "/" + index;
 		}
 	}
@@ -318,7 +315,6 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 
 	if(_statusCode >= 400)
 	{
-		std::cout << "WE ARE HANDLINE ERROR RIGHT NOW SHEESHT" << std::endl;
 		handleError(client, request);
 		return;
 	}
@@ -347,8 +343,7 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 	return false;
 	std::string indexFileName = request.extractLocationVariable(client, "_index");
 	std::string indexPath = _path + "/" + indexFileName;
-	std::cout << "THIS IS A TEST DO i HAVE CORRECT PATH? : " << indexPath << std::endl;
-
+	std::cout << "indexPath: " << indexPath << std::endl;
 	return true;
 }
 
@@ -395,7 +390,7 @@ void HttpResponse::handleResponse(Client& client, WebServer& server){
 			server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
 		}
 		else {
-			std::cout << "HANDLE RESPONSE ERROR" << std::endl; //CHECK error handling not done for response
+			//CHECK error handling not done for response
 			response.setStatusCode(500);
 		}
 	}

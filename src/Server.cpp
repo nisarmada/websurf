@@ -55,7 +55,6 @@ int WebServer::setupListenerSocket(int port) {
 		return -2;
 	}
 
-	std::cout << "We are listening people !" << std::endl;
 	return listeningSocket;
 }
 
@@ -109,7 +108,6 @@ void WebServer::clientIsReadyToWriteTo(int clientFd){
 void WebServer::monitorCgiFd(int cgiReadFd, int clientFd, Cgi* cgiInstance){
 	setNonBlocking(cgiReadFd);
 
-	std::cout << "MONITOR CGI FD " << std::endl;
 	struct epoll_event event;
 	event.events = EPOLLIN;
 	event.data.fd = cgiReadFd;
@@ -129,7 +127,6 @@ void WebServer::clientRead(int clientFd){
 	char readBuffer[BUFFER_SIZE];
 	ssize_t bytesRead = recv(clientFd, readBuffer, BUFFER_SIZE, 0); //recv returns how many bytes it read each itteration
 	if (bytesRead == 0){ // client terminated the connection
-		std::cout << "Cleanup crew called" << std::endl;
 		cleanupFd(clientFd);
 	}
 	else if (bytesRead < 0){
@@ -184,10 +181,8 @@ void WebServer::clientWrite(int clientFd){
 	}
 	else {
 		clientToWrite.addBytesSent(bytesSentThisRound);
-		std::cout << "We sent " << bytesSentThisRound << " bytes to client" << std::endl;
 	}
 	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately CHECK
-		std::cout << "Full response sent to client " << clientFd << std::endl;
 		cleanupFd(clientFd);
 	}
 }
@@ -214,7 +209,6 @@ void WebServer::cgiWaitAndCleanup(int cgiFd, Cgi* cgi, int clientFd){
 void WebServer::cgiResponse(int cgiFd){
 	int clientFd = _cgiFdsToClientFds.at(cgiFd);
 	Cgi* cgi = _activeCgis.at(clientFd);
-	std::cout << "when response is done it looks like his--> " << cgi->getResponseString() << std::endl;
 	HttpResponse httpResponse;
 	cgi->parseResponse(cgi->getResponseString(), httpResponse);
 	_clients.at(clientFd).setResponse(httpResponse.responseToString());
@@ -267,8 +261,8 @@ void WebServer::startListening(int num_events){
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
 		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there CHECK
-		std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
-				<< clientInstance.getServerBlock()->getServerName() << std::endl; 
+		// std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
+		// 		<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
 		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct CHECK
@@ -276,7 +270,6 @@ void WebServer::createClientAndMonitorFd(int clientSocket){
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &clientEvent) == -1){
 			std::cerr << "Epoll ctllllll" << std::endl;
 		}
-		std::cout << "Client connected @!!! fuck yes" << std::endl;
 }
 
 void WebServer::acceptClientConnection(int listenerFd){
