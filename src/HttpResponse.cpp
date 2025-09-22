@@ -102,6 +102,7 @@ std::string HttpResponse::setErrorText(){
 
 void HttpResponse::populateErrorHeaders()
 {
+	std::cout << "this is the error:  " << _statusCode << std::endl;
 	std::string errorMessage = setErrorText();
 	std::stringstream html;
 
@@ -173,30 +174,20 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
 
-	if (isDirectory(uri)){ //what in the world is this?
-		std::string index = request.extractLocationVariable(client, "_index");
-		if (index.empty()){
-			std::cout << "in index.empty()!" << std::endl;
-			setStatusCode(404);
-			populateErrorHeaders(); //check if this needs to be here change to createBodyVecto? CHECK
-			std::cerr << "index is not found " << std::endl;
-			return ;
-		}
-		if (uri.back() == '/'){
-			// std::cout << "in uri back == / !" << std::endl;
-			uri += index;
-		} else {
-			// std::cout << "in else ! " << std::endl;
-			uri += "/" + index;
-		}
-	}
+	std::cout << "index is: " << index << std::endl;
+	std::cout << "uri path thats created: " << uri << std::endl;
+
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
 		fullPath = _root + "/" + uri;
 	else
 		fullPath = _root + uri;
+
 	_path = fullPath;
+	
+	handleDirectoryRedirect(uri, fullPath);
+
 	std::ifstream testFile(fullPath.c_str()); //change it CHECK (change to what???!!! haha)
 	if (!testFile.is_open()) {
 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
@@ -205,6 +196,64 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 	setStatusCode(200); 
 	createBodyVector(client, request);
 }
+
+bool HttpResponse::handleDirectoryRedirect(std::string& uri, std::string& fullPath)
+{
+	struct stat st; //CHECK see if I need to set error code 301
+	if(stat(fullPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode) && !uri.empty() && uri.back() != '/')
+	{
+		uri += '/';
+		fullPath += '/';
+		return true;
+	}
+	return false;
+}
+
+
+
+
+
+
+// void HttpResponse::executeGet(HttpRequest& request, Client& client)
+// {
+// 	std::string uri = request.getUri();
+// 	std::string index = request.extractLocationVariable(client, "_index");
+// 	std::string fullPath;
+
+// 	if (isDirectory(uri)){ //what in the world is this?
+// 		std::string index = request.extractLocationVariable(client, "_index");
+// 		if (index.empty()){
+// 			std::cout << "in index.empty()!" << std::endl;
+// 			setStatusCode(404);
+// 			populateErrorHeaders(); //check if this needs to be here change to createBodyVecto? CHECK
+// 			std::cerr << "index is not found " << std::endl;
+// 			return ;
+// 		}
+// 		if (uri.back() == '/'){
+// 			std::cout << "in uri back == / !" << std::endl;
+// 			uri += index;
+// 		} else {
+// 			std::cout << "in else ! " << std::endl;
+// 			uri += "/" + index;
+// 		}
+// 	}
+// 	std::cout << "index is: " << index << std::endl;
+// 	std::cout << "uri path thats created: " << uri << std::endl;
+// 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
+// 		fullPath = _root + uri.substr(1); // avoid double slash
+// 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
+// 		fullPath = _root + "/" + uri;
+// 	else
+// 		fullPath = _root + uri;
+// 	_path = fullPath;
+// 	std::ifstream testFile(fullPath.c_str()); //change it CHECK (change to what???!!! haha)
+// 	if (!testFile.is_open()) {
+// 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
+// 		std::cerr << "File not found: " << fullPath << std::endl;
+// 	}
+// 	setStatusCode(200); 
+// 	createBodyVector(client, request);
+// }
 
 bool HttpResponse::checkAllowedMethods(Client& client, std::string check)
 {
@@ -319,35 +368,102 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 		handleError(client, request);
 		return;
 	}
-
+	std::cout << "path createvector " << _path << std::endl;
 	if(handleAutoindex(request, client) == true)
 		return;
-
-	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
-	std::string content;
-	if(!file.is_open())
-	{
-		_statusCode = 404;
-		handleError(client, request);
-		return ;
-	}
-	std::stringstream buf;
-	buf << file.rdbuf();
-	content = buf.str();
-	setBody(std::vector<char>(content.begin(), content.end()));
+		
+	if (setBodyFromFile(client, request) == false)
+		return;
 	setStatusCode(200);
 }
 bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 {
 	struct stat checkPath;
+	std::cout << "in handleAutoIndex" << std::endl;
 	if(stat(_path.c_str(), &checkPath) != 0 || !S_ISDIR(checkPath.st_mode))//does something exist at the file and check if its a directory. 
-	return false;
+		return false;
+
 	std::string indexFileName = request.extractLocationVariable(client, "_index");
 	std::string indexPath = _path + "/" + indexFileName;
-	std::cout << "indexPath: " << indexPath << std::endl;
+	
+	struct stat isFile;
+	if(stat(indexPath.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
+	{
+		std::cout << "in setBodyFile autoindex !" << std::endl;
+		_path = indexPath;
+		setBodyFromFile(client, request);
+		setStatusCode(200);
+		return true;
+	}
+
+	std::string autoIndex = request.extractLocationVariable(client, "_autoindex");
+
+	if(autoIndex == "true")
+	{
+		// std::string uri= request.getUri();
+		// if(!uri.empty() && uri.back() != '/')
+		// 	request.setUri(uri + "/"); internal object; it does not change the actual URL the browser used for this request. The browser st
+		setBodyFromDirectoryList(client, request);
+		return true;
+	}
+
+	_statusCode = 403;
+	handleError(client, request);
 	return true;
 }
 
+bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
+{
+	std::cout << "path is: " << _path << std::endl;
+ 	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
+	if(!file.is_open())
+	{
+		_statusCode = 404;
+		handleError(client, request);
+		return false;
+	}
+	std::string content;
+	std::stringstream buf;
+	buf << file.rdbuf();
+	content = buf.str();
+	setBody(std::vector<char>(content.begin(), content.end()));
+	return true;
+}
+void HttpResponse::setBodyFromDirectoryList(Client& client, HttpRequest& request)
+{
+	std::cout << "path inside of setbodyfromdirectorylist: " << _path << std::endl; //check if I earlier overwrite the path to a file instead of the directory. That should not happen for this function
+	DIR* dir_ptr = opendir(_path.c_str()); //struct with directory information.
+	if(!dir_ptr)
+	{
+		setStatusCode(403);
+		handleError(client, request);
+		return;
+	}
+	std::ostringstream html;
+	html << "<html><head><title>Index of" << request.getUri()
+		<< "</title></head><body>\n";
+	html << "<h1>Index of " << request.getUri() << "</h1>\n<ul>\n";
+	std::string base = request.getUri();
+	if(!base.empty() && base.back() != '/')
+		base += '/';
+	
+	struct dirent* dirEntry;
+	while ((dirEntry = readdir(dir_ptr)) != NULL) //readdir goes to the next entry dirptr remember where its at.
+	{
+		std::string name = dirEntry->d_name;
+		if(name == "." || name == "..")
+			continue;
+		html << "<li><a href=\"" << base << name << "\">"
+		<< name << "</a></li>\n";
+	}
+	closedir(dir_ptr);
+
+	html << "</ul>\n</body></html>\n";
+	std::string page = html.str();
+	setStatusCode(200);
+	setBody(std::vector<char>(page.begin(), page.end()));
+	return;
+}
 
 
 void HttpResponse::handleError(Client& client, HttpRequest& request)
@@ -372,6 +488,7 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 		populateHeaders(request);
 		return;
 	}
+	std::cout << "popolate the error headers :)" << std::endl;
 	populateErrorHeaders();
 }
 

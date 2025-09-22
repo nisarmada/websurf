@@ -17,6 +17,8 @@
 
 class Cgi;
 
+class Cgi;
+
 class WebServer {
 	public:
 		WebServer();

@@ -142,6 +142,19 @@ std::string& Cgi::getResponseString(){
 	return _cgiResponse;
 }
 
+// void Cgi::readCgiResponse(std::string& response){
+// 	char buffer[4096];
+// 	ssize_t bytesRead;
+// 	//read from the response until there's nothing left
+// 	while ((bytesRead = read(_responsePipe[0], buffer, sizeof(buffer))) > 0){
+// 		response.append(buffer,bytesRead);
+// 	}
+// 	if (bytesRead == -1){
+// 		std::cerr << "Read from cgi failed in readCgiResponse" << std::endl;
+// 	}
+// 	close(_responsePipe[0]);
+// }
+
 void Cgi::putHeaderInMap(std::unordered_map<std::string, std::string>& headers, std::string& headerString){
 	size_t keyEnd = headerString.find(':');
 	std::string key = headerString.substr(0, keyEnd);

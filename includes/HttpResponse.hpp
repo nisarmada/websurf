@@ -9,6 +9,9 @@
 #include <cstdio>
 #include "Cgi.hpp"
 #include <sys/stat.h>
+#include <dirent.h>  
+#include <sys/stat.h>  
+#include <sstream>  
 
 class HttpResponse {
 	public:
@@ -40,6 +43,10 @@ class HttpResponse {
 		bool checkAllowedMethods(Client& client, std::string check);
 		void handleError(Client& client, HttpRequest& request);
 		bool handleAutoindex(HttpRequest& request, Client& client);
+		bool handleDirectoryRedirect(std::string& uri, std::string& fullPath);
+		bool setBodyFromFile(Client& client, HttpRequest& request);
+		void setBodyFromDirectoryList(Client& client, HttpRequest& request);
+
 	private:
 		const std::string _root;
 		std::string _httpVersion;
