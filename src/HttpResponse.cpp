@@ -2,7 +2,7 @@
 #include "../includes/Utils.hpp"
 
 
-HttpResponse::HttpResponse() : _root("./www")
+HttpResponse::HttpResponse() : _root("./www"), _httpVersion("HTTP/1.1")
 {} 
 
 HttpResponse::~HttpResponse() {}
@@ -181,10 +181,10 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 			return ;
 		}
 		if (uri.back() == '/'){
-			std::cout << "in uri back == / !" << std::endl;
+			// std::cout << "in uri back == / !" << std::endl;
 			uri += index;
 		} else {
-			std::cout << "in else ! " << std::endl;
+			// std::cout << "in else ! " << std::endl;
 			uri += "/" + index;
 		}
 	}
