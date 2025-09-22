@@ -3,3 +3,4 @@
 -stress test the server (apparently checked on eval sheet)
 -check for leaks
 -remove illigal stuff that are not allowed by the subject.
+-autoindex when on and there is no index it serves an empty body fix this bruh
