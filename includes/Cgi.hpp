@@ -1,8 +1,8 @@
 #pragma once
 
 #include <sstream>
-#include "server.hpp"
 #include "Client.hpp"
+#include "server.hpp"
 #include <fstream>
 #include <ctime>
 #include <cstdio>
@@ -13,7 +13,7 @@
 
 class HttpResponse;
 
-class HttpResponse;
+extern pid_t cgi_pid_to_kill;
 
 class Cgi {
 	private:

@@ -69,6 +69,13 @@
       background: linear-gradient(90deg, #5d8be3 0%, #7ea6e0 100%);
       box-shadow: 0 4px 16px rgba(93,139,227,0.13);
             }
+    #statusMessage {
+      font-size: 0.9em;
+      text-align: center;
+      margin-top: 10px;
+      height: 20px; /* Reserve space to prevent layout shift */
+      color: #5d8be3;
+    }
     @media (max-width: 500px) {
             .container {
         padding: 18px 6px 14px 6px;
@@ -87,6 +94,7 @@
       <input type="file" id="fileInput" name="file" required>
       <button type="button" onclick="uploadFile()">Upload</button>
     </form>
+    <div id="statusMessage"></div>
 
     <h1>File Delete (DELETE)</h1>
     <form id="deleteForm" method="POST" onsubmit="return false;">
@@ -99,14 +107,20 @@
     // Upload file using POST to /upload
     function uploadFile() {
       const fileInput = document.getElementById('fileInput');
+      const statusMessage = document.getElementById('statusMessage');
       if (!fileInput.files.length) {
-        alert('Please select a file.');
+        statusMessage.textContent = 'Please select a file.';
+        statusMessage.style.color = '#e74c3c';
         return;
       }
       
       const file = fileInput.files[0];
       const formData = new FormData();
       formData.append('file', file);
+      
+      // Show waiting message
+      statusMessage.textContent = 'Uploading file... please wait.';
+      statusMessage.style.color = '#5d8be3';
       
       fetch('/upload', {
         method: 'POST',
@@ -117,10 +131,17 @@
       })
       .then(response => {
         if (response.ok) {
-          alert('File uploaded successfully!');
+          statusMessage.textContent = 'File uploaded successfully!';
+          statusMessage.style.color = '#27ae60';
         } else {
-          alert('Upload failed: ' + response.status);
+          statusMessage.textContent = 'Upload failed: ' + response.status;
+          statusMessage.style.color = '#e74c3c';
         }
+      })
+      .catch(error => {
+        statusMessage.textContent = 'An error occurred. Check the server.';
+        statusMessage.style.color = '#e74c3c';
+        console.error('Error:', error);
       });
     }
 

@@ -2,6 +2,22 @@
 #include "../includes/Parser.hpp"
 #include "../includes/server.hpp"
 #include "../includes/Client.hpp"
+#include "../includes/Cgi.hpp"
+
+pid_t cgi_pid_to_kill = -1;
+
+void cleanupZombieChildren(int signum){
+	(void)signum;
+	while (waitpid(-1, NULL, WNOHANG) > 0){}
+}
+
+void sigalrm_handler(int signum){
+	(void)signum;
+	std::cerr << "Timeout occurred! Killing the child process " << cgi_pid_to_kill << std::endl;
+	if (cgi_pid_to_kill != -1){
+		kill(cgi_pid_to_kill, SIGKILL);
+	}
+}
 
 WebServer::WebServer() : _events(MAX_EVENTS){}
 
@@ -61,6 +77,8 @@ int WebServer::setupListenerSocket(int port) {
 WebServer::~WebServer() {}
 
 void WebServer::initializeServer() {
+	signal(SIGCHLD, cleanupZombieChildren);
+	signal(SIGALRM, sigalrm_handler);
 	_epollFd = epoll_create1(0); // this fd monitors other fds for any pending activity
 	if (_epollFd == -1) {
 		throw std::runtime_error("epoll create failed");
@@ -197,6 +215,8 @@ bool WebServer::fdIsListeningSocket(int fd){
 }
 
 void WebServer::cgiWaitAndCleanup(int cgiFd, Cgi* cgi, int clientFd){
+	alarm(0);
+	cgi_pid_to_kill = -1;
 	epoll_ctl(_epollFd, EPOLL_CTL_DEL, cgiFd, NULL);
 	close (cgiFd);
 	waitpid(cgi->getPid(), NULL, 0);

@@ -1,5 +1,6 @@
 #include "../includes/Cgi.hpp"
 
+
 Cgi::Cgi(HttpRequest& request) : _request(request) {
 	_requestPipe[0] = -1;
 	_requestPipe[1] = -1;
@@ -79,6 +80,8 @@ void Cgi::executeExecve(){
 		const_cast<char*>(_cgiPath.c_str()),
 		NULL
 	};
+	std::cout << "cgi pass: " << _cgiPass << std::endl;
+	std::cout << "cgi path: " << _cgiPath << std::endl;
 	std::vector<char*> envp = createEnvironmentVariableVector();
 	if (execve(const_cast<char*>(_cgiPass.c_str()), argv, envp.data()) == -1){
 		std::cerr << "Execve failed:(" << std::endl;
@@ -212,6 +215,8 @@ int Cgi::executeCgi() {
 		exit(EXIT_FAILURE); //if it reaches here execve failed
 	} else { //parent process
 		closePipes("parent");
+		cgi_pid_to_kill = _pid;
+		alarm(3);
 		giveBodyToChild();
 		return _responsePipe[0]; //read-end of the pipe so it can be added to epoll
 		// parentProcess(response);

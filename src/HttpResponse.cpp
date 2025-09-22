@@ -2,7 +2,7 @@
 #include "../includes/Utils.hpp"
 
 
-HttpResponse::HttpResponse() : _root("./www")
+HttpResponse::HttpResponse() : _root("./www"), _httpVersion("HTTP/1.1")
 {} 
 
 HttpResponse::~HttpResponse() {}
@@ -59,8 +59,10 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
-	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST"))
+	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
 		executePost(request, client);
+
+	}
 	if (request.getMethod() == "DELETE" && checkAllowedMethods(client, "DELETE"))
 		executeDelete(request, client);
 	
@@ -191,7 +193,6 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << fullPath << std::endl;
 	}
-
 	setStatusCode(200); 
 	createBodyVector(client, request);
 }
@@ -278,7 +279,6 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
         setStatusCode(500);
         return;
     }
-    
     // Get original filename from custom header
     std::string originalFilename = request.getHeader("X-Filename");
     std::string fileName;
@@ -501,15 +501,18 @@ void HttpResponse::handleResponse(Client& client, WebServer& server){
 	const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 
-	if (isCgi(cgiPass)){
+	if (isCgi(cgiPass) && cgiPathIsValid(fullPathCgi)){
 		Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
 		int cgiReadFd = cgi->executeCgi();
 		if (cgiReadFd != -1){
 			server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
 		}
 		else {
-			//CHECK error handling not done for response
-			response.setStatusCode(500);
+			if (cgiPathIsValid(fullPathCgi))
+				response.setStatusCode(404);
+			else{
+				response.setStatusCode(500);
+			}
 		}
 	}
 	else{

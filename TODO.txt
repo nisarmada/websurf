@@ -1,6 +1,10 @@
--post and delete seem not to be working properly (try max boxy size 1)
+-post and delete seem not to be working properly (try max boxy size 1)- doneezo prolly
 -autoindexing
 -stress test the server (apparently checked on eval sheet)
 -check for leaks
 -remove illigal stuff that are not allowed by the subject.
--autoindex when on and there is no index it serves an empty body fix this bruh
+
+-double listen works
+-if cgi doesnt have execute permission we should give 403 forbidden. should we do that?
+-maybe make root needed as well? what do we do if it's missing? are we hardcoding ./www ?
+-check with error codes (500 and 403 for example) it says it twice.

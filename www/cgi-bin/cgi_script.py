@@ -5,6 +5,17 @@ import os
 import sys
 import time
 
+<<<<<<< HEAD
+=======
+# --- ADDED CODE FOR DELAY ---
+# This simulates a long-running CGI process
+# print("Waiting for 10 seconds...")
+# sys.stdout.flush() # Ensure this message is sent immediately
+# time.sleep(10)
+# print("Finished waiting!")
+# # ----------------------------
+
+>>>>>>> main
 # Print the HTTP header
 print("Content-Type: text/html\r\n", end='')
 print("\r\n", end='')
