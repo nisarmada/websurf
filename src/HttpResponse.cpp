@@ -59,8 +59,10 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
-	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST"))
+	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
 		executePost(request, client);
+
+	}
 	if (request.getMethod() == "DELETE" && checkAllowedMethods(client, "DELETE"))
 		executeDelete(request, client);
 	
@@ -228,7 +230,6 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
         setStatusCode(500);
         return;
     }
-    
     // Get original filename from custom header
     std::string originalFilename = request.getHeader("X-Filename");
     std::string fileName;
