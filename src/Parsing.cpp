@@ -163,7 +163,8 @@ Type getType(const std::string& token)
         {"autoindex", DIRECTIVE},
         {"return", DIRECTIVE},
         {"upload_path", DIRECTIVE},
-        {"cgi_pass", DIRECTIVE}
+        {"cgi_pass", DIRECTIVE},
+        {"return", DIRECTIVE}
 
     };
     if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map

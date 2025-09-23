@@ -99,6 +99,15 @@ const std::string& LocationBlock::getCgiPass() const
     return _cgiPass;
 }
 
+//   void LocationBlock::setReturn(std::string& return_str)
+//   {
+//     _return = return_str;
+//   }
+
+//   const std::string& LocationBlock::getReturn() const
+//   {
+//     return _return;
+//   }
 
 
 

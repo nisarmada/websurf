@@ -12,6 +12,7 @@ class LocationBlock
         std::string _redirectUrl;
         std::string _uploadPath;
         std::string _cgiPass;
+        std::string _return;
         std::set<std::string> _methods;
         bool _autoindex;
         bool _autoindexSet;
@@ -46,4 +47,7 @@ class LocationBlock
 
         void setCgiPass(const std::string& cgi);
         const std::string& getCgiPass() const;
+
+        // void setReturn(std::string& return_str);
+        // const std::string& getReturn() const;
 };

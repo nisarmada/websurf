@@ -55,3 +55,4 @@ void parseCgiPass(std::vector<std::string> tokens, size_t i, LocationBlock& loca
 void parseAutoindex(std::vector<std::string> tokens, size_t i, LocationBlock& location);
 void parseRoot(std::vector<std::string> tokens, size_t i, LocationBlock& location);
 void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& location);
+void parseReturn(std::vector<std::string> tokens, size_t i, LocationBlock& location);

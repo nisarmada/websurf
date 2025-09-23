@@ -57,6 +57,25 @@ std::string HttpResponse::responseToString(){
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 {
+	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
+	populateFullPath(request, client);
+
+	std::cout << "path: " << _path << std::endl;
+	std::cout << "redirect: " << redirect << std::endl;
+	std::cout << "redirectdone: ";
+	
+	
+
+	if(!redirect.empty() && buildFullUrl(request) != redirect)
+	{
+		if(redirect.rfind("http://", 0) == 0) //temporary find good fix
+		{
+			sendRedirect(redirect);
+			return;
+		}
+		// setStatusCode(404);
+	}
+
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
 	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
@@ -75,6 +94,24 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 		createBodyVector(client, request);
 	}
 	return;
+}
+
+std::string HttpResponse::buildFullUrl(HttpRequest& request)
+{
+	std::string fullUrl = "http://";
+	fullUrl = fullUrl + request.getHeader("Host");
+	fullUrl += request.getUri();
+	return fullUrl;
+}
+
+
+void HttpResponse::sendRedirect(const std::string& url)
+{
+	setStatusCode(301);
+	setText("Moved Permanently");
+	addHeader("Location", url);
+	setBody(std::vector<char>()); //set empty body in case there is still something in there.
+	addHeader("Content-Length", "0");
 }
 
 std::string HttpResponse::setErrorText(){
@@ -171,6 +208,36 @@ std::string HttpResponse::createCompleteResponse()
 void HttpResponse::executeGet(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
+	// std::string index = request.extractLocationVariable(client, "_index");
+	// std::string fullPath;
+
+	// std::cout << "index is: " << index << std::endl;
+	// std::cout << "uri path thats created: " << uri << std::endl;
+
+	// if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
+	// 	fullPath = _root + uri.substr(1); // avoid double slash
+	// else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
+	// 	fullPath = _root + "/" + uri;
+	// else
+	// 	fullPath = _root + uri;
+
+	// _path = fullPath;
+	
+	handleDirectoryRedirect(uri, _path);
+
+	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
+	if (!testFile.is_open()) {
+		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
+		std::cerr << "File not found: " << _path << std::endl;
+	}
+
+	setStatusCode(200); 
+	createBodyVector(client, request);
+}
+
+void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
+{
+	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
 
@@ -208,52 +275,6 @@ bool HttpResponse::handleDirectoryRedirect(std::string& uri, std::string& fullPa
 	}
 	return false;
 }
-
-
-
-
-
-
-// void HttpResponse::executeGet(HttpRequest& request, Client& client)
-// {
-// 	std::string uri = request.getUri();
-// 	std::string index = request.extractLocationVariable(client, "_index");
-// 	std::string fullPath;
-
-// 	if (isDirectory(uri)){ //what in the world is this?
-// 		std::string index = request.extractLocationVariable(client, "_index");
-// 		if (index.empty()){
-// 			std::cout << "in index.empty()!" << std::endl;
-// 			setStatusCode(404);
-// 			populateErrorHeaders(); //check if this needs to be here change to createBodyVecto? CHECK
-// 			std::cerr << "index is not found " << std::endl;
-// 			return ;
-// 		}
-// 		if (uri.back() == '/'){
-// 			std::cout << "in uri back == / !" << std::endl;
-// 			uri += index;
-// 		} else {
-// 			std::cout << "in else ! " << std::endl;
-// 			uri += "/" + index;
-// 		}
-// 	}
-// 	std::cout << "index is: " << index << std::endl;
-// 	std::cout << "uri path thats created: " << uri << std::endl;
-// 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
-// 		fullPath = _root + uri.substr(1); // avoid double slash
-// 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
-// 		fullPath = _root + "/" + uri;
-// 	else
-// 		fullPath = _root + uri;
-// 	_path = fullPath;
-// 	std::ifstream testFile(fullPath.c_str()); //change it CHECK (change to what???!!! haha)
-// 	if (!testFile.is_open()) {
-// 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
-// 		std::cerr << "File not found: " << fullPath << std::endl;
-// 	}
-// 	setStatusCode(200); 
-// 	createBodyVector(client, request);
-// }
 
 bool HttpResponse::checkAllowedMethods(Client& client, std::string check)
 {
