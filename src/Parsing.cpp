@@ -117,7 +117,7 @@ void mustHaveSemicolon(std::vector<std::string> tokens, size_t i)
         {
             if(i + 2 >= tokens.size() || tokens[i + 2] != ";")
             {
-                std::cerr << "Error: missing semicolon: " << tokens[i] << std::endl;
+                std::cerr << "Error: " << tokens[i] << std::endl;
                 exit(1);
             }
         }
@@ -139,7 +139,7 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
         if(static_cast<int>(i) - 3 >= 0 && getType(tokens[i - 3]) == DIRECTIVE2) 
             return;
     
-        std::cerr << "Error: invalid semicolon after \"" << tokens[i - 2] << "\"" << std::endl;
+        std::cerr << "Error: \"" << tokens[i - 2] << "\"" << std::endl;
         exit(1);
     }
 }

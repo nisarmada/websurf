@@ -211,20 +211,6 @@ std::string HttpResponse::createCompleteResponse()
 void HttpResponse::executeGet(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
-	// std::string index = request.extractLocationVariable(client, "_index");
-	// std::string fullPath;
-
-	// std::cout << "index is: " << index << std::endl;
-	// std::cout << "uri path thats created: " << uri << std::endl;
-
-	// if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
-	// 	fullPath = _root + uri.substr(1); // avoid double slash
-	// else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
-	// 	fullPath = _root + "/" + uri;
-	// else
-	// 	fullPath = _root + uri;
-
-	// _path = fullPath;
 	
 	handleDirectoryRedirect(uri, _path);
 

@@ -192,18 +192,27 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
         std::cerr << "Error invalid client_max_body_size: " << tokens[i + 1] << std::endl;
         exit(1);
     }
+
+    try
+    { 
     unsigned long long overflowCheck = std::stoull(tokens[i + 1]);
     
-    //make long max instead.
+    //make long max
     //for my future: catch the exeption instead of this, stoull throws exception by overflow. CHECK
     if(overflowCheck > std::numeric_limits<size_t>::max())
     {
-        std::cerr << "Error invalid client_max_body_size: " << tokens[i + 1] << std::endl;
-        exit(1);
+        return std::numeric_limits<size_t>::max();
     }
     
     size_t maxBodySize = static_cast<size_t>(std::stoull(tokens[i + 1]));
     return maxBodySize;
+    }
+
+    catch(const std::out_of_range&)
+    {
+        return std::numeric_limits<size_t>::max();
+    }
+
 }
 
 int parseListen(std::vector<std::string> tokens, size_t i) //CHECK if i + 1 is smaller then tokens.size !!!!!!!!!!!!!

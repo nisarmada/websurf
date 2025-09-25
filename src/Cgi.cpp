@@ -191,7 +191,7 @@ void Cgi::parseResponse(std::string& rawResponse, HttpResponse& response){
 		response.setText("OK");
 	}
 	else{
-		response.setStatusCode(500);
+		response.setStatusCode(501);
 		response.populateErrorHeaders();
 	}
 }
