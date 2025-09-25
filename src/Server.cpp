@@ -281,8 +281,6 @@ void WebServer::startListening(int num_events){
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
 		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there CHECK
-		// std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
-		// 		<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
 		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct CHECK
@@ -348,54 +346,54 @@ void WebServer::loadConfig(std::vector<std::vector<std::string>>& serverBlocks)
 
 
 //remove later, this is just for test purposes.
-void WebServer::printServerBlocks()
-{
-	for (size_t i = 0; i < _serverBlocks.size(); ++i)
-	{
-		if (_serverBlocks[i].hasErrorPage(404))
-		{
-			std::cout << "Error page for 404: " << _serverBlocks[i].getErrorPagePath(404) << std::endl;
-		}
-		if (_serverBlocks[i].hasErrorPage(500))
-		{
-			std::cout << "Error page for 500: " << _serverBlocks[i].getErrorPagePath(500) << std::endl;
-		}
+// void WebServer::printServerBlocks()
+// {
+// 	for (size_t i = 0; i < _serverBlocks.size(); ++i)
+// 	{
+// 		if (_serverBlocks[i].hasErrorPage(404))
+// 		{
+// 			std::cout << "Error page for 404: " << _serverBlocks[i].getErrorPagePath(404) << std::endl;
+// 		}
+// 		if (_serverBlocks[i].hasErrorPage(500))
+// 		{
+// 			std::cout << "Error page for 500: " << _serverBlocks[i].getErrorPagePath(500) << std::endl;
+// 		}
 
-		// Print location blocks
-		const std::map<std::string, LocationBlock>& locations = _serverBlocks[i].getLocations();
-		if (locations.empty())
-			std::cout << "No locations defined." << std::endl;
-		else
-		{
-			std::cout << "Locations:" << std::endl;
-			for (std::map<std::string, LocationBlock>::const_iterator it = locations.begin(); it != locations.end(); ++it)
-			{
-				std::cout << "  --Path--:       " << it->first << std::endl;
-				std::cout << "    Root:         " << it->second.getRoot() << std::endl;
-				std::cout << "    Index:        " << it->second.getIndex() << std::endl;
+// 		// Print location blocks
+// 		const std::map<std::string, LocationBlock>& locations = _serverBlocks[i].getLocations();
+// 		if (locations.empty())
+// 			std::cout << "No locations defined." << std::endl;
+// 		else
+// 		{
+// 			std::cout << "Locations:" << std::endl;
+// 			for (std::map<std::string, LocationBlock>::const_iterator it = locations.begin(); it != locations.end(); ++it)
+// 			{
+// 				std::cout << "  --Path--:       " << it->first << std::endl;
+// 				std::cout << "    Root:         " << it->second.getRoot() << std::endl;
+// 				std::cout << "    Index:        " << it->second.getIndex() << std::endl;
 
-				const std::set<std::string>& methods = it->second.getMethods();
-				if (!methods.empty())
-				{
-					std::cout << "    Methods:      ";
-					for (std::set<std::string>::const_iterator mit = methods.begin(); mit != methods.end(); ++mit)
-						std::cout << *mit << " ";
-					std::cout << std::endl;
-				}
+// 				const std::set<std::string>& methods = it->second.getMethods();
+// 				if (!methods.empty())
+// 				{
+// 					std::cout << "    Methods:      ";
+// 					for (std::set<std::string>::const_iterator mit = methods.begin(); mit != methods.end(); ++mit)
+// 						std::cout << *mit << " ";
+// 					std::cout << std::endl;
+// 				}
 
-				std::cout << "    Autoindex:    " << (it->second.getAutoindex() ? "on" : "off") << std::endl;
+// 				std::cout << "    Autoindex:    " << (it->second.getAutoindex() ? "on" : "off") << std::endl;
 
-				if (!it->second.getRedirectUrl().empty())
-					std::cout << "    Redirect:     " << it->second.getRedirectUrl() << std::endl;
+// 				if (!it->second.getRedirectUrl().empty())
+// 					std::cout << "    Redirect:     " << it->second.getRedirectUrl() << std::endl;
 
-				if (!it->second.getUploadPath().empty())
-					std::cout << "    Upload path:  " << it->second.getUploadPath() << std::endl;
-			}
-		}
+// 				if (!it->second.getUploadPath().empty())
+// 					std::cout << "    Upload path:  " << it->second.getUploadPath() << std::endl;
+// 			}
+// 		}
 
-		std::cout << std::endl;
-	}
-}
+// 		std::cout << std::endl;
+// 	}
+// }
 
 
 

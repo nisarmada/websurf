@@ -103,7 +103,6 @@ std::string HttpResponse::buildFullUrl(HttpRequest& request, std::string& redire
 	if(absolutePath.back() != '/' && redirect.front() != '/')
 		absolutePath += '/';
 	redirect.insert(0, absolutePath);
-	std::cout << "redirect: " << redirect << std::endl;
 	return fullUrl;
 }
 
@@ -142,7 +141,6 @@ std::string HttpResponse::setErrorText(){
 
 void HttpResponse::populateErrorHeaders()
 {
-	std::cout << "this is the error:  " << _statusCode << std::endl;
 	std::string errorMessage = setErrorText();
 	std::stringstream html;
 
@@ -229,9 +227,6 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
-
-	std::cout << "index is: " << index << std::endl;
-	std::cout << "uri path thats created: " << uri << std::endl;
 
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
@@ -378,7 +373,6 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 		handleError(client, request);
 		return;
 	}
-	std::cout << "path createvector " << _path << std::endl;
 	if(handleAutoindex(request, client) == true)
 		return;
 		
@@ -389,7 +383,6 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 {
 	struct stat checkPath;
-	std::cout << "in handleAutoIndex" << std::endl;
 	if(stat(_path.c_str(), &checkPath) != 0 || !S_ISDIR(checkPath.st_mode))//does something exist at the file and check if its a directory. 
 		return false;
 
@@ -399,7 +392,6 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 	struct stat isFile;
 	if(stat(indexPath.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
 	{
-		std::cout << "in setBodyFile autoindex !" << std::endl;
 		_path = indexPath;
 		setBodyFromFile(client, request);
 		setStatusCode(200);
@@ -424,7 +416,6 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 
 bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
 {
-	std::cout << "path is: " << _path << std::endl;
  	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	if(!file.is_open())
 	{
@@ -441,7 +432,6 @@ bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
 }
 void HttpResponse::setBodyFromDirectoryList(Client& client, HttpRequest& request)
 {
-	std::cout << "path inside of setbodyfromdirectorylist: " << _path << std::endl; //check if I earlier overwrite the path to a file instead of the directory. That should not happen for this function
 	DIR* dir_ptr = opendir(_path.c_str()); //struct with directory information.
 	if(!dir_ptr)
 	{
@@ -498,7 +488,6 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 		populateHeaders(request);
 		return;
 	}
-	std::cout << "popolate the error headers :)" << std::endl;
 	populateErrorHeaders();
 }
 

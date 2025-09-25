@@ -36,9 +36,7 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
     }
     return parsedBlock;
 }
-
-//add here later the syntax check if everything is correct as an input. CHECK
-//check if something is found i do i +=2 and t;hen else i++ instead of this. 
+ 
 LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
 {
     LocationBlock location;
@@ -66,25 +64,10 @@ LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
             parseUploadPath(tokens, i, location);
         else if(tokens[i] == "cgi_pass")
             parseCgiPass(tokens, i, location);
-        // else if(tokens[i] == "return")
-        //     parseReturn(tokens, i, location);
         i++;
     }
     return location;
 }
-
-// void parseReturn(std::vector<std::string> tokens, size_t i, LocationBlock& location)
-// {
-//     std::cout << "we are in parse return duh" << std::endl;
-//     if(i + 1 >= tokens.size())
-//         throw std::runtime_error("Missing value after 'return' directive.");
-//     if(!location.getReturn().empty())
-//     {
-//         throw std::runtime_error("Multiple definitions of 'return' directive.");
-//     }
-//         location.setReturn(tokens[i + 1]);
-//         std::cout << "return string that is set: " << tokens[i + 1] << std::endl;
-// }
 
 void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& location)
 {
@@ -196,9 +179,7 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
     try
     { 
     unsigned long long overflowCheck = std::stoull(tokens[i + 1]);
-    
-    //make long max
-    //for my future: catch the exeption instead of this, stoull throws exception by overflow. CHECK
+
     if(overflowCheck > std::numeric_limits<size_t>::max())
     {
         return std::numeric_limits<size_t>::max();
@@ -222,13 +203,21 @@ int parseListen(std::vector<std::string> tokens, size_t i) //CHECK if i + 1 is s
         std::cerr << "Error invalid port: " << tokens[i + 1] << std::endl;
         exit(1);
     }
-    int port = std::stoi(tokens[i + 1]);
-    if (port < 1 || port > 65535) //allowed ports on a system
+    try
+    {
+        int port = std::stoi(tokens[i + 1]);
+        if (port < 1 || port > 65535) //allowed ports on a system
+        {
+            std::cerr << "Error invalid port range: " << tokens[i + 1] << std::endl;
+            exit(1);
+        }
+        return port;
+    }
+    catch (const std::out_of_range&)
     {
         std::cerr << "Error invalid port range: " << tokens[i + 1] << std::endl;
-        exit(1);
+        exit (1);
     }
-    return port;
 }
 
 bool stringIsDigit(std::string& str)
