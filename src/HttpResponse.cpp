@@ -60,22 +60,15 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
 	populateFullPath(request, client);
 
-	std::cout << "path: " << _path << std::endl;
-	std::cout << "redirect: " << redirect << std::endl;
-	std::cout << "redirectdone: ";
-	
-	
-
-	if(!redirect.empty() && buildFullUrl(request) != redirect)
+	if(!redirect.empty() && buildFullUrl(request, redirect) != redirect)
 	{
-		if(redirect.rfind("http://", 0) == 0) //temporary find good fix
-		{
+		// if(redirect.rfind("http://", 0) == 0) //temporary find good fix
+		// {
 			sendRedirect(redirect);
 			return;
-		}
+		// }
 		// setStatusCode(404);
 	}
-
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
 	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
@@ -96,11 +89,21 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 	return;
 }
 
-std::string HttpResponse::buildFullUrl(HttpRequest& request)
+std::string HttpResponse::buildFullUrl(HttpRequest& request, std::string& redirect)
 {
 	std::string fullUrl = "http://";
 	fullUrl = fullUrl + request.getHeader("Host");
 	fullUrl += request.getUri();
+	if(redirect.rfind("http://", 0) == 0)
+	{
+		return fullUrl;
+	}
+	std::string absolutePath = "http://";
+	absolutePath += request.getHeader("Host");
+	if(absolutePath.back() != '/' && redirect.front() != '/')
+		absolutePath += '/';
+	redirect.insert(0, absolutePath);
+	std::cout << "redirect: " << redirect << std::endl;
 	return fullUrl;
 }
 
@@ -117,11 +120,11 @@ void HttpResponse::sendRedirect(const std::string& url)
 std::string HttpResponse::setErrorText(){
 	if (getStatusCode() == 404){
 		setText("Not Found");
-		return ("404 Not Found");
+		return ("Not Found");
 	}
 	else if (getStatusCode() == 413){
 		setText("Payload Too Large");
-		return ("413 Payload Too Large");
+		return ("Payload Too Large");
 	}
 	else if (getStatusCode() == 405){
 		setText("Method Not Allowed");
@@ -129,11 +132,11 @@ std::string HttpResponse::setErrorText(){
 	}
 	else if (getStatusCode() == 403){
 		setText("Forbidden");
-		return ("403 Forbidden");
+		return ("Forbidden");
 	}
 	else {
 		setText("Internal Server Error");
-		return ("500 Internal Server Error");
+		return ("Internal Server Error");
 	}
 }
 

@@ -48,7 +48,7 @@ class HttpResponse {
 		void setBodyFromDirectoryList(Client& client, HttpRequest& request);
 		void sendRedirect(const std::string& url);
 		void populateFullPath(HttpRequest& request, Client& client);
-		std::string buildFullUrl(HttpRequest& request);
+		std::string buildFullUrl(HttpRequest& request, std::string& redirect);
 
 
 

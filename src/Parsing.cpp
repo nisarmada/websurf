@@ -13,7 +13,6 @@ void parsing(const char* path, WebServer& webServ)
     std::vector<std::vector<std::string>> serverBlocks = getServerBlockTokens(tokens);
     
     webServ.loadConfig(serverBlocks);
-    // test.printServerBlocks();
 }
 
 std::ifstream openConfigFile(const char* path)
@@ -141,7 +140,7 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
             return;
     
         std::cerr << "Error: invalid semicolon after \"" << tokens[i - 2] << "\"" << std::endl;
-        exit(1); //exit? should we exit at any point? CHECK
+        exit(1);
     }
 }
 
