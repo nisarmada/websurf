@@ -50,6 +50,7 @@ class WebServer {
 		std::vector<ServerBlock> _serverBlocks;
 		std::unordered_map<int, int> _cgiFdsToClientFds;
 		std::unordered_map<int, Cgi*> _activeCgis;
+		std::unordered_map<int, HttpRequest*> _activeRequests;
 };
 
 void cleanupZombieChildren();

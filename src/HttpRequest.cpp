@@ -76,18 +76,29 @@ void HttpRequest::addBody(const char* data, size_t len){
 
 void HttpRequest::parseBody(Client& client){
 	const std::vector<char>& requestBuffer = client.getRequestBuffer();
-	std::string rawRequest(requestBuffer.begin(), requestBuffer.end());
-	size_t headerEnd = rawRequest.find("\r\n\r\n");
-	size_t bodyStart = headerEnd + 4;
+	size_t newBytes = requestBuffer.size() - _bodyReadPosition;
 
-	if (bodyStart < rawRequest.size()){
-		std::string bodyContent = rawRequest.substr(bodyStart);
-		addBody(bodyContent.data(), bodyContent.length());
-		_bodyFullyParsed = true;
-	}else{
-		_bodyFullyParsed = true;
+	if (newBytes > 0){
+		addBody(requestBuffer.data() + _bodyReadPosition, newBytes);
+		_bodyReadPosition = requestBuffer.size();
 	}
 }
+
+// void HttpRequest::parseBody(Client& client){ 
+// 	//ok so here we copy the whole buffer from scratch every time ina string
+// 	const std::vector<char>& requestBuffer = client.getRequestBuffer();
+// 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end());
+// 	size_t headerEnd = rawRequest.find("\r\n\r\n");
+// 	size_t bodyStart = headerEnd + 4;
+
+// 	if (bodyStart < rawRequest.size()){
+// 		std::string bodyContent = rawRequest.substr(bodyStart);
+// 		addBody(bodyContent.data(), bodyContent.length());
+// 		_bodyFullyParsed = true;
+// 	}else{
+// 		_bodyFullyParsed = true;
+// 	}
+// }
 
 int HttpRequest::checkChunked(){
 	if (getHeader("Transfer-Encoding") != "" && getHeader("Content-Length") != ""){

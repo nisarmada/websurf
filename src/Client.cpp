@@ -1,7 +1,7 @@
 #include "../includes/Client.hpp"
 #include <string_view>
 
-Client::Client() : _bytesSent(0) {}
+Client::Client() : _bytesSent(0), _bytesUploaded(0) {}
 
 Client::Client(int fd) : _clientFd(fd), _bytesSent(0), _associatedServerBlock(nullptr) {}
 
