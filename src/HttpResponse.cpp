@@ -159,11 +159,16 @@ std::string HttpResponse::createCompleteResponse()
 {
 	std::string response = _httpVersion;
 	std::string bodyString(_body.begin(), _body.end());
+
+	// std::cout << "DEBUG: Response Body Size: " << _body.size() << " bytes" << std::endl;
+    // std::cout << "DEBUG: Final Response Headers:\n" << response << " " << std::to_string(_statusCode) << " " << _text << "\r\n";
+
 	response +=  " " + std::to_string(_statusCode) + " " + _text + "\r\n";
 	for (auto& iterator : _headers){
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
 	}
 	response += "\r\n" + bodyString;
+	// std::cout << "create complete respones " << response << std::endl;
 	return response;
 }
 
@@ -304,6 +309,7 @@ void HttpResponse::executePost(HttpRequest& request, Client& client)
     setStatusCode(200);
     setText("Created");
     addHeader("Content-Type", "text/plain");
+	addHeader("Connection", "close");
     std::string responseBody = "File uploaded successfully: " + fileName;
     setBody(std::vector<char>(responseBody.begin(), responseBody.end()));
 }
@@ -492,10 +498,10 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 	populateErrorHeaders();
 }
 
-void HttpResponse::handleResponse(Client& client, WebServer& server){
-	HttpRequest request;
+void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
+	// HttpRequest request;
 	HttpResponse response;
-	request.parser(client);
+	// request.parser(client);
 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
 	const std::string fullPathCgi = cgiRoot + request.getUri();

@@ -157,20 +157,34 @@ void WebServer::clientRead(int clientFd){
 		}
 	}
 	else{
+		HttpRequest* currentRequest = nullptr;
 		clientToRead.appendData(readBuffer, bytesRead);
+		if (_activeRequests.count(clientFd)){
+			currentRequest = _activeRequests.at(clientFd);
+		}
+		else{
+			currentRequest = new HttpRequest();
+			_activeRequests[clientFd] = currentRequest;
+			//we need this parser, but we parse in several spots we should get rid of that
+		}
 		if (clientToRead.headerIsComplete())
 		{
-			HttpRequest tempRequest;
-			tempRequest.parser(clientToRead);
-			if (tempRequest.getMethod() == "POST" && tempRequest.isBodyComplete()){
-				if (tempRequest.isBodyComplete()){
-					HttpResponse::handleResponse(clientToRead, *this);
-					clientIsReadyToWriteTo(clientFd);
-				}
+			currentRequest->parser(clientToRead);
+			bool isComplete = false;
+			// bool isComplete = (currentRequest->getMethod() != "POST" && !currentRequest->checkChunked()) || \
+			// 					(currentRequest->isBodyComplete());
+			if ((currentRequest->getMethod() == "POST" && currentRequest->isBodyComplete()) || currentRequest->getMethod() != "POST"){
+				isComplete = true;
 			}
-			else if (tempRequest.getMethod() != "POST"){
-				HttpResponse::handleResponse(clientToRead, *this);
+			if (isComplete){
+				// std::cout << "dsahdkjsahdkjsahdkjhd " << std::endl;
+				HttpResponse::handleResponse(clientToRead, *this, *currentRequest);
 				clientIsReadyToWriteTo(clientFd);
+
+				delete currentRequest;
+				_activeRequests.erase(clientFd);
+				// clientToRead.clearRequestBuffer(); //if I comment it it works idk why
+				//maybe it goes here when it shouldnt
 			}
 		}
 	}

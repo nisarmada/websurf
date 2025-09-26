@@ -38,7 +38,7 @@ class HttpResponse {
 		void findContentType();
 		std::string setErrorText();
 		std::string createCompleteResponse();
-		static void handleResponse(Client& client, WebServer& server);
+		static void handleResponse(Client& client, WebServer& server, HttpRequest& request);
 		void executeCgi();
 		bool checkAllowedMethods(Client& client, std::string check);
 		void handleError(Client& client, HttpRequest& request);
