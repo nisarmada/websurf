@@ -158,7 +158,6 @@ void WebServer::clientRead(int clientFd){
 	}
 	else{
 		clientToRead.appendData(readBuffer, bytesRead);
-		std::string buffer(clientToRead.getRequestBuffer().begin(), clientToRead.getRequestBuffer().end());
 		if (clientToRead.headerIsComplete())
 		{
 			HttpRequest tempRequest;
