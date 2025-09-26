@@ -130,6 +130,7 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	}
 	_bodyReadPosition = headerEnd + 4;
 	_headersComplete = true;
+	std::cout << "we go in parse except body" << std::endl;
 	return rawRequest;
 }
 
@@ -149,7 +150,9 @@ void HttpRequest::parser(Client& client){ //handler that controls the parsing
 	if (!client.headerIsComplete()) {
         return; // Return immediately, the client buffer needs more data
     }
-	std::string firstHalfRequest = parseExceptBody(client);
+	if (!_headersComplete){
+		std::string firstHalfRequest = parseExceptBody(client);
+	}
 	if (checkChunked() == 1){
 		parseBodyChunked(client);
 	}else if (_method == "POST"){

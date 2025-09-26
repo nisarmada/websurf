@@ -499,9 +499,7 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 }
 
 void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
-	// HttpRequest request;
 	HttpResponse response;
-	// request.parser(client);
 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
 	const std::string fullPathCgi = cgiRoot + request.getUri();
