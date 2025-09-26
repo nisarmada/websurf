@@ -2,7 +2,7 @@
 #include "../includes/Utils.hpp"
 
 
-HttpResponse::HttpResponse() : _root("./www"), _httpVersion("HTTP/1.1")
+HttpResponse::HttpResponse() : _root("./www"), _httpVersion("HTTP/1.1"), _isCgi(false)
 {} 
 
 HttpResponse::~HttpResponse() {}
@@ -55,7 +55,7 @@ std::string HttpResponse::responseToString(){
 	return responseString;
 }
 
-void HttpResponse::executeResponse(HttpRequest& request, Client& client)
+bool HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServer& server)
 {
 	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
 	populateFullPath(request, client);
@@ -64,13 +64,27 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 	{
 		// if(redirect.rfind("http://", 0) == 0) //temporary find good fix
 		// {
-			sendRedirect(redirect);
-			return;
+		std::cout << "am I in here right now??" << std::endl;
+		std::cout << "cgi status: " << getCgiStatus() << std::endl;
+		std::cout << "path: " << _path << std::endl;
+		sendRedirect(redirect);
+		return true;
 		// }
 		// setStatusCode(404);
 	}
+	std::cout << "in execute response" << std::endl;
+	if(request.getMethod() == "GET" && checkAllowedMethods(client, "GET") && getCgiStatus())
+	{
+		std::cout << "here--------------" << std::endl;
+		initiateCgi(client, server);
+		return false;
+	}
+
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
+	{
+		std::cout << "in if get statement" << std::endl;
 		executeGet(request, client);
+	}
 	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
 		executePost(request, client);
 
@@ -84,9 +98,10 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 	
 	else if(_body.empty())
 	{
+		std::cout << "WHATTTTTT" << std::endl;
 		createBodyVector(client, request);
 	}
-	return;
+	return true;
 }
 
 std::string HttpResponse::buildFullUrl(HttpRequest& request, std::string& redirect)
@@ -367,7 +382,7 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
 	if(request.getError() != 0)	//change this logic maybe here.  CHECK
 		_statusCode = request.getError(); //maybe change this logic here. 
-
+	std::cout << "in create body vector" << std::endl;
 	if(_statusCode >= 400)
 	{
 		handleError(client, request);
@@ -378,6 +393,7 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 		
 	if (setBodyFromFile(client, request) == false)
 		return;
+	
 	setStatusCode(200);
 }
 bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
@@ -387,8 +403,22 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 		return false;
 
 	std::string indexFileName = request.extractLocationVariable(client, "_index");
-	std::string indexPath = _path + "/" + indexFileName;
-	
+	std::string indexPath = _path + "/" + indexFileName; //fix this /
+	std::cout << "indexpath: " << indexPath << std::endl;
+	std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
+//MADE BY CHATGPT DONT KEEP THAT!!!!
+	if (!cgiPass.empty()) {
+    size_t dotPos = indexPath.find_last_of('.');
+    if (dotPos != std::string::npos) {
+        std::string ext = indexPath.substr(dotPos + 1);
+        if (ext == "py" || ext == "php" || ext == "pl") {
+            setCgiStatus(true);
+            return true; // let executeResponse trigger CGI
+        }
+    }
+} //MADE BY CHATGPT DONT KEEP THAT !!!!
+
+
 	struct stat isFile;
 	if(stat(indexPath.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
 	{
@@ -408,8 +438,8 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 		setBodyFromDirectoryList(client, request);
 		return true;
 	}
-
-	_statusCode = 403;
+	std::cout << "we are at status code 404" << std::endl;
+	_statusCode = 403; //check what error code it has to be here. 
 	handleError(client, request);
 	return true;
 }
@@ -498,24 +528,48 @@ void HttpResponse::handleResponse(Client& client, WebServer& server){
 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
 	const std::string fullPathCgi = cgiRoot + request.getUri();
+	(void)server;
+
+	if (isCgi(cgiPass) && cgiPathIsValid(fullPathCgi))
+	{
+		std::cout << "CGI is set to true right now !" << std::endl;
+		response.setCgiStatus(true);
+	}
+		if(response.executeResponse(request, client, server)) 
+			client.setResponse(response.createCompleteResponse());
+	
+}
+
+
+void HttpResponse::initiateCgi(Client& client, WebServer& server){
+	HttpRequest request;
+	HttpResponse response;
+	request.parser(client);
+	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
+	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
+	const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 
-	if (isCgi(cgiPass) && cgiPathIsValid(fullPathCgi)){
-		Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
-		int cgiReadFd = cgi->executeCgi();
-		if (cgiReadFd != -1){
-			server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
-		}
-		else {
-			if (cgiPathIsValid(fullPathCgi))
-				response.setStatusCode(404);
-			else{
-				response.setStatusCode(500);
-			}
+	Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
+	int cgiReadFd = cgi->executeCgi();
+	if (cgiReadFd != -1){
+		server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
+	}
+	else {
+		if (cgiPathIsValid(fullPathCgi))
+			response.setStatusCode(404);
+		else{
+			response.setStatusCode(500);
 		}
 	}
-	else{
-		response.executeResponse(request, client);
-		client.setResponse(response.createCompleteResponse());
-	}
+}
+
+void HttpResponse::setCgiStatus(bool status)
+{
+	_isCgi = status;
+}
+
+bool HttpResponse::getCgiStatus()
+{
+	return _isCgi;
 }

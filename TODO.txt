@@ -7,4 +7,5 @@
 -double listen works
 -if cgi doesnt have execute permission we should give 403 forbidden. should we do that?
 -maybe make root needed as well? what do we do if it's missing? are we hardcoding ./www ?
--check with error codes (500 and 403 for example) it says it twice.
+-cgipass wrong value it trips out check if valid
+-if cgipass in diffrent locationblock does it propably triggers that its cgi but it isnt. 

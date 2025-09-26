@@ -12,6 +12,8 @@
 #include <dirent.h>  
 #include <sys/stat.h>  
 #include <sstream>  
+#include "ServerBlock.hpp"
+
 
 class HttpResponse {
 	public:
@@ -27,7 +29,7 @@ class HttpResponse {
 		int getStatusCode();
 		std::string& getText();
 		std::vector<char>& getBody();
-		void executeResponse(HttpRequest& request, Client& client);
+		bool executeResponse(HttpRequest& request, Client& client, WebServer& server);
 		void executeGet(HttpRequest& request, Client& client);
 		void executePost(HttpRequest& request, Client& client);
 		void executeDelete(HttpRequest& request, Client& client);
@@ -49,9 +51,9 @@ class HttpResponse {
 		void sendRedirect(const std::string& url);
 		void populateFullPath(HttpRequest& request, Client& client);
 		std::string buildFullUrl(HttpRequest& request, std::string& redirect);
-
-
-
+		void initiateCgi(Client& client, WebServer& server);
+		void setCgiStatus(bool status);
+		bool getCgiStatus();
 
 	private:
 		const std::string _root;
@@ -62,5 +64,6 @@ class HttpResponse {
 		std::vector<char> _body;
 		size_t _bodyLen;
 		std::string _path;
+		bool _isCgi;
 };
 

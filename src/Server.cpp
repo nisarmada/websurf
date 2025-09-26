@@ -30,7 +30,7 @@ int WebServer::setNonBlocking(int fd) {
 	}
 
 	if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
-		perror("fcntl SETFL failed:(");
+		perror("fcntl SETFL failed");
 		exit (EXIT_FAILURE);
 	}
 	return (flags);

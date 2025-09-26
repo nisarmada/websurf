@@ -28,9 +28,15 @@ bool isCgi(const std::string& cgi){
 }
 
 bool cgiPathIsValid(const std::string& fullPath){
-	std::ifstream cgiFile(fullPath.c_str());
-	if (!cgiFile.is_open()){
+	struct stat isDir;
+
+	if(stat(fullPath.c_str(), &isDir) != 0)
+		return false;
+	
+	if(S_ISDIR(isDir.st_mode))
+	{
 		return false;
 	}
+
 	return true;
 }
