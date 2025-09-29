@@ -33,5 +33,6 @@ class Client {
 		std::vector<char> _responseBuffer;
 		ssize_t _bytesSent;
 		ServerBlock* _associatedServerBlock;
+		size_t		_bytesUploaded;
 		// HttpRequest _request;
 };

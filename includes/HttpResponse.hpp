@@ -27,7 +27,7 @@ class HttpResponse {
 		int getStatusCode();
 		std::string& getText();
 		std::vector<char>& getBody();
-		void executeResponse(HttpRequest& request, Client& client);
+		void executeResponse(HttpRequest& request, Client& client, WebServer& server);
 		void executeGet(HttpRequest& request, Client& client);
 		void executePost(HttpRequest& request, Client& client);
 		void executeDelete(HttpRequest& request, Client& client);
@@ -38,7 +38,7 @@ class HttpResponse {
 		void findContentType();
 		std::string setErrorText();
 		std::string createCompleteResponse();
-		static void handleResponse(Client& client, WebServer& server);
+		static void handleResponse(Client& client, WebServer& server, HttpRequest& request);
 		void executeCgi();
 		bool checkAllowedMethods(Client& client, std::string check);
 		void handleError(Client& client, HttpRequest& request);
@@ -49,6 +49,8 @@ class HttpResponse {
 		void sendRedirect(const std::string& url);
 		void populateFullPath(HttpRequest& request, Client& client);
 		std::string buildFullUrl(HttpRequest& request, std::string& redirect);
+		void initiateCgi(Client& client, WebServer& server, HttpRequest& request);
+
 
 
 

@@ -8,3 +8,5 @@
 -if cgi doesnt have execute permission we should give 403 forbidden. should we do that?
 -maybe make root needed as well? what do we do if it's missing? are we hardcoding ./www ?
 -check with error codes (500 and 403 for example) it says it twice.
+-I still have double error code for /images 
+-fix return to check if its inside of the server or diffrent host. absolute path for diffrent host and relative within the same host. 

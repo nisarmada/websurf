@@ -20,17 +20,18 @@ bool isDirectory(std::string file){
 	return false;
 }
 
-bool isCgi(const std::string& cgi){
-	if (cgi.empty()){
-		return false;
-	}
-	return true;
+bool isCgi(HttpRequest& request, Client& client){
+	std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
+	return !cgiPass.empty();
 }
 
-bool cgiPathIsValid(const std::string& fullPath){
-	std::ifstream cgiFile(fullPath.c_str());
-	if (!cgiFile.is_open()){
+
+bool cgiPathIsValid(const std::string& fullPath)
+{
+	struct stat fileStats;
+
+	if(stat(fullPath.c_str(), &fileStats) != 0 || !S_ISREG(fileStats.st_mode))
 		return false;
-	}
-	return true;
+
+	return (access(fullPath.c_str(), X_OK) == 0);
 }
