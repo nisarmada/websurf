@@ -50,6 +50,7 @@ class HttpResponse {
 		void populateFullPath(HttpRequest& request, Client& client);
 		std::string buildFullUrl(HttpRequest& request, std::string& redirect);
 		void initiateCgi(Client& client, WebServer& server, HttpRequest& request);
+		bool pickAppropriateLocation(std::string& redirect);
 
 
 

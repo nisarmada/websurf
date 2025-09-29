@@ -54,15 +54,23 @@ std::string HttpResponse::responseToString(){
 	responseString.insert(responseString.end(), _body.begin(), _body.end()); //_body is binary data.
 	return responseString;
 }
+//WORK FROM HERE
+bool HttpResponse::pickAppropriateLocation(std::string& redirect)
+{
+	if(redirect.front() == '/' || redirect.find("http://", 0) == 0)
+		return true;
+	_path += redirect;
+	return false;
+}
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServer& server)
 {
 	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
 	
-	if(!redirect.empty() && buildFullUrl(request, redirect) != redirect)
+	if(!redirect.empty() && buildFullUrl(request, redirect) != redirect && pickAppropriateLocation(redirect))
 	{
-			sendRedirect(redirect);
-			return;
+		sendRedirect(redirect);
+		return;
 	}
 	populateFullPath(request, client);
 	std::cout << "what in the hell:   " << _path << std::endl;
@@ -137,6 +145,7 @@ void HttpResponse::sendRedirect(const std::string& url)
 {
 	setStatusCode(301);
 	setText("Moved Permanently");
+
 	addHeader("Location", url);
 	setBody(std::vector<char>()); //set empty body in case there is still something in there.
 	addHeader("Content-Length", "0");
@@ -233,7 +242,7 @@ std::string HttpResponse::createCompleteResponse()
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
 	}
 	response += "\r\n" + bodyString;
-	// std::cout << "create complete respones " << response << std::endl;
+	std::cout << "create complete respones " << response << std::endl;
 	return response;
 }
 
