@@ -65,7 +65,9 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 			return;
 	}
 	populateFullPath(request, client);
+	std::cout << "what in the hell:   " << _path << std::endl;
 	if (cgiPathIsValid(_path) && isCgi(request, client)){
+		std::cout << "cgiiiii" << std::endl;
 		initiateCgi(client, server, request);
 		setStatusCode(999);
 		return;
@@ -93,18 +95,20 @@ void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& r
 	// request.parser(client);
 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
-	const std::string fullPathCgi = cgiRoot + request.getUri();
+	// const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 
-	Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
+	// std::cout << "path cgiii " << fullPathCgi << std::endl;
+	Cgi* cgi = new Cgi(request, _path, cgiPass, serverPort);
 	int cgiReadFd = cgi->executeCgi();
 	if (cgiReadFd != -1){
 		server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
 	}
 	else {
-		if (cgiPathIsValid(fullPathCgi))
+		if (cgiPathIsValid(_path))
 			setStatusCode(404);
 		else{
+			std::cout << "we are in setting status code to 500!!" << std::endl;
 			setStatusCode(500);
 		}
 	}
@@ -270,9 +274,17 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 	_path = fullPath;
 	std::cout << "path we like to know: " << _path << std::endl;
 	
-	handleDirectoryRedirect(uri, fullPath);
+	handleDirectoryRedirect(uri, _path);
 	//we concatinate the index to the full path
 	
+	std::string indexFileName = request.extractLocationVariable(client, "_index");
+	if(indexFileName.front() == '/')
+		indexFileName.erase(0, 1);
+	std::cout << "path check if has slash: " << _path << std::endl;
+	if(_path.back() == '/')
+		_path = _path + indexFileName;
+
+
 	std::string autoIndex = request.extractLocationVariable(client, "_autoindex");
 	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
 	if (!testFile.is_open() && autoIndex == "false") 
@@ -426,16 +438,15 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 	if(stat(_path.c_str(), &checkPath) != 0 || !S_ISDIR(checkPath.st_mode))//does something exist at the file and check if its a directory. 
 		return false;
 
-	std::string indexFileName = request.extractLocationVariable(client, "_index");
-	if(indexFileName.front() == '/')
-		indexFileName.erase(0);
-	std::string indexPath = _path + indexFileName;
+	// std::string indexFileName = request.extractLocationVariable(client, "_index");
+	// if(indexFileName.front() == '/')
+	// 	indexFileName.erase(0, 1);
+	// std::string indexPath = _path + indexFileName;
 	
 	struct stat isFile;
-	if(stat(indexPath.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
+	if(stat(_path.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
 	{
 		std::cout << "in setBodyFile autoindex !" << std::endl;
-		_path = indexPath;
 		setBodyFromFile(client, request);
 		setStatusCode(200);
 		return true;
@@ -459,7 +470,6 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 
 bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
 {
-	std::cout << "path is: " << _path << std::endl;
  	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	if(!file.is_open())
 	{
