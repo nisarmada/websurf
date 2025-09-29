@@ -61,7 +61,6 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client)
 		executeGet(request, client);
 	if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
 		executePost(request, client);
-
 	}
 	if (request.getMethod() == "DELETE" && checkAllowedMethods(client, "DELETE"))
 		executeDelete(request, client);
@@ -497,6 +496,12 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 	std::cout << "popolate the error headers :)" << std::endl;
 	populateErrorHeaders();
 }
+
+// void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
+// 	HttpResponse response;
+
+// 	response.executeResponse(request, client);
+// }
 
 void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
 	HttpResponse response;
