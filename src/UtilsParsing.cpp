@@ -208,12 +208,27 @@ size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
 
 int parseListen(std::vector<std::string> tokens, size_t i) //CHECK if i + 1 is smaller then tokens.size !!!!!!!!!!!!!
 {
+     if (i + 1 >= tokens.size()) 
+     {
+        std::cerr << "Error: missing port after: 'listen'" << std::endl;
+        exit(1);
+    }
     if(!stringIsDigit(tokens[i + 1]))
     {
         std::cerr << "Error invalid port: " << tokens[i + 1] << std::endl;
         exit(1);
     }
-    int port = std::stoi(tokens[i + 1]);
+    int port;
+    try
+    {
+        port = std::stoi(tokens[i + 1]);    
+    }
+    catch(const std::out_of_range&)
+    {
+        std::cerr << "Error invalid port range." << std::endl;
+        exit(1);
+    }
+
     if (port < 1 || port > 65535) //allowed ports on a system
     {
         std::cerr << "Error invalid port range: " << tokens[i + 1] << std::endl;
