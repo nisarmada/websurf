@@ -13,7 +13,6 @@ void parsing(const char* path, WebServer& webServ)
     std::vector<std::vector<std::string>> serverBlocks = getServerBlockTokens(tokens);
     
     webServ.loadConfig(serverBlocks);
-    // test.printServerBlocks();
 }
 
 std::ifstream openConfigFile(const char* path)
@@ -141,7 +140,7 @@ void wrongPlaceSemicolon(std::vector<std::string> tokens, size_t i)
             return;
     
         std::cerr << "Error: invalid semicolon after \"" << tokens[i - 2] << "\"" << std::endl;
-        exit(1); //exit? should we exit at any point? CHECK
+        exit(1);
     }
 }
 
@@ -163,7 +162,8 @@ Type getType(const std::string& token)
         {"autoindex", DIRECTIVE},
         {"return", DIRECTIVE},
         {"upload_path", DIRECTIVE},
-        {"cgi_pass", DIRECTIVE}
+        {"cgi_pass", DIRECTIVE},
+        {"return", DIRECTIVE}
 
     };
     if(typeMap.find(token) != typeMap.end()) //find returns end(represents one past the last element) if it didnt find it in the map

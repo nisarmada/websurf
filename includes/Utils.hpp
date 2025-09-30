@@ -7,9 +7,11 @@
 #include <algorithm>
 #include <map>
 #include "Client.hpp"
+#include <sys/stat.h>
+#include "HttpRequest.hpp"
 
 
 const std::string findLongestMatch(const std::string& uri, const std::map<std::string, LocationBlock>& locations);
 bool isDirectory(std::string file);
-bool isCgi(const std::string& cgi);
+bool isCgi(HttpRequest& request, Client& client);
 bool cgiPathIsValid(const std::string& path);

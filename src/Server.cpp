@@ -241,6 +241,7 @@ void WebServer::cgiResponse(int cgiFd){
 	int clientFd = _cgiFdsToClientFds.at(cgiFd);
 	Cgi* cgi = _activeCgis.at(clientFd);
 	HttpResponse httpResponse;
+	// std::cout << "cgi response : " << cgi->getResponseString() << std::endl;
 	cgi->parseResponse(cgi->getResponseString(), httpResponse);
 	_clients.at(clientFd).setResponse(httpResponse.responseToString());
 

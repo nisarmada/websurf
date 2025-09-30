@@ -80,8 +80,6 @@ void Cgi::executeExecve(){
 		const_cast<char*>(_cgiPath.c_str()),
 		NULL
 	};
-	std::cout << "cgi pass: " << _cgiPass << std::endl;
-	std::cout << "cgi path: " << _cgiPath << std::endl;
 	std::vector<char*> envp = createEnvironmentVariableVector();
 	if (execve(const_cast<char*>(_cgiPass.c_str()), argv, envp.data()) == -1){
 		std::cerr << "Execve failed:(" << std::endl;

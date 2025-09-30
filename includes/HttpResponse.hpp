@@ -27,7 +27,7 @@ class HttpResponse {
 		int getStatusCode();
 		std::string& getText();
 		std::vector<char>& getBody();
-		void executeResponse(HttpRequest& request, Client& client);
+		void executeResponse(HttpRequest& request, Client& client, WebServer& server);
 		void executeGet(HttpRequest& request, Client& client);
 		void executePost(HttpRequest& request, Client& client);
 		void executeDelete(HttpRequest& request, Client& client);
@@ -46,6 +46,15 @@ class HttpResponse {
 		bool handleDirectoryRedirect(std::string& uri, std::string& fullPath);
 		bool setBodyFromFile(Client& client, HttpRequest& request);
 		void setBodyFromDirectoryList(Client& client, HttpRequest& request);
+		void sendRedirect(const std::string& url);
+		void populateFullPath(HttpRequest& request, Client& client);
+		std::string buildFullUrl(HttpRequest& request, std::string& redirect);
+		void initiateCgi(Client& client, WebServer& server, HttpRequest& request);
+		bool pickAppropriateLocation(std::string& redirect);
+
+
+
+
 
 	private:
 		const std::string _root;
