@@ -212,7 +212,8 @@ void WebServer::clientWrite(int clientFd){
 		clientToWrite.addBytesSent(bytesSentThisRound);
 	}
 	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately CHECK
-		cleanupFd(clientFd);
+		// cleanupFd(clientFd);
+		clientToWrite.resetState();
 	}
 }
 
@@ -307,13 +308,13 @@ void WebServer::acceptClientConnection(int listenerFd){
 	socklen_t clientAdressLen = sizeof(clientAdress);
 	int clientSocketFd = accept(listenerFd, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
 	if (clientSocketFd == -1) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject CHECK ILLIGAL NIKOS
-			return;
-		}
-		else {
+		// if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject CHECK ILLIGAL NIKOS
+		// 	return;
+		// }
+		// else {
 			perror("accept failed");
 			return;
-		}
+		// }
 	}
 	else {
 			if (setNonBlocking(clientSocketFd) == -1){

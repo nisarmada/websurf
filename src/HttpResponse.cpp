@@ -36,6 +36,10 @@ int HttpResponse::getStatusCode() {
 	return _statusCode;
 }
 
+std::string HttpResponse::getPath(){
+	return _path;
+}
+
 std::string HttpResponse::responseToString(){
 	std::string responseString = _httpVersion;
 
@@ -55,29 +59,42 @@ std::string HttpResponse::responseToString(){
 	return responseString;
 }
 //WORK FROM HERE
-bool HttpResponse::pickAppropriateLocation(std::string& redirect)
-{
-	if(redirect.front() == '/' || redirect.find("http://", 0) == 0)
-		return true;
-	_path += redirect;
-	return false;
-}
+// bool HttpResponse::isRedirection(std::string& redirect)
+// {
+// 	if(redirect.front() == '/' || redirect.find("http://", 0) == 0)
+// 		return true;
+// 	_path += redirect;
+// 	return false;
+// }
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServer& server)
 {
 	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
-	
-	if(!redirect.empty() && buildFullUrl(request, redirect) != redirect && pickAppropriateLocation(redirect))
+	std::cout << "bool client: " <<  client.getRedirectHappened() << std::endl;
+	std::cout << "fd client: " <<  client.getFd() << std::endl;
+	populateFullPath(request, client);
+	if(!redirect.empty() && isRedirect(request, redirect) && !client.getRedirectHappened())
 	{
 		sendRedirect(redirect);
+		client.changeRedirectStatus();
+		std::cout << "bool client fater change: " <<  client.getRedirectHappened() << std::endl;
 		return;
 	}
-	populateFullPath(request, client);
+	expandPath(request, client); //CHECK CHANGE NAME FOR THE LOVE OF GOD
+	if (client.getRedirectHappened())
+		client.changeRedirectStatus();
 	std::cout << "what in the hell:   " << _path << std::endl;
-	if (cgiPathIsValid(_path) && isCgi(request, client)){
+	if (cgiPathIsValid(*this, request, client) && isCgi(request, client) && !checkAllowedMethods(client, request.getMethod())){
 		std::cout << "cgiiiii" << std::endl;
 		initiateCgi(client, server, request);
-		setStatusCode(999);
+
+		// setStatusCode(999);
+		return;
+	}
+	if(_statusCode > 400)
+	{
+		std::cout << "this is the error " << std::endl;
+		handleError(client, request);
 		return;
 	}
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
@@ -111,33 +128,43 @@ void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& r
 	int cgiReadFd = cgi->executeCgi();
 	if (cgiReadFd != -1){
 		server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
+		setStatusCode(999);
 	}
-	else {
-		if (cgiPathIsValid(_path))
-			setStatusCode(404);
+	else
+	 {
+		if (cgiPathIsValid(*this, request, client)){
+			setStatusCode(600);
+		if (access(_path.c_str(), X_OK) == 0)
+		{
+			std::cout << "are we in hereeeeeeeee !" << std::endl;
+			setStatusCode(403);
+		}
+		}
 		else{
 			std::cout << "we are in setting status code to 500!!" << std::endl;
 			setStatusCode(500);
 		}
+		handleError(client, request);
 	}
 }
 //change buldFullUrl this works for diffrent host. we need server here/host
-std::string HttpResponse::buildFullUrl(HttpRequest& request, std::string& redirect)
+bool HttpResponse::isRedirect(HttpRequest& request, std::string& redirect)
 {
 	std::string fullUrl = "http://";
 	fullUrl = fullUrl + request.getHeader("Host");
 	fullUrl += request.getUri();
-	if(redirect.rfind("http://", 0) == 0)
+	if(redirect.find("http://", 0) == 0 && fullUrl != redirect)
+		return true;
+	else if(redirect.front() == '/')
 	{
-		return fullUrl;
+		std::cout << "return / is first char " << std::endl;
+		return true;
 	}
-	std::string absolutePath = "http://";
-	absolutePath += request.getHeader("Host");
-	if(absolutePath.back() != '/' && redirect.front() != '/')
-		absolutePath += '/';
-	redirect.insert(0, absolutePath);
-	std::cout << "redirect: " << redirect << std::endl;
-	return fullUrl;
+	if(_path.back() != '/')
+		_path +=  '/';
+	_path += redirect;
+	std::cout << "within isRedirect path: " << _path << std::endl;
+	return false;
 }
 
 
@@ -242,7 +269,7 @@ std::string HttpResponse::createCompleteResponse()
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
 	}
 	response += "\r\n" + bodyString;
-	std::cout << "create complete respones " << response << std::endl;
+	// std::cout << "create complete respones " << response << std::endl;
 	return response;
 }
 
@@ -256,11 +283,11 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 
 	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
 	if (!testFile.is_open()) {
-		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
+		setStatusCode(601); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << _path << std::endl;
 	}
-
-	setStatusCode(200); 
+	
+	setStatusCode(200);
 	createBodyVector(client, request);
 }
 
@@ -282,7 +309,12 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 
 	_path = fullPath;
 	std::cout << "path we like to know: " << _path << std::endl;
-	
+}
+
+void HttpResponse::expandPath(HttpRequest& request, Client& client)
+{
+	std::string uri = request.getUri();
+
 	handleDirectoryRedirect(uri, _path);
 	//we concatinate the index to the full path
 	
@@ -298,11 +330,9 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
 	if (!testFile.is_open() && autoIndex == "false") 
 	{
-		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
+		setStatusCode(602); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << _path << std::endl;
 	}
-	// setStatusCode(200); 
-	// createBodyVector(client, request);
 }
 
 bool HttpResponse::handleDirectoryRedirect(std::string& uri, std::string& fullPath)
@@ -325,6 +355,7 @@ bool HttpResponse::checkAllowedMethods(Client& client, std::string check)
 	if (methods.find(check) == methods.end())
 	{
 		setStatusCode(405);
+		std::cout << "are we here now ? --------" << std::endl;
 		return false;
 	}
 	return true;
@@ -398,7 +429,7 @@ void HttpResponse::executeDelete(HttpRequest& request, Client& client)
     
     std::ifstream checkFile(fullPath);
     if (!checkFile.good()) {
-        setStatusCode(404);
+        setStatusCode(603);
         return;
     }
     checkFile.close();
@@ -426,7 +457,7 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
 	if(request.getError() != 0)	//change this logic maybe here.  CHECK
 		_statusCode = request.getError(); //maybe change this logic here. 
-
+	std::cout << "STATUS CODE: " << _statusCode << std::endl;
 	if(_statusCode >= 400)
 	{
 		handleError(client, request);
@@ -446,11 +477,6 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 	std::cout << "in handleAutoIndex" << std::endl;
 	if(stat(_path.c_str(), &checkPath) != 0 || !S_ISDIR(checkPath.st_mode))//does something exist at the file and check if its a directory. 
 		return false;
-
-	// std::string indexFileName = request.extractLocationVariable(client, "_index");
-	// if(indexFileName.front() == '/')
-	// 	indexFileName.erase(0, 1);
-	// std::string indexPath = _path + indexFileName;
 	
 	struct stat isFile;
 	if(stat(_path.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
@@ -482,7 +508,7 @@ bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
  	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	if(!file.is_open())
 	{
-		_statusCode = 404;
+		_statusCode = 604;
 		handleError(client, request);
 		return false;
 	}

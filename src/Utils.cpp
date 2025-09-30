@@ -26,12 +26,16 @@ bool isCgi(HttpRequest& request, Client& client){
 }
 
 
-bool cgiPathIsValid(const std::string& fullPath)
+bool cgiPathIsValid(HttpResponse& response, HttpRequest& request, Client& client)
 {
 	struct stat fileStats;
 
-	if(stat(fullPath.c_str(), &fileStats) != 0 || !S_ISREG(fileStats.st_mode))
+	if(stat(response.getPath().c_str(), &fileStats) != 0 || !S_ISREG(fileStats.st_mode))
 		return false;
-
-	return (access(fullPath.c_str(), X_OK) == 0);
+	if (access(response.getPath().c_str(), X_OK) != 0 && isCgi(request, client)){
+		std::cout << "we here boiiii " << std::endl;
+		response.setStatusCode(403);
+		return false;
+	}
+	return (true);
 }

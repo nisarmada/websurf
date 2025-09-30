@@ -27,6 +27,9 @@ class Client {
 		void clearRequestBuffer();
 		// const HttpRequest& getCurrentRequest();
 		void handleResponse();
+		bool getRedirectHappened();
+		void changeRedirectStatus();
+		void resetState();
 	private:
 		int _clientFd;
 		std::vector<char> _requestBuffer;
@@ -34,5 +37,6 @@ class Client {
 		ssize_t _bytesSent;
 		ServerBlock* _associatedServerBlock;
 		size_t		_bytesUploaded;
+		bool _redirectHappened = false;
 		// HttpRequest _request;
 };

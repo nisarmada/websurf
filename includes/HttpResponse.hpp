@@ -48,9 +48,10 @@ class HttpResponse {
 		void setBodyFromDirectoryList(Client& client, HttpRequest& request);
 		void sendRedirect(const std::string& url);
 		void populateFullPath(HttpRequest& request, Client& client);
-		std::string buildFullUrl(HttpRequest& request, std::string& redirect);
+		bool isRedirect(HttpRequest& request, std::string& redirect);
 		void initiateCgi(Client& client, WebServer& server, HttpRequest& request);
-		bool pickAppropriateLocation(std::string& redirect);
+		void expandPath(HttpRequest& request, Client& client);
+		std::string getPath();
 
 
 
@@ -59,11 +60,12 @@ class HttpResponse {
 	private:
 		const std::string _root;
 		std::string _httpVersion;
-		int _statusCode;
+		int _statusCode = 0;
 		std::string _text;
 		std::unordered_map<std::string, std::string> _headers;
 		std::vector<char> _body;
 		size_t _bodyLen;
 		std::string _path;
+		bool _redirectHappened = false;
 };
 
