@@ -171,8 +171,6 @@ void WebServer::clientRead(int clientFd){
 		{
 			currentRequest->parser(clientToRead);
 			bool isComplete = false;
-			// bool isComplete = (currentRequest->getMethod() != "POST" && !currentRequest->checkChunked()) || \
-			// 					(currentRequest->isBodyComplete());
 			if ((currentRequest->getMethod() == "POST" && currentRequest->isBodyComplete()) || currentRequest->getMethod() != "POST"){
 				isComplete = true;
 			}
@@ -294,8 +292,6 @@ void WebServer::startListening(int num_events){
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
 		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there CHECK
-		// std::cout << "client with fd " << clientInstance.getFd() << " is associated to serverblock "\
-		// 		<< clientInstance.getServerBlock()->getServerName() << std::endl; 
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
 		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct CHECK
