@@ -91,3 +91,11 @@ void Client::resetState(){
 	_bytesSent = 0;
 	_bytesUploaded = 0;
 }
+
+bool Client::getCloseConnection(){
+	return _shouldCloseConnection;
+}
+
+void Client::setCloseConnection(bool state){
+	_shouldCloseConnection = state;
+}

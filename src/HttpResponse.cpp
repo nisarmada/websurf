@@ -84,11 +84,9 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 	if (client.getRedirectHappened())
 		client.changeRedirectStatus();
 	std::cout << "what in the hell:   " << _path << std::endl;
-	if (cgiPathIsValid(*this, request, client) && isCgi(request, client) && !checkAllowedMethods(client, request.getMethod())){
+	if (cgiPathIsValid(*this, request, client) && isCgi(request, client) && checkAllowedMethods(client, request.getMethod())){
 		std::cout << "cgiiiii" << std::endl;
 		initiateCgi(client, server, request);
-
-		// setStatusCode(999);
 		return;
 	}
 	if(_statusCode > 400)
@@ -129,6 +127,7 @@ void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& r
 	if (cgiReadFd != -1){
 		server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
 		setStatusCode(999);
+		client.setCloseConnection(true);
 	}
 	else
 	 {

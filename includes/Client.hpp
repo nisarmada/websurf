@@ -30,6 +30,8 @@ class Client {
 		bool getRedirectHappened();
 		void changeRedirectStatus();
 		void resetState();
+		bool getCloseConnection();
+		void setCloseConnection(bool state);
 	private:
 		int _clientFd;
 		std::vector<char> _requestBuffer;
@@ -38,5 +40,6 @@ class Client {
 		ServerBlock* _associatedServerBlock;
 		size_t		_bytesUploaded;
 		bool _redirectHappened = false;
+		bool _shouldCloseConnection = false;
 		// HttpRequest _request;
 };
