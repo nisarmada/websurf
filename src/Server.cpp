@@ -213,7 +213,7 @@ void WebServer::clientWrite(int clientFd){
 	}
 	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately CHECK
 		// cleanupFd(clientFd);
-		if (clientToWrite.getCloseConnection() == true)
+		if (clientToWrite.getCloseConnection() == true) //check hardcoded fix maybe we can get away with it
 			cleanupFd(clientFd); //this breaks some cases but works for cgi
 		else
 			clientToWrite.resetState(); //this works for some cases but breaks cgi

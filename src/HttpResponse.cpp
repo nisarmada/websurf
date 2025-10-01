@@ -58,43 +58,8 @@ std::string HttpResponse::responseToString(){
 	responseString.insert(responseString.end(), _body.begin(), _body.end()); //_body is binary data.
 	return responseString;
 }
-//WORK FROM HERE
-// bool HttpResponse::isRedirection(std::string& redirect)
-// {
-// 	if(redirect.front() == '/' || redirect.find("http://", 0) == 0)
-// 		return true;
-// 	_path += redirect;
-// 	return false;
-// }
 
-void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServer& server)
-{
-	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
-	std::cout << "bool client: " <<  client.getRedirectHappened() << std::endl;
-	std::cout << "fd client: " <<  client.getFd() << std::endl;
-	populateFullPath(request, client);
-	if(!redirect.empty() && isRedirect(request, redirect) && !client.getRedirectHappened())
-	{
-		sendRedirect(redirect);
-		client.changeRedirectStatus();
-		std::cout << "bool client fater change: " <<  client.getRedirectHappened() << std::endl;
-		return;
-	}
-	expandPath(request, client); //CHECK CHANGE NAME FOR THE LOVE OF GOD
-	if (client.getRedirectHappened())
-		client.changeRedirectStatus();
-	std::cout << "what in the hell:   " << _path << std::endl;
-	if (cgiPathIsValid(*this, request, client) && isCgi(request, client) && checkAllowedMethods(client, request.getMethod())){
-		std::cout << "cgiiiii" << std::endl;
-		initiateCgi(client, server, request);
-		return;
-	}
-	if(_statusCode > 400)
-	{
-		std::cout << "this is the error " << std::endl;
-		handleError(client, request);
-		return;
-	}
+void HttpResponse::executeGetPostDelete(HttpRequest& request, Client& client){
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
 	else if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
@@ -102,15 +67,41 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 	}
 	else if (request.getMethod() == "DELETE" && checkAllowedMethods(client, "DELETE"))
 		executeDelete(request, client);
-	
 
+}
+
+void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServer& server)
+{
+	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
+	populateFullPath(request, client);
+	if(!redirect.empty() && isRedirect(request, redirect) && !client.getRedirectHappened())
+	{
+		sendRedirect(redirect);
+		client.changeRedirectStatus();
+		return;
+	}
+	expandPath(request, client); //CHECK CHANGE NAME FOR THE LOVE OF GOD
+	if (client.getRedirectHappened())
+		client.changeRedirectStatus();
+	if (cgiPathIsValid(*this, request, client) && isCgi(request, client) && checkAllowedMethods(client, request.getMethod())){
+		initiateCgi(client, server, request);
+		return;
+	}
+	if(_statusCode > 400)
+	{
+		handleError(client, request);
+		return;
+	}
+	executeGetPostDelete(request, client);
 	if(getStatusCode() == 200)
 		populateHeaders(request);
 	
-	else if(_body.empty())
-	{
-		createBodyVector(client, request);
-	}
+	//I didn't find any case that it goes in here check
+	// else if(_body.empty())
+	// {
+	// 	std::cout << "do we ever go in here??????" << std::endl;
+	// 	createBodyVector(client, request);
+	// }
 	return;
 }
 
@@ -126,13 +117,13 @@ void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& r
 	int cgiReadFd = cgi->executeCgi();
 	if (cgiReadFd != -1){
 		server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
-		setStatusCode(999);
+		setStatusCode(CGI_STATUS_CODE);
 		client.setCloseConnection(true);
 	}
 	else
 	 {
 		if (cgiPathIsValid(*this, request, client)){
-			setStatusCode(600);
+			setStatusCode(404);
 		if (access(_path.c_str(), X_OK) == 0)
 		{
 			std::cout << "are we in hereeeeeeeee !" << std::endl;
@@ -159,7 +150,12 @@ bool HttpResponse::isRedirect(HttpRequest& request, std::string& redirect)
 		std::cout << "return / is first char " << std::endl;
 		return true;
 	}
-	if(_path.back() != '/')
+	//i am changing this cause of what chat said check
+	else{
+		redirect = '/' + redirect;
+		return true;
+	}
+	if (_path.back() != '/')
 		_path +=  '/';
 	_path += redirect;
 	std::cout << "within isRedirect path: " << _path << std::endl;
@@ -282,7 +278,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 
 	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
 	if (!testFile.is_open()) {
-		setStatusCode(601); //goes out of here and then the status code is turned to 200 again CHECK
+		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << _path << std::endl;
 	}
 	
@@ -329,7 +325,7 @@ void HttpResponse::expandPath(HttpRequest& request, Client& client)
 	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
 	if (!testFile.is_open() && autoIndex == "false") 
 	{
-		setStatusCode(602); //goes out of here and then the status code is turned to 200 again CHECK
+		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << _path << std::endl;
 	}
 }
@@ -428,7 +424,7 @@ void HttpResponse::executeDelete(HttpRequest& request, Client& client)
     
     std::ifstream checkFile(fullPath);
     if (!checkFile.good()) {
-        setStatusCode(603);
+        setStatusCode(404);
         return;
     }
     checkFile.close();
@@ -507,7 +503,7 @@ bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
  	std::ifstream file(_path.c_str(), std::ios::binary); //std::ios::binary reads the file as it is raw bytes.
 	if(!file.is_open())
 	{
-		_statusCode = 604;
+		_statusCode = 404;
 		handleError(client, request);
 		return false;
 	}
@@ -584,7 +580,7 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
 	HttpResponse response;
 	response.executeResponse(request, client, server);
-	if (response._statusCode != 999){
+	if (response._statusCode != CGI_STATUS_CODE){
 		client.setResponse(response.createCompleteResponse());
 	}
 }

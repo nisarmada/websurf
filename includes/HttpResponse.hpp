@@ -4,6 +4,7 @@
 #include "server.hpp"
 #include "HttpRequest.hpp"
 #include "Client.hpp"
+#include "Constants.hpp"
 #include <fstream>
 #include <ctime>
 #include <cstdio>
@@ -52,7 +53,7 @@ class HttpResponse {
 		void initiateCgi(Client& client, WebServer& server, HttpRequest& request);
 		void expandPath(HttpRequest& request, Client& client);
 		std::string getPath();
-
+		void executeGetPostDelete(HttpRequest& request, Client& client);
 
 
 
