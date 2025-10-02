@@ -2,7 +2,7 @@
 #include "../includes/Utils.hpp"
 
 
-HttpResponse::HttpResponse() : _root("./www"), _httpVersion("HTTP/1.1")
+HttpResponse::HttpResponse() : _httpVersion("HTTP/1.1")
 {} 
 
 HttpResponse::~HttpResponse() {}
@@ -123,12 +123,10 @@ void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& r
 			setStatusCode(404);
 		if (access(_path.c_str(), X_OK) == 0)
 		{
-			std::cout << "are we in hereeeeeeeee !" << std::endl;
 			setStatusCode(403);
 		}
 		}
 		else{
-			std::cout << "we are in setting status code to 500!!" << std::endl;
 			setStatusCode(500);
 		}
 		handleError(client, request);
@@ -144,18 +142,13 @@ bool HttpResponse::isRedirect(HttpRequest& request, std::string& redirect)
 		return true;
 	else if(redirect.front() == '/')
 	{
-		std::cout << "return / is first char " << std::endl;
 		return true;
 	}
-	//i am changing this cause of what chat said check
 	else{
 		redirect = '/' + redirect;
 		return true;
 	}
-	if (_path.back() != '/')
-		_path +=  '/';
-	_path += redirect;
-	std::cout << "within isRedirect path: " << _path << std::endl;
+
 	return false;
 }
 
@@ -195,7 +188,6 @@ std::string HttpResponse::setErrorText(){
 
 void HttpResponse::populateErrorHeaders()
 {
-	std::cout << "this is the error:  " << _statusCode << std::endl;
 	std::string errorMessage = setErrorText();
 	std::stringstream html;
 
@@ -258,7 +250,6 @@ std::string HttpResponse::createCompleteResponse()
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
 	}
 	response += "\r\n" + bodyString;
-	// std::cout << "create complete respones " << response << std::endl;
 	return response;
 }
 
@@ -283,9 +274,7 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
 	std::string fullPath;
-
-	std::cout << "index is: " << index << std::endl;
-	std::cout << "uri path thats created: " << uri << std::endl;
+	_root = request.extractLocationVariable(client, "_root");
 
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
 		fullPath = _root + uri.substr(1); // avoid double slash
@@ -295,7 +284,6 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 		fullPath = _root + uri;
 
 	_path = fullPath;
-	std::cout << "path we like to know: " << _path << std::endl;
 }
 
 void HttpResponse::expandPath(HttpRequest& request, Client& client)
@@ -308,7 +296,6 @@ void HttpResponse::expandPath(HttpRequest& request, Client& client)
 	std::string indexFileName = request.extractLocationVariable(client, "_index");
 	if(indexFileName.front() == '/')
 		indexFileName.erase(0, 1);
-	std::cout << "path check if has slash: " << _path << std::endl;
 	if(_path.back() == '/')
 		_path = _path + indexFileName;
 
@@ -329,7 +316,6 @@ bool HttpResponse::handleDirectoryRedirect(std::string& uri, std::string& fullPa
 	{
 		uri += '/';
 		fullPath += '/';
-		std::cout << "fullpath: " << fullPath << std::endl;
 		return true;
 	}
 	return false;
@@ -342,7 +328,6 @@ bool HttpResponse::checkAllowedMethods(Client& client, std::string check)
 	if (methods.find(check) == methods.end())
 	{
 		setStatusCode(405);
-		std::cout << "are we here now ? --------" << std::endl;
 		return false;
 	}
 	return true;

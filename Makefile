@@ -1,19 +1,26 @@
-#                           Webserv Project Makefile                           #
-# ============================================================================ #
 
-# --- Project Configuration ---
 NAME            = webserv
 CXX             = c++
 CXXFLAGS        = -Wall -Wextra -Werror -std=c++17 -g
 
-# --- Directory Paths ---
 SRC_DIR         = src
 INC_DIR         = includes
 BUILD_DIR       = build
 
-# --- Source Files Discovery ---
-# Find all .cpp files in the SRC_DIR and its subdirectories
-SRCS            = $(shell find $(SRC_DIR) -name "*.cpp")
+SRCS            = \
+	$(SRC_DIR)/Cgi.cpp \
+	$(SRC_DIR)/Client.cpp \
+	$(SRC_DIR)/Chunked.cpp \
+	$(SRC_DIR)/HttpRequest.cpp \
+	$(SRC_DIR)/HttpRequestParsing.cpp \
+	$(SRC_DIR)/HttpResponse.cpp \
+	$(SRC_DIR)/LocationBlock.cpp \
+	$(SRC_DIR)/Parsing.cpp \
+	$(SRC_DIR)/Server.cpp \
+	$(SRC_DIR)/ServerBlock.cpp \
+	$(SRC_DIR)/Utils.cpp \
+	$(SRC_DIR)/UtilsParsing.cpp \
+	$(SRC_DIR)/main.cpp
 
 # --- Object Files and Dependency Files Generation ---
 # Replace SRC_DIR with BUILD_DIR for object files, and change .cpp to .o
@@ -25,7 +32,7 @@ DEPS            = $(patsubst $(BUILD_DIR)/%.o,$(BUILD_DIR)/%.d,$(OBJS))
 # --- Main Rules ---
 
 # Default target: builds the executable
-all: $(NAME)
+all: $(BUILD_DIR) $(NAME)
 
 # Link the object files to create the executable
 $(NAME): $(OBJS)
@@ -35,10 +42,10 @@ $(NAME): $(OBJS)
 
 # Compile .cpp files into .o files
 # -MMD: Generate dependency files (.d)
-# -MP: Add phony targets for header files (prevents errors if headers are removed)
+# -MP: Add phony targets for header files
 # -I$(INC_DIR): Add includes/ to the include path
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
-	@mkdir -p $(@D) # Create parent directories for the object file if they don't exist
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(@D)
 	@echo "Compiling $<..."
 	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $< -o $@ -MMD -MP
 
@@ -49,33 +56,25 @@ $(BUILD_DIR):
 
 # --- Cleanup Rules ---
 
-# Remove object files and dependency files
 clean:
 	@echo "Cleaning object files and dependencies..."
 	@rm -rf $(BUILD_DIR)
 	@echo "Clean complete."
 
-# Remove object files, dependency files, and the executable
 fclean: clean
 	@echo "Full clean (removing executable)..."
 	@rm -f $(NAME)
 	@echo "Full clean complete."
 
-# Rebuild the project from scratch
 re: fclean all
 	@echo "Rebuilding project."
 
-# --- Phony Targets ---
-# Declare phony targets to prevent issues if files with the same names exist
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re run
 
 # --- Include Generated Dependencies ---
-# This line ensures that Make rebuilds targets when header files change.
-# The '-' suppresses errors if .d files don't exist yet (e.g., on first build).
 -include $(DEPS)
 
-# --- Run the program with test.conf ---
-run: all
-	@echo "\033[0;32mRunning $(NAME) with test.conf...\033[0m"
+# --- Run the program with original.config ---
+run: $(NAME)
+	@echo "\033[0;32mRunning $(NAME) with original.config...\033[0m"
 	@./$(NAME) original.config
-

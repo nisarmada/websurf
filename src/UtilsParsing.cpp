@@ -165,32 +165,6 @@ void parseMethods(std::vector<std::string> tokens, size_t i, LocationBlock& loca
         throw std::runtime_error("Missing semicolon after 'methods' directive.");
 }
 
-size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
-{
-    if(i + 1 >= tokens.size())
-    {
-        std::cerr << "Error missing value for client_max_body_size" << std::endl;
-        exit(1);
-    }
-    if(!stringIsDigit(tokens[i + 1]))
-    {
-        std::cerr << "Error invalid client_max_body_size: " << tokens[i + 1] << std::endl;
-        exit(1);
-    }
-    unsigned long long overflowCheck = std::stoull(tokens[i + 1]);
-    
-    //make long max instead.
-    //for my future: catch the exeption instead of this, stoull throws exception by overflow. CHECK
-    if(overflowCheck > std::numeric_limits<size_t>::max())
-    {
-        std::cerr << "Error invalid client_max_body_size: " << tokens[i + 1] << std::endl;
-        exit(1);
-    }
-    
-    size_t maxBodySize = static_cast<size_t>(std::stoull(tokens[i + 1]));
-    return maxBodySize;
-}
-
 int parseListen(std::vector<std::string> tokens, size_t i) //CHECK if i + 1 is smaller then tokens.size !!!!!!!!!!!!!
 {
      if (i + 1 >= tokens.size()) 
@@ -238,4 +212,33 @@ void expectSemicolon (const std::vector<std::string>& tokens, size_t index)
         throw std::runtime_error("Expected ';' after all directive");
     if (index + 1 < tokens.size() && tokens[index + 1] == ";")
         throw std::runtime_error("Unexpected extra ';' after directive");
+}
+
+size_t parseMaxBodySize(std::vector<std::string> tokens, size_t i)
+{
+    if(i + 1 >= tokens.size())
+    {
+        std::cerr << "Error missing value for client_max_body_size" << std::endl;
+        exit(1);
+    }
+    if(!stringIsDigit(tokens[i + 1]))
+    {
+        std::cerr << "Error invalid client_max_body_size: " << tokens[i + 1] << std::endl;
+        exit(1);
+    }
+    long maxBodySize;
+    try
+    {
+        maxBodySize = std::stoul(tokens[i +1]);
+    }
+    catch(const std::invalid_argument&)
+    {
+        std::cerr << "Error: invalid number for client_max_body_size: " << tokens[i + 1] << std::endl;
+        exit(1);
+    }
+    catch(const std::out_of_range&)
+    {
+        return std::numeric_limits<size_t>::max();
+    }
+    return maxBodySize;
 }

@@ -59,7 +59,7 @@ class HttpResponse {
 
 
 	private:
-		const std::string _root;
+		std::string _root;
 		std::string _httpVersion;
 		int _statusCode = 0;
 		std::string _text;

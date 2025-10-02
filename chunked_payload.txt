@@ -1,6 +1,0 @@
-B
-Hello World
-F
-This is a test.
-0
-
