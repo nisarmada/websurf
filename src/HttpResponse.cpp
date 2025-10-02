@@ -106,13 +106,10 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 }
 
 void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& request){
-	// request.parser(client);
 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
-	// const std::string fullPathCgi = cgiRoot + request.getUri();
 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
 
-	// std::cout << "path cgiii " << fullPathCgi << std::endl;
 	Cgi* cgi = new Cgi(request, _path, cgiPass, serverPort);
 	int cgiReadFd = cgi->executeCgi();
 	if (cgiReadFd != -1){
@@ -137,7 +134,7 @@ void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& r
 		handleError(client, request);
 	}
 }
-//change buldFullUrl this works for diffrent host. we need server here/host
+
 bool HttpResponse::isRedirect(HttpRequest& request, std::string& redirect)
 {
 	std::string fullUrl = "http://";
@@ -256,9 +253,6 @@ std::string HttpResponse::createCompleteResponse()
 	std::string response = _httpVersion;
 	std::string bodyString(_body.begin(), _body.end());
 
-	// std::cout << "DEBUG: Response Body Size: " << _body.size() << " bytes" << std::endl;
-    // std::cout << "DEBUG: Final Response Headers:\n" << response << " " << std::to_string(_statusCode) << " " << _text << "\r\n";
-
 	response +=  " " + std::to_string(_statusCode) + " " + _text + "\r\n";
 	for (auto& iterator : _headers){
 		response += iterator.first + ": " + iterator.second + "\r\n"; 
@@ -272,11 +266,9 @@ std::string HttpResponse::createCompleteResponse()
 void HttpResponse::executeGet(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
-	//before check what the index is in case we need to serve it. 
-	//first to do here is check if its a cgi (.py)//maybe we can re move it since we call it before also
 	handleDirectoryRedirect(uri, _path);
 
-	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
+	std::ifstream testFile(_path.c_str());
 	if (!testFile.is_open()) {
 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
 		std::cerr << "File not found: " << _path << std::endl;
@@ -322,7 +314,7 @@ void HttpResponse::expandPath(HttpRequest& request, Client& client)
 
 
 	std::string autoIndex = request.extractLocationVariable(client, "_autoindex");
-	std::ifstream testFile(_path.c_str()); //change it CHECK (change to what???!!! haha)
+	std::ifstream testFile(_path.c_str());
 	if (!testFile.is_open() && autoIndex == "false") 
 	{
 		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
@@ -452,13 +444,11 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
 	if(request.getError() != 0)	//change this logic maybe here.  CHECK
 		_statusCode = request.getError(); //maybe change this logic here. 
-	std::cout << "STATUS CODE: " << _statusCode << std::endl;
 	if(_statusCode >= 400)
 	{
 		handleError(client, request);
 		return;
 	}
-	std::cout << "path createvector " << _path << std::endl;
 	if(handleAutoindex(request, client) == true)
 		return;
 		
@@ -469,14 +459,12 @@ void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 {
 	struct stat checkPath;
-	std::cout << "in handleAutoIndex" << std::endl;
 	if(stat(_path.c_str(), &checkPath) != 0 || !S_ISDIR(checkPath.st_mode))//does something exist at the file and check if its a directory. 
 		return false;
 	
 	struct stat isFile;
 	if(stat(_path.c_str(), &isFile) == 0 && S_ISREG(isFile.st_mode)) //checks if the file exist and if its a regular file (no dir or socket etc.)
 	{
-		std::cout << "in setBodyFile autoindex !" << std::endl;
 		setBodyFromFile(client, request);
 		setStatusCode(200);
 		return true;
@@ -486,9 +474,6 @@ bool HttpResponse::handleAutoindex(HttpRequest& request, Client& client)
 
 	if(autoIndex == "true")
 	{
-		// std::string uri= request.getUri();
-		// if(!uri.empty() && uri.back() != '/')
-		// 	request.setUri(uri + "/"); internal object; it does not change the actual URL the browser used for this request. The browser st
 		setBodyFromDirectoryList(client, request);
 		return true;
 	}
@@ -516,7 +501,6 @@ bool HttpResponse::setBodyFromFile(Client& client, HttpRequest& request)
 }
 void HttpResponse::setBodyFromDirectoryList(Client& client, HttpRequest& request)
 {
-	std::cout << "path inside of setbodyfromdirectorylist: " << _path << std::endl; //check if I earlier overwrite the path to a file instead of the directory. That should not happen for this function
 	DIR* dir_ptr = opendir(_path.c_str()); //struct with directory information.
 	if(!dir_ptr)
 	{
@@ -573,7 +557,6 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 		populateHeaders(request);
 		return;
 	}
-	std::cout << "popolate the error headers :)" << std::endl;
 	populateErrorHeaders();
 }
 
@@ -585,29 +568,3 @@ void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest
 	}
 }
 
-// void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
-// 	HttpResponse response;
-// 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
-// 	const std::string cgiRoot = request.extractLocationVariable(client, "_root");
-// 	const std::string fullPathCgi = cgiRoot + request.getUri();
-// 	const std::string serverPort = std::to_string(client.getServerBlock()->getPort());
-
-// 	if (isCgi(cgiPass) && cgiPathIsValid(fullPathCgi)){
-// 		Cgi* cgi = new Cgi(request, fullPathCgi, cgiPass, serverPort);
-// 		int cgiReadFd = cgi->executeCgi();
-// 		if (cgiReadFd != -1){
-// 			server.monitorCgiFd(cgiReadFd, client.getFd(), cgi);
-// 		}
-// 		else {
-// 			if (cgiPathIsValid(fullPathCgi))
-// 				response.setStatusCode(404);
-// 			else{
-// 				response.setStatusCode(500);
-// 			}
-// 		}
-// 	}
-// 	else{
-// 		response.executeResponse(request, client);
-// 		client.setResponse(response.createCompleteResponse());
-// 	}
-// }

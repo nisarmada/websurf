@@ -86,7 +86,7 @@ void Client::changeRedirectStatus(){
 }
 
 void Client::resetState(){
-	_requestBuffer.clear(); //maybe
+	_requestBuffer.clear();
 	_responseBuffer.clear();
 	_bytesSent = 0;
 	_bytesUploaded = 0;

@@ -62,7 +62,7 @@ int HttpRequest::readingChunkData(const std::vector<char>& buffer, size_t buffer
 	if (_currentChunkSize == 0){
 		_chunkParseState = READING_CHUNK_TERMINATOR;
 	} else {
-		return -1; //not sure if realistically we ever go here, we should check. CHECK
+		return -1;
 	}
 	return 0;
 }

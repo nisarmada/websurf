@@ -22,7 +22,7 @@ void sigalrm_handler(int signum){
 WebServer::WebServer() : _events(MAX_EVENTS){}
 
 int WebServer::setNonBlocking(int fd) {
-	int flags = fcntl(fd, F_GETFL, 0); //get this away NIKOS Illigal bussiness detected CHECK
+	int flags = fcntl(fd, F_GETFL, 0);
 
 	if (flags == -1) {
 		perror("fcntl GETFL failed");
@@ -49,9 +49,7 @@ int WebServer::setupListenerSocket(int port) {
 	int optval = 1; // Set to 1 to enable SO_REUSEADDR
     if (setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
         perror("setsockopt SO_REUSEADDR failed");
-        // For simplicity, you can exit here as per your other error handling,
-        // or choose to just log and continue if this error isn't considered fatal for your project.
-        exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE); //exit?? check
     }
 	// end of block to delete CHECK
 	sockaddr_in serverAddress;
@@ -116,7 +114,7 @@ void WebServer::handleRequest(const HttpRequest& request){
 
 void WebServer::clientIsReadyToWriteTo(int clientFd){
 	struct epoll_event event;
-	event.events = EPOLLIN | EPOLLOUT; //we might want to remove EPOLLET CHECK
+	event.events = EPOLLIN | EPOLLOUT;
 	event.data.fd = clientFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
 		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here CHECK
@@ -165,7 +163,6 @@ void WebServer::clientRead(int clientFd){
 		else{
 			currentRequest = new HttpRequest();
 			_activeRequests[clientFd] = currentRequest;
-			//we need this parser, but we parse in several spots we should get rid of that
 		}
 		if (clientToRead.headerIsComplete())
 		{
@@ -175,14 +172,11 @@ void WebServer::clientRead(int clientFd){
 				isComplete = true;
 			}
 			if (isComplete){
-				// std::cout << "dsahdkjsahdkjsahdkjhd " << std::endl;
 				HttpResponse::handleResponse(clientToRead, *this, *currentRequest);
 				clientIsReadyToWriteTo(clientFd);
 
 				delete currentRequest;
 				_activeRequests.erase(clientFd);
-				// clientToRead.clearRequestBuffer(); //if I comment it it works idk why
-				//maybe it goes here when it shouldnt
 			}
 		}
 	}
@@ -192,7 +186,7 @@ void WebServer::clientWrite(int clientFd){
 	Client& clientToWrite = _clients.at(clientFd);
 
 	if (!clientToWrite.hasResponseToSend()){
-		return; //we might want to remove EPOLLOUT or handle differently CHECK
+		return;
 	}
 	const std::vector<char>& responseBuffer = clientToWrite.getResponseBuffer();
 	ssize_t bytesSent = clientToWrite.getBytesSent();
@@ -211,10 +205,9 @@ void WebServer::clientWrite(int clientFd){
 	else {
 		clientToWrite.addBytesSent(bytesSentThisRound);
 	}
-	if (!clientToWrite.hasResponseToSend()){ // maybe we shouldnt close the fd immediately CHECK
-		// cleanupFd(clientFd);
+	if (!clientToWrite.hasResponseToSend()){
 		if (clientToWrite.getCloseConnection() == true) //check hardcoded fix maybe we can get away with it
-			cleanupFd(clientFd); //this breaks some cases but works for cgi
+			cleanupFd(clientFd);
 		else
 			clientToWrite.resetState(); //this works for some cases but breaks cgi
 	}
@@ -245,7 +238,6 @@ void WebServer::cgiResponse(int cgiFd){
 	int clientFd = _cgiFdsToClientFds.at(cgiFd);
 	Cgi* cgi = _activeCgis.at(clientFd);
 	HttpResponse httpResponse;
-	// std::cout << "cgi response : " << cgi->getResponseString() << std::endl;
 	cgi->parseResponse(cgi->getResponseString(), httpResponse);
 	_clients.at(clientFd).setResponse(httpResponse.responseToString());
 
@@ -273,7 +265,6 @@ void WebServer::startListening(int num_events){
 		uint32_t eventFlags = _events[i].events;
 		if (_cgiFdsToClientFds.count(currentFd)){
 			if (eventFlags & (EPOLLHUP | EPOLLERR)){
-				//this is a Cgi response and we need to handle it CHECK
 				cgiResponse(currentFd);
 			}
 			else if (eventFlags & EPOLLIN){ //IMPORTANT put a check here to see if the read() has finished first CHECK
@@ -299,10 +290,10 @@ void WebServer::createClientAndMonitorFd(int clientSocket){
 		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there CHECK
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
-		clientEvent.events = EPOLLIN | EPOLLOUT; //I removed EPOLLET not sure if that's correct CHECK
+		clientEvent.events = EPOLLIN | EPOLLOUT;
 		clientEvent.data.fd = clientSocket;
 		if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, clientSocket, &clientEvent) == -1){
-			std::cerr << "Epoll ctllllll" << std::endl;
+			std::cerr << "Epoll ctl error" << std::endl;
 		}
 }
 
@@ -311,13 +302,8 @@ void WebServer::acceptClientConnection(int listenerFd){
 	socklen_t clientAdressLen = sizeof(clientAdress);
 	int clientSocketFd = accept(listenerFd, reinterpret_cast<sockaddr*>(&clientAdress), &clientAdressLen);
 	if (clientSocketFd == -1) {
-		// if (errno == EAGAIN || errno == EWOULDBLOCK) { //this is not allowed in the subject CHECK ILLIGAL NIKOS
-		// 	return;
-		// }
-		// else {
 			perror("accept failed");
 			return;
-		// }
 	}
 	else {
 			if (setNonBlocking(clientSocketFd) == -1){
@@ -410,9 +396,3 @@ void WebServer::printServerBlocks()
 		std::cout << std::endl;
 	}
 }
-
-
-
-
-
-

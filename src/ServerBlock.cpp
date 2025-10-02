@@ -92,5 +92,3 @@ bool ServerBlock::hasErrorPage(int code) const
 {
 	return _errorPages.find(code) != _errorPages.end();
 }
-
-

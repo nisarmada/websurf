@@ -3,8 +3,7 @@
 HttpRequestParser::HttpRequestParser() {}
 
 HttpRequestParser::~HttpRequestParser() {}
-//it only works for the basic type of response like the second one that I include in the httprequest_test
-//we need to handle any potential errors and add extra stuff like body in case it exists. CHECK
+
 void HttpRequestParser::parseRequestLine(const std::string& line, HttpRequest& request) {
 	std::string method, uri, version;
 	size_t firstSpace = line.find(" ");

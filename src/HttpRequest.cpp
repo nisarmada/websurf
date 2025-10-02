@@ -20,7 +20,6 @@ void HttpRequest::setHttpVersion(const std::string& httpVersion){
 }
 
 void HttpRequest::addHeader(const std::string& key, const std::string& value){ 
-	// we might need to check if it already exists CHECK
 	_headers[key] = value;
 }
 
@@ -84,22 +83,6 @@ void HttpRequest::parseBody(Client& client){
 	}
 }
 
-// void HttpRequest::parseBody(Client& client){ 
-// 	//ok so here we copy the whole buffer from scratch every time ina string
-// 	const std::vector<char>& requestBuffer = client.getRequestBuffer();
-// 	std::string rawRequest(requestBuffer.begin(), requestBuffer.end());
-// 	size_t headerEnd = rawRequest.find("\r\n\r\n");
-// 	size_t bodyStart = headerEnd + 4;
-
-// 	if (bodyStart < rawRequest.size()){
-// 		std::string bodyContent = rawRequest.substr(bodyStart);
-// 		addBody(bodyContent.data(), bodyContent.length());
-// 		_bodyFullyParsed = true;
-// 	}else{
-// 		_bodyFullyParsed = true;
-// 	}
-// }
-
 int HttpRequest::checkChunked(){
 	if (getHeader("Transfer-Encoding") != "" && getHeader("Content-Length") != ""){
 		setError(400);
@@ -130,7 +113,6 @@ const std::string HttpRequest::parseExceptBody(Client& client){
 	}
 	_bodyReadPosition = headerEnd + 4;
 	_headersComplete = true;
-	std::cout << "we go in parse except body" << std::endl;
 	return rawRequest;
 }
 

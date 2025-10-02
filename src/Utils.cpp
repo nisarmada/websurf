@@ -33,7 +33,6 @@ bool cgiPathIsValid(HttpResponse& response, HttpRequest& request, Client& client
 	if(stat(response.getPath().c_str(), &fileStats) != 0 || !S_ISREG(fileStats.st_mode))
 		return false;
 	if (access(response.getPath().c_str(), X_OK) != 0 && isCgi(request, client)){
-		std::cout << "we here boiiii " << std::endl;
 		response.setStatusCode(403);
 		return false;
 	}

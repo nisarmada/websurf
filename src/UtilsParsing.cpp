@@ -66,25 +66,10 @@ LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
             parseUploadPath(tokens, i, location);
         else if(tokens[i] == "cgi_pass")
             parseCgiPass(tokens, i, location);
-        // else if(tokens[i] == "return")
-        //     parseReturn(tokens, i, location);
         i++;
     }
     return location;
 }
-
-// void parseReturn(std::vector<std::string> tokens, size_t i, LocationBlock& location)
-// {
-//     std::cout << "we are in parse return duh" << std::endl;
-//     if(i + 1 >= tokens.size())
-//         throw std::runtime_error("Missing value after 'return' directive.");
-//     if(!location.getReturn().empty())
-//     {
-//         throw std::runtime_error("Multiple definitions of 'return' directive.");
-//     }
-//         location.setReturn(tokens[i + 1]);
-//         std::cout << "return string that is set: " << tokens[i + 1] << std::endl;
-// }
 
 void parseIndex(std::vector<std::string> tokens, size_t i, LocationBlock& location)
 {
