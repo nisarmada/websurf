@@ -192,7 +192,6 @@ void HttpRequest::checkRequest(Client& client){
 	{ 
 		return;
 	}
-	//we should check if _associatedBlock == nullptr CHECK
 	if ((_method == "POST") && !_isChunked) 
 		contentLengthCheck(client);
 	
@@ -230,7 +229,7 @@ const std::string HttpRequest::extractLocationVariable(Client& client, std::stri
 	}
 	else if (identifier == "_autoindex")
 	{
-		bool autoindex =  currentLocation.getAutoindex(); //CHECK  this is very ugly.
+		bool autoindex =  currentLocation.getAutoindex();
 		if (autoindex == true)
 			return("true");
 		else

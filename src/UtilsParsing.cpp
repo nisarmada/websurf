@@ -37,8 +37,6 @@ ServerBlock parseServerBlock (std::vector<std::string> serverBlock)
     return parsedBlock;
 }
 
-//add here later the syntax check if everything is correct as an input. CHECK
-//check if something is found i do i +=2 and t;hen else i++ instead of this. 
 LocationBlock parseLocationBlock(std::vector<std::string> tokens, size_t& i)
 {
     LocationBlock location;
@@ -165,7 +163,7 @@ void parseMethods(std::vector<std::string> tokens, size_t i, LocationBlock& loca
         throw std::runtime_error("Missing semicolon after 'methods' directive.");
 }
 
-int parseListen(std::vector<std::string> tokens, size_t i) //CHECK if i + 1 is smaller then tokens.size !!!!!!!!!!!!!
+int parseListen(std::vector<std::string> tokens, size_t i)
 {
      if (i + 1 >= tokens.size()) 
      {

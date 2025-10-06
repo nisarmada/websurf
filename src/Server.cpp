@@ -45,20 +45,18 @@ int WebServer::setupListenerSocket(int port) {
 	}
 
 	setNonBlocking(listeningSocket); 
-	//delete this block later CHECK
 	int optval = 1; // Set to 1 to enable SO_REUSEADDR
     if (setsockopt(listeningSocket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
         perror("setsockopt SO_REUSEADDR failed");
-        exit(EXIT_FAILURE); //exit?? check
+        exit(EXIT_FAILURE);
     }
-	// end of block to delete CHECK
 	sockaddr_in serverAddress;
 	std::memset(&serverAddress, 0, sizeof(serverAddress));
 	serverAddress.sin_family = AF_INET;
 	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 	serverAddress.sin_port = htons(port);
 
-	if (bind(listeningSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) != 0) { //CHECKOUT WHAT THIS DOES
+	if (bind(listeningSocket, reinterpret_cast<sockaddr*>(&serverAddress), sizeof(serverAddress)) != 0) {
 		perror ("bind failed");
 		return -1;
 	}
@@ -117,7 +115,7 @@ void WebServer::clientIsReadyToWriteTo(int clientFd){
 	event.events = EPOLLIN | EPOLLOUT;
 	event.data.fd = clientFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
-		perror("epoll_ctl MOD EPOLLOUT failed"); // we may need to call cleanup crew here CHECK
+		perror("epoll_ctl MOD EPOLLOUT failed");
 	}
 }
 
@@ -128,7 +126,6 @@ void WebServer::monitorCgiFd(int cgiReadFd, int clientFd, Cgi* cgiInstance){
 	event.events = EPOLLIN;
 	event.data.fd = cgiReadFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_ADD, cgiReadFd, &event) == -1){
-		//here we send an error 500 and kill child process CHECK
 		delete cgiInstance;
 		return ;
 	}
@@ -206,10 +203,10 @@ void WebServer::clientWrite(int clientFd){
 		clientToWrite.addBytesSent(bytesSentThisRound);
 	}
 	if (!clientToWrite.hasResponseToSend()){
-		if (clientToWrite.getCloseConnection() == true) //check hardcoded fix maybe we can get away with it
+		if (clientToWrite.getCloseConnection() == true)
 			cleanupFd(clientFd);
 		else
-			clientToWrite.resetState(); //this works for some cases but breaks cgi
+			clientToWrite.resetState();
 	}
 }
 
@@ -267,7 +264,7 @@ void WebServer::startListening(int num_events){
 			if (eventFlags & (EPOLLHUP | EPOLLERR)){
 				cgiResponse(currentFd);
 			}
-			else if (eventFlags & EPOLLIN){ //IMPORTANT put a check here to see if the read() has finished first CHECK
+			else if (eventFlags & EPOLLIN){
 				readCgiData(currentFd);
 			}
 		}
@@ -276,7 +273,7 @@ void WebServer::startListening(int num_events){
 				acceptClientConnection(currentFd);
 			}
 			else { // if it's not a listen socket then it is a client
-				clientRead(currentFd); //CHECK we may need to use try-catch here in case the fd doesn't exist in our client map --------existing connection
+				clientRead(currentFd);
 			}
 		}
 		else if (eventFlags & EPOLLOUT){
@@ -287,7 +284,7 @@ void WebServer::startListening(int num_events){
 
 void WebServer::createClientAndMonitorFd(int clientSocket){
 	Client clientInstance(clientSocket);
-		clientInstance.connectClientToServerBlock(_serverBlocks); // we should potentially add a check in case the name is not there CHECK
+		clientInstance.connectClientToServerBlock(_serverBlocks);
 		_clients.insert(std::make_pair(clientSocket, clientInstance));
 		struct epoll_event clientEvent;
 		clientEvent.events = EPOLLIN | EPOLLOUT;

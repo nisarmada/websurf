@@ -20,7 +20,7 @@ void HttpResponse::setText(const std::string& text){
 }
 
 void HttpResponse::addHeader(const std::string& key, const std::string& value) {
-	_headers[key] = value; //we might need to check if the key already exists CHECK
+	_headers[key] = value;
 }
 
 void HttpResponse::setBody(const std::vector<char>& body){
@@ -80,7 +80,7 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 		client.changeRedirectStatus();
 		return;
 	}
-	expandPath(request, client); //CHECK CHANGE NAME FOR THE LOVE OF GOD
+	expandPath(request, client);
 	if (client.getRedirectHappened())
 		client.changeRedirectStatus();
 	if (cgiPathIsValid(*this, request, client) && isCgi(request, client) && checkAllowedMethods(client, request.getMethod())){
@@ -95,13 +95,6 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 	executeGetPostDelete(request, client);
 	if(getStatusCode() == 200)
 		populateHeaders(request);
-	
-	//I didn't find any case that it goes in here check
-	// else if(_body.empty())
-	// {
-	// 	std::cout << "do we ever go in here??????" << std::endl;
-	// 	createBodyVector(client, request);
-	// }
 	return;
 }
 
@@ -261,7 +254,7 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 
 	std::ifstream testFile(_path.c_str());
 	if (!testFile.is_open()) {
-		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
+		setStatusCode(404);
 		std::cerr << "File not found: " << _path << std::endl;
 	}
 	
@@ -304,14 +297,14 @@ void HttpResponse::expandPath(HttpRequest& request, Client& client)
 	std::ifstream testFile(_path.c_str());
 	if (!testFile.is_open() && autoIndex == "false") 
 	{
-		setStatusCode(404); //goes out of here and then the status code is turned to 200 again CHECK
+		setStatusCode(404);
 		std::cerr << "File not found: " << _path << std::endl;
 	}
 }
 
 bool HttpResponse::handleDirectoryRedirect(std::string& uri, std::string& fullPath)
 {
-	struct stat st; //CHECK see if I need to set error code 301
+	struct stat st;
 	if(stat(fullPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode) && !uri.empty() && uri.back() != '/')
 	{
 		uri += '/';
@@ -427,8 +420,8 @@ const std::string& HttpResponse::getRoot() const
 
 void HttpResponse::createBodyVector(Client& client, HttpRequest& request)
 {
-	if(request.getError() != 0)	//change this logic maybe here.  CHECK
-		_statusCode = request.getError(); //maybe change this logic here. 
+	if(request.getError() != 0)
+		_statusCode = request.getError(); 
 	if(_statusCode >= 400)
 	{
 		handleError(client, request);
@@ -530,7 +523,6 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 		std::ifstream file(_path.c_str(), std::ios::binary);
 		if(!file.is_open())
 		{
-			// _statusCode = 404; //should I do this or not? CHECK
 			populateErrorHeaders();
 			return;
 		}

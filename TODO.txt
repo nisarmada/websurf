@@ -1,8 +1,0 @@
--post and delete seem not to be working properly (try max boxy size 1)- doneezo prolly
--check for leaks
--double listen works
--maybe make root needed as well? what do we do if it's missing? are we hardcoding ./www ?
-
--execute response should be cleaned a bit.
--error handling should also be checked
--multiple listen ports in one server block maybe
