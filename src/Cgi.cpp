@@ -66,6 +66,7 @@ std::vector<char*> Cgi::createEnvironmentVariableVector(){
     envStr.push_back("PATH_INFO=" + _pathInfo);
     envStr.push_back("GATEWAY_INTERFACE=" + _gatewayInterface);
     envStr.push_back("SERVER_PORT=" + _serverPort);
+	envStr.push_back("REDIRECT_STATUS=200");
 	std::vector<char*> envp;
 	for (const auto& iterator : envStr){
 		envp.push_back(strdup(iterator.c_str()));
@@ -152,7 +153,6 @@ void Cgi::putHeaderInMap(std::unordered_map<std::string, std::string>& headers, 
 
 void Cgi::parseResponse(std::string& rawResponse, HttpResponse& response){
 	size_t headersEnd = rawResponse.find("\r\n\r\n");
-
 	if (headersEnd != std::string::npos){
 		std::string headersPart = rawResponse.substr(0, headersEnd);
 		std::string bodyPart = rawResponse.substr(headersEnd + 4);
