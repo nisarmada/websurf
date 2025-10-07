@@ -60,6 +60,12 @@ std::string HttpResponse::responseToString(){
 }
 
 void HttpResponse::executeGetPostDelete(HttpRequest& request, Client& client){
+	
+	if (_statusCode >= 400) 
+	{
+		handleError(client, request);
+		return;
+	}
 	if (request.getMethod() == "GET" && checkAllowedMethods(client, "GET"))
 		executeGet(request, client);
 	else if (request.getMethod() == "POST" && checkAllowedMethods(client, "POST")){
@@ -93,16 +99,19 @@ void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServ
 		initiateCgi(client, server, request);
 		return;
 	}
-	if(_statusCode > 400)
+	executeGetPostDelete(request, client);
+
+	if(_statusCode >= 400)
 	{
 		handleError(client, request);
 		return;
 	}
-	executeGetPostDelete(request, client);
-	if(getStatusCode() == 200)
-		populateHeaders(request);
-	return;
-}
+		if(getStatusCode() == 200)
+			populateHeaders(request);
+	}
+
+
+
 
 void HttpResponse::initiateCgi(Client& client, WebServer& server, HttpRequest& request){
 	const std::string cgiPass = request.extractLocationVariable(client, "_cgiPass");
@@ -257,11 +266,9 @@ void HttpResponse::executeGet(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
 	handleDirectoryRedirect(uri, _path);
-
 	std::ifstream testFile(_path.c_str());
 	if (!testFile.is_open()) {
 		setStatusCode(404);
-		std::cerr << "File not found: " << _path << std::endl;
 	}
 	
 	setStatusCode(200);
@@ -272,39 +279,38 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
+	std::cout << "index is: " << index << std::endl;
 	std::string fullPath;
 	_root = request.extractLocationVariable(client, "_root");
-
+	
 	if (!_root.empty() && _root.back() == '/' && !uri.empty() && uri.front() == '/')
-		fullPath = _root + uri.substr(1); // avoid double slash
+	fullPath = _root + uri.substr(1); // avoid double slash
 	else if (!_root.empty() && _root.back() != '/' && !uri.empty() && uri.front() != '/')
-		fullPath = _root + "/" + uri;
+	fullPath = _root + "/" + uri;
 	else
-		fullPath = _root + uri;
-
+	fullPath = _root + uri;
+	
+	std::cout << "full path is: " <<  fullPath << std::endl;
 	_path = fullPath;
 }
 
 void HttpResponse::expandPath(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
-
 	handleDirectoryRedirect(uri, _path);
 	//we concatinate the index to the full path
 	
 	std::string indexFileName = request.extractLocationVariable(client, "_index");
-	if(indexFileName.front() == '/')
+	if(!indexFileName.empty() && indexFileName.front() == '/')
 		indexFileName.erase(0, 1);
 	if(_path.back() == '/')
 		_path = _path + indexFileName;
-
 
 	std::string autoIndex = request.extractLocationVariable(client, "_autoindex");
 	std::ifstream testFile(_path.c_str());
 	if (!testFile.is_open() && autoIndex == "false") 
 	{
 		setStatusCode(404);
-		std::cerr << "File not found: " << _path << std::endl;
 	}
 }
 

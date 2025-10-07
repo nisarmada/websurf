@@ -112,6 +112,7 @@ void WebServer::handleRequest(const HttpRequest& request){
 
 void WebServer::clientIsReadyToWriteTo(int clientFd){
 	struct epoll_event event;
+
 	event.events = EPOLLIN | EPOLLOUT;
 	event.data.fd = clientFd;
 	if (epoll_ctl(_epollFd, EPOLL_CTL_MOD, clientFd, &event) == -1){
