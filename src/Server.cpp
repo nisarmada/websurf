@@ -143,13 +143,8 @@ void WebServer::clientRead(int clientFd){
 		cleanupFd(clientFd);
 	}
 	else if (bytesRead < 0){
-		if (errno == EAGAIN || errno == EWOULDBLOCK){
-			return;
-		}
-		else{
-			perror("recv failed");
-			cleanupFd(clientFd);
-		}
+		perror("recv failed");
+		cleanupFd(clientFd);
 	}
 	else{
 		HttpRequest* currentRequest = nullptr;
@@ -190,14 +185,9 @@ void WebServer::clientWrite(int clientFd){
 	ssize_t bytesRemaining = responseBuffer.size() - bytesSent;
 	ssize_t bytesSentThisRound = send(clientFd, responseBuffer.data() + bytesSent, bytesRemaining, 0);
 	if (bytesSentThisRound < 0){
-		if (errno == EAGAIN || errno == EWOULDBLOCK){
-			return;
-		}
-		else{
 			perror("send failed");
 			cleanupFd(clientFd);
 			return ;
-		}
 	}
 	else {
 		clientToWrite.addBytesSent(bytesSentThisRound);

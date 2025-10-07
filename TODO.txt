@@ -11,3 +11,8 @@
 -I still have double error code for /images 
 -fix return to check if its inside of the server or diffrent host. absolute path for diffrent host and relative within the same host.
 -if we give chmod 000 to the script we get 404 instead of 403, probem is in cgiPathisValid 
+
+
+
+
+CHECK IF WE CLEANUP FD IN EVERY CASE
