@@ -1,168 +1,264 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-  <title>Webserv File Upload & Delete Demo</title>
-    <style>
-        body {
-      background: linear-gradient(135deg, #e0eafc, #cfdef3);
-      min-height: 100vh;
-            margin: 0;
-      font-family: 'Segoe UI', Arial, sans-serif;
-            display: flex;
-      align-items: center;
-            justify-content: center;
-    }
-        .container {
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      padding: 32px 28px 24px 28px;
-      max-width: 400px;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 32px;
-        }
-        h1 {
-      font-size: 1.6em;
-      color: #2d3a4b;
-      margin: 0 0 12px 0;
-      text-align: center;
-    }
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-        }
-    label {
-      font-size: 1em;
-      color: #3a4a5d;
-      margin-bottom: 4px;
-    }
-    input[type="text"], input[type="file"] {
-      padding: 8px 10px;
-      border: 1px solid #cfd8dc;
-      border-radius: 6px;
-      font-size: 1em;
-      background: #f7fafc;
-      transition: border 0.2s;
-    }
-    input[type="text"]:focus, input[type="file"]:focus {
-      border: 1.5px solid #7ea6e0;
-      outline: none;
-    }
-    button {
-      background: linear-gradient(90deg, #7ea6e0 0%, #5d8be3 100%);
-      color: #fff;
-            border: none;
-      border-radius: 6px;
-      padding: 10px 0;
-      font-size: 1em;
-      font-weight: 600;
-            cursor: pointer;
-      margin-top: 6px;
-      transition: background 0.2s, box-shadow 0.2s;
-      box-shadow: 0 2px 8px rgba(93,139,227,0.08);
-        }
-    button:hover {
-      background: linear-gradient(90deg, #5d8be3 0%, #7ea6e0 100%);
-      box-shadow: 0 4px 16px rgba(93,139,227,0.13);
-            }
-    #statusMessage {
-      font-size: 0.9em;
-      text-align: center;
-      margin-top: 10px;
-      height: 20px; /* Reserve space to prevent layout shift */
-      color: #5d8be3;
-    }
-    @media (max-width: 500px) {
-            .container {
-        padding: 18px 6px 14px 6px;
-        max-width: 98vw;
-      }
-            h1 {
-        font-size: 1.2em;
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hello Kitty Uploader</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --pink:#ff8fb1;
+    --hot:#ff4f88;
+    --bg:#fff5f8;
+    --ink:#333;
+    --white:#fff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:
+      radial-gradient(circle at 20% 0%, #ffe0ea 0%, rgba(255,224,234,0) 30%),
+      radial-gradient(circle at 80% 100%, #ffeaf1 0%, rgba(255,234,241,0) 35%),
+      var(--bg);
+    font-family: Nunito, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    color:var(--ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:18px;
+  }
+
+  /* Header */
+  h1{
+    margin:0; font-size:clamp(22px, 4vw, 32px); font-weight:900; color:#ff2e74;
+    letter-spacing:.02em;
+  }
+
+  /* Heart frame around image */
+  .heart-wrap{
+    position:relative; width:min(720px, 92vw); aspect-ratio:1; display:grid; place-items:center;
+  }
+  .heart{
+    position:absolute; inset:0;
+  }
+  .heart svg{
+    width:100%; height:100%;
+    filter: drop-shadow(0 8px 18px rgba(255,79,136,.25));
+  }
+  .heart path{
+    fill:none; stroke: var(--hot); stroke-width:16; stroke-linecap:round; stroke-linejoin:round;
+  }
+  .pic{
+    max-width:55%; max-height:55%; border-radius:22px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    background: var(--white);
+  }
+
+  /* Buttons area */
+  .controls{
+    display:flex; gap:14px; flex-wrap:wrap; align-items:center; justify-content:center;
+  }
+  .btn{
+    appearance:none; border:none; cursor:pointer; font-weight:800;
+    padding:14px 18px; border-radius:999px; letter-spacing:.02em;
+    background: linear-gradient(180deg, #ffc4d6, #ff8fb1);
+    color:#7a113b; box-shadow: 0 6px 14px rgba(255,79,136,.25), inset 0 1px 0 #fff;
+    transition: transform .06s ease, filter .15s ease, opacity .15s ease;
+  }
+  .btn:hover{filter:brightness(1.04)}
+  .btn:active{transform: translateY(1px)}
+  .btn[disabled]{opacity:.6; cursor:not-allowed}
+  .btn.delete{
+    background: linear-gradient(180deg, #ffd3dc, #ff9abf);
+  }
+
+  .status{
+    min-height:1.6em; font-size:14px; color:#7a113b; text-align:center;
+  }
+
+  /* Hello-Kitty bow accent in the corner */
+  .bow{
+    position:fixed; top:10px; right:12px; width:min(18vw,120px); opacity:.85; pointer-events:none;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-    <h1>File Upload (POST)</h1>
-    <form id="uploadForm" method="POST" enctype="multipart/form-data" onsubmit="return false;">
-      <input type="file" id="fileInput" name="file" required>
-      <button type="button" onclick="uploadFile()">Upload</button>
-    </form>
-    <div id="statusMessage"></div>
+  <img class="bow" alt="" src="data:image/svg+xml;utf8,
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 120'>
+      <path d='M55 60c-20-18-35-30-45-24-8 5-10 24 10 36 18 11 47 10 58 7-3-15-9-22-23-19z' fill='%23ff8fb1' stroke='%23ff4f88' stroke-width='4'/>
+      <circle cx='100' cy='62' r='20' fill='%23ff8fb1' stroke='%23ff4f88' stroke-width='4'/>
+      <path d='M145 60c20-18 35-30 45-24 8 5 10 24-10 36-18 11-47 10-58 7-3-15 9-22 23-19z' fill='%23ff8fb1' stroke='%23ff4f88' stroke-width='4'/>
+    </svg>"/>
 
-    <h1>File Delete (DELETE)</h1>
-    <form id="deleteForm" method="POST" onsubmit="return false;">
-      <label for="deleteFilename">Filename to delete (e.g. myfile.txt):</label>
-      <input type="text" id="deleteFilename" name="deleteFilename" required>
-      <button type="button" onclick="deleteFile()">Delete</button>
-    </form>
-        </div>
-  <script>
-    // Upload file using POST to /upload
-    function uploadFile() {
-      const fileInput = document.getElementById('fileInput');
-      const statusMessage = document.getElementById('statusMessage');
-      if (!fileInput.files.length) {
-        statusMessage.textContent = 'Please select a file.';
-        statusMessage.style.color = '#e74c3c';
-        return;
-      }
-      
-      const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      // Show waiting message
-      statusMessage.textContent = 'Uploading file... please wait.';
-      statusMessage.style.color = '#5d8be3';
-      
-      fetch('/upload', {
+  <h1>Webserv</h1>
+
+  <div class="heart-wrap" aria-label="Greatness photo in a heart frame">
+    <div class="heart" aria-hidden="true">
+      <svg viewBox="0 0 100 90" preserveAspectRatio="xMidYMid meet">
+        <path d="M50 82
+                 C 40 70, 20 55, 12 42
+                 C 2 27, 10 10, 27 10
+                 C 38 10, 45 17, 50 24
+                 C 55 17, 62 10, 73 10
+                 C 90 10, 98 27, 88 42
+                 C 80 55, 60 70, 50 82 Z"/>
+      </svg>
+    </div>
+    <img class="pic" src="./greatness.jpeg" alt="greatness" />
+  </div>
+
+  <div class="controls">
+    <button id="uploadBtn" class="btn">Upload</button>
+    <button id="deleteBtn" class="btn delete">Delete</button>
+  </div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+
+  <input id="fileInput" type="file" multiple hidden />
+
+<script>
+  // ======= Configure to match your server =======
+  const UPLOAD_ENDPOINT   = "/upload"; // POST target for uploads (raw body)
+  const UPLOADS_BASE_PATH = "/upload"; // served path for uploaded files (used for DELETE)
+  const REQUEST_TIMEOUT_MS = 30000;
+  // ==============================================
+
+  const statusEl  = document.getElementById('status');
+  const fileInput = document.getElementById('fileInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const deleteBtn = document.getElementById('deleteBtn');
+
+  function setStatus(msg){ statusEl.textContent = msg; }
+  function setBusy(b){
+    uploadBtn.disabled = b;
+    deleteBtn.disabled = b;
+  }
+
+  function explainStatus(code){
+    const map = {
+      400: "Bad Request — the server couldn't parse the request.",
+      401: "Unauthorized — authentication required or invalid.",
+      403: "Forbidden — the server denied permission.",
+      404: "Not Found — file or path doesn't exist.",
+      405: "Method Not Allowed — server doesn't allow this method.",
+      408: "Request Timeout — the server timed out waiting for data.",
+      409: "Conflict — a file with that name may already exist.",
+      413: "Payload Too Large — file exceeds allowed size.",
+      415: "Unsupported Media Type — content-type not accepted.",
+      422: "Unprocessable Content — validation failed.",
+      429: "Too Many Requests — you're being rate limited.",
+      500: "Internal Server Error — something broke on the server.",
+      501: "Not Implemented — endpoint/method not supported.",
+      503: "Service Unavailable — server is temporarily down.",
+      507: "Insufficient Storage — server can't store or remove the file."
+    };
+    if (map[code]) return map[code];
+    if (code >= 500) return "Server error.";
+    if (code >= 400) return "Client error.";
+    return "OK";
+  }
+
+  async function readErrorBody(response){
+    try{
+      const txt = await response.text();
+      const trimmed = (txt || "").trim();
+      if (!trimmed) return "";
+      return trimmed.length > 200 ? (trimmed.slice(0, 200) + "…") : trimmed;
+    }catch{
+      return "";
+    }
+  }
+
+  function withTimeout(ms){
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), ms);
+    return { signal: controller.signal, cancel: () => clearTimeout(id) };
+  }
+
+  // Upload button → open picker
+  uploadBtn.addEventListener('click', () => {
+    fileInput.value = "";
+    fileInput.click();
+  });
+
+  // When a file is selected
+  fileInput.addEventListener('change', async () => {
+    if (!fileInput.files.length) {
+      setStatus('Please select a file.');
+      return;
+    }
+
+    const file = fileInput.files[0];
+
+    setBusy(true);
+    setStatus(`Uploading ${file.name}…`);
+
+    const timeout = withTimeout(REQUEST_TIMEOUT_MS);
+    try{
+      const resp = await fetch(UPLOAD_ENDPOINT, {
         method: 'POST',
         headers: {
-          'X-Filename': file.name // Send filename in custom header
+          'X-Filename': encodeURIComponent(file.name),
+          'Content-Type': 'application/octet-stream'
         },
-        body: file // send raw file data as body
-      })
-      .then(response => {
-        if (response.ok) {
-          statusMessage.textContent = 'File uploaded successfully!';
-          statusMessage.style.color = '#27ae60';
-        } else {
-          statusMessage.textContent = 'Upload failed: ' + response.status;
-          statusMessage.style.color = '#e74c3c';
-        }
-      })
-      .catch(error => {
-        statusMessage.textContent = 'An error occurred. Check the server.';
-        statusMessage.style.color = '#e74c3c';
-        console.error('Error:', error);
+        body: file,
+        signal: timeout.signal
       });
-    }
 
-    // Delete file using DELETE to /upload/filename
-    function deleteFile() {
-      const filename = document.getElementById('deleteFilename').value;
-      if (!filename) {
-        alert('Please enter a filename to delete.');
-        return;
+      if (resp.ok) {
+        setStatus(`Upload complete: ${file.name} ✓ (HTTP ${resp.status})`);
+      } else {
+        const detail = await readErrorBody(resp);
+        const line2 = detail ? ` Details: ${detail}` : "";
+        setStatus(`Upload failed ✗ (HTTP ${resp.status}: ${explainStatus(resp.status)}).${line2}`);
       }
-      fetch('/upload/' + encodeURIComponent(filename), {
-        method: 'DELETE'
-      })
-      .then(response => {
-        if (response.ok) {
-          alert('File deleted successfully!');
-        } else {
-          alert('Delete failed: ' + response.status);
-        }
-      });
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setStatus("Upload cancelled due to timeout.");
+      } else if (err.name === 'NotAllowedError' || err.name === 'SecurityError') {
+        setStatus("Upload blocked by browser or permissions.");
+      } else {
+        setStatus("Network error during upload. Check your connection or server.");
+      }
+      console.error('Upload error:', err);
+    } finally {
+      timeout.cancel();
+      setBusy(false);
     }
-  </script>
+  });
+
+  // Delete flow: prompt → DELETE /upload/<name>
+  deleteBtn.addEventListener('click', async () => {
+    const name = (prompt("Enter the exact filename to delete (e.g. myfile.txt):") || "").trim();
+    if (!name){ setStatus("Delete cancelled."); return; }
+
+    setBusy(true);
+    setStatus("Deleting…");
+
+    const timeout = withTimeout(REQUEST_TIMEOUT_MS);
+    try{
+      const resp = await fetch(`${UPLOADS_BASE_PATH}/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+        signal: timeout.signal
+      });
+
+      // Treat only 200 OK or 204 No Content as success
+      if (resp.status === 200 || resp.status === 204) {
+        setStatus(`Deleted ✓ (HTTP ${resp.status})`);
+      } else {
+        const detail = await readErrorBody(resp);
+        const friendly = explainStatus(resp.status);
+        const line2 = detail ? ` Details: ${detail}` : "";
+        setStatus(`Delete failed ✗ (HTTP ${resp.status}: ${friendly}).${line2}`);
+      }
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        setStatus("Delete cancelled due to timeout.");
+      } else {
+        setStatus("Network error during delete.");
+      }
+      console.error('Error during delete:', e);
+    } finally {
+      timeout.cancel();
+      setBusy(false);
+    }
+  });
+</script>
 </body>
 </html>

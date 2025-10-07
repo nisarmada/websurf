@@ -71,3 +71,31 @@ void Client::connectClientToServerBlock(std::vector<ServerBlock>& serverBlocks){
 const ServerBlock* Client::getServerBlock(){ 
 	return _associatedServerBlock;
 }
+
+bool Client::getRedirectHappened(){
+	return _redirectHappened;
+}
+
+void Client::changeRedirectStatus(){
+	if (!_redirectHappened){
+		_redirectHappened = true;
+	}
+	else{
+		_redirectHappened = false;
+	}
+}
+
+void Client::resetState(){
+	_requestBuffer.clear();
+	_responseBuffer.clear();
+	_bytesSent = 0;
+	_bytesUploaded = 0;
+}
+
+bool Client::getCloseConnection(){
+	return _shouldCloseConnection;
+}
+
+void Client::setCloseConnection(bool state){
+	_shouldCloseConnection = state;
+}

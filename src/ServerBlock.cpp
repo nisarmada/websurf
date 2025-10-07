@@ -22,6 +22,11 @@ const std::string ServerBlock::getServerName() const
 }
 void ServerBlock::setPort(int port)
 {
+	if(this->port != -1)
+	{
+		std::cerr << "Error: multiple listening directives" << std::endl;
+		exit(1);
+	}
     this->port = port;
 }
 
@@ -87,5 +92,3 @@ bool ServerBlock::hasErrorPage(int code) const
 {
 	return _errorPages.find(code) != _errorPages.end();
 }
-
-
