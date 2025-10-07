@@ -60,16 +60,17 @@
     padding:14px 18px; border-radius:999px; letter-spacing:.02em;
     background: linear-gradient(180deg, #ffc4d6, #ff8fb1);
     color:#7a113b; box-shadow: 0 6px 14px rgba(255,79,136,.25), inset 0 1px 0 #fff;
-    transition: transform .06s ease, filter .15s ease;
+    transition: transform .06s ease, filter .15s ease, opacity .15s ease;
   }
   .btn:hover{filter:brightness(1.04)}
   .btn:active{transform: translateY(1px)}
+  .btn[disabled]{opacity:.6; cursor:not-allowed}
   .btn.delete{
     background: linear-gradient(180deg, #ffd3dc, #ff9abf);
   }
 
   .status{
-    min-height:1.4em; font-size:14px; color:#7a113b; text-align:center;
+    min-height:1.6em; font-size:14px; color:#7a113b; text-align:center;
   }
 
   /* Hello-Kitty bow accent in the corner */
@@ -107,14 +108,15 @@
     <button id="uploadBtn" class="btn">Upload</button>
     <button id="deleteBtn" class="btn delete">Delete</button>
   </div>
-  <div id="status" class="status"></div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
 
   <input id="fileInput" type="file" multiple hidden />
 
 <script>
   // ======= Configure to match your server =======
-  const UPLOAD_ENDPOINT   = "/upload"; // POST target for uploads
+  const UPLOAD_ENDPOINT   = "/upload"; // POST target for uploads (raw body)
   const UPLOADS_BASE_PATH = "/upload"; // served path for uploaded files (used for DELETE)
+  const REQUEST_TIMEOUT_MS = 30000;
   // ==============================================
 
   const statusEl  = document.getElementById('status');
@@ -123,72 +125,138 @@
   const deleteBtn = document.getElementById('deleteBtn');
 
   function setStatus(msg){ statusEl.textContent = msg; }
+  function setBusy(b){
+    uploadBtn.disabled = b;
+    deleteBtn.disabled = b;
+  }
 
-  // Upload: single clean button → opens picker, then executes the fetch logic
+  function explainStatus(code){
+    const map = {
+      400: "Bad Request — the server couldn't parse the request.",
+      401: "Unauthorized — authentication required or invalid.",
+      403: "Forbidden — the server denied permission.",
+      404: "Not Found — file or path doesn't exist.",
+      405: "Method Not Allowed — server doesn't allow this method.",
+      408: "Request Timeout — the server timed out waiting for data.",
+      409: "Conflict — a file with that name may already exist.",
+      413: "Payload Too Large — file exceeds allowed size.",
+      415: "Unsupported Media Type — content-type not accepted.",
+      422: "Unprocessable Content — validation failed.",
+      429: "Too Many Requests — you're being rate limited.",
+      500: "Internal Server Error — something broke on the server.",
+      501: "Not Implemented — endpoint/method not supported.",
+      503: "Service Unavailable — server is temporarily down.",
+      507: "Insufficient Storage — server can't store or remove the file."
+    };
+    if (map[code]) return map[code];
+    if (code >= 500) return "Server error.";
+    if (code >= 400) return "Client error.";
+    return "OK";
+  }
+
+  async function readErrorBody(response){
+    try{
+      const txt = await response.text();
+      const trimmed = (txt || "").trim();
+      if (!trimmed) return "";
+      return trimmed.length > 200 ? (trimmed.slice(0, 200) + "…") : trimmed;
+    }catch{
+      return "";
+    }
+  }
+
+  function withTimeout(ms){
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), ms);
+    return { signal: controller.signal, cancel: () => clearTimeout(id) };
+  }
+
+  // Upload button → open picker
   uploadBtn.addEventListener('click', () => {
-    // Reset selection and open picker
     fileInput.value = "";
     fileInput.click();
   });
 
-  // Listener for when a file is selected
-  fileInput.addEventListener('change', () => {
+  // When a file is selected
+  fileInput.addEventListener('change', async () => {
     if (!fileInput.files.length) {
       setStatus('Please select a file.');
       return;
     }
 
-    // Since the original logic only handled the first file, we'll process the first selected file.
     const file = fileInput.files[0];
-    
-    // Show waiting message
-    setStatus(`Uploading ${file.name} (raw body)...`);
-    
-    // --- START: MODIFIED UPLOAD LOGIC ---
-    // Use the raw fetch upload method: body is raw file data, filename in custom header.
-    fetch(UPLOAD_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'X-Filename': file.name // Send filename in custom header
-      },
-      body: file // send raw file data as body
-    })
-    .then(response => {
-      if (response.ok) {
-        setStatus(`Upload complete: ${file.name} ✓ (HTTP ${response.status})`);
+
+    setBusy(true);
+    setStatus(`Uploading ${file.name}…`);
+
+    const timeout = withTimeout(REQUEST_TIMEOUT_MS);
+    try{
+      const resp = await fetch(UPLOAD_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'X-Filename': encodeURIComponent(file.name),
+          'Content-Type': 'application/octet-stream'
+        },
+        body: file,
+        signal: timeout.signal
+      });
+
+      if (resp.ok) {
+        setStatus(`Upload complete: ${file.name} ✓ (HTTP ${resp.status})`);
       } else {
-        setStatus(`Upload failed ✗ (HTTP ${response.status})`);
+        const detail = await readErrorBody(resp);
+        const line2 = detail ? ` Details: ${detail}` : "";
+        setStatus(`Upload failed ✗ (HTTP ${resp.status}: ${explainStatus(resp.status)}).${line2}`);
       }
-    })
-    .catch(error => {
-      setStatus("An error occurred. Check the server or network.");
-      console.error('Error:', error);
-    });
-    // --- END: MODIFIED UPLOAD LOGIC ---
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setStatus("Upload cancelled due to timeout.");
+      } else if (err.name === 'NotAllowedError' || err.name === 'SecurityError') {
+        setStatus("Upload blocked by browser or permissions.");
+      } else {
+        setStatus("Network error during upload. Check your connection or server.");
+      }
+      console.error('Upload error:', err);
+    } finally {
+      timeout.cancel();
+      setBusy(false);
+    }
   });
 
-  // Delete: single clean button → prompt for filename → DELETE /upload/<name>
+  // Delete flow: prompt → DELETE /upload/<name>
   deleteBtn.addEventListener('click', async () => {
     const name = (prompt("Enter the exact filename to delete (e.g. myfile.txt):") || "").trim();
     if (!name){ setStatus("Delete cancelled."); return; }
 
+    setBusy(true);
     setStatus("Deleting…");
+
+    const timeout = withTimeout(REQUEST_TIMEOUT_MS);
     try{
-      // --- START: MODIFIED DELETE LOGIC (using the alert method from your reference) ---
-      const resp = await fetch(`${UPLOADS_BASE_PATH}/${encodeURIComponent(name)}`, { method: "DELETE" });
-      
-      if (resp.ok) {
-        alert('File deleted successfully!'); // Retaining alert() as per your provided reference
+      const resp = await fetch(`${UPLOADS_BASE_PATH}/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+        signal: timeout.signal
+      });
+
+      // Treat only 200 OK or 204 No Content as success
+      if (resp.status === 200 || resp.status === 204) {
         setStatus(`Deleted ✓ (HTTP ${resp.status})`);
       } else {
-        alert('Delete failed: ' + resp.status); // Retaining alert()
-        setStatus(`Delete failed ✗ (HTTP ${resp.status})`);
+        const detail = await readErrorBody(resp);
+        const friendly = explainStatus(resp.status);
+        const line2 = detail ? ` Details: ${detail}` : "";
+        setStatus(`Delete failed ✗ (HTTP ${resp.status}: ${friendly}).${line2}`);
       }
-      // --- END: MODIFIED DELETE LOGIC ---
-      
-    }catch(e){
-      setStatus("Network error during delete.");
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        setStatus("Delete cancelled due to timeout.");
+      } else {
+        setStatus("Network error during delete.");
+      }
       console.error('Error during delete:', e);
+    } finally {
+      timeout.cancel();
+      setBusy(false);
     }
   });
 </script>

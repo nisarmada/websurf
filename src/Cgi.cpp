@@ -179,7 +179,7 @@ void Cgi::parseResponse(std::string& rawResponse, HttpResponse& response){
 	}
 	else{
 		response.setStatusCode(500);
-		response.populateErrorHeaders();
+		response.populateErrorHeaders(); //CHECK call handle error instead, now cannot call it yet. How to handle clean.
 	}
 }
 

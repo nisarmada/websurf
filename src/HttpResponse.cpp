@@ -72,6 +72,12 @@ void HttpResponse::executeGetPostDelete(HttpRequest& request, Client& client){
 
 void HttpResponse::executeResponse(HttpRequest& request, Client& client, WebServer& server)
 {
+	if(request.getError() != 0)
+	{
+		_statusCode = request.getError();
+		handleError(client, request);
+		return;
+	}
 	std::string redirect = request.extractLocationVariable(client, "_redirectUrl");
 	populateFullPath(request, client);
 	if(!redirect.empty() && isRedirect(request, redirect) && !client.getRedirectHappened())
@@ -519,7 +525,10 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 	{
 		_path =   client.getServerBlock()->getErrorPagePath(_statusCode);
 		std::string extension = request.extractLocationVariable(client, "_root");
-		_path = extension + _path;
+		if(!extension.empty() && extension.back() != '/' && !_path.empty() && _path.front() != '/')
+			_path = extension + '/' + _path;
+		else
+			_path = extension + _path;
 		std::ifstream file(_path.c_str(), std::ios::binary);
 		if(!file.is_open())
 		{
@@ -539,6 +548,7 @@ void HttpResponse::handleError(Client& client, HttpRequest& request)
 
 void HttpResponse::handleResponse(Client& client, WebServer& server, HttpRequest& request){
 	HttpResponse response;
+
 	response.executeResponse(request, client, server);
 	if (response._statusCode != CGI_STATUS_CODE){
 		client.setResponse(response.createCompleteResponse());
