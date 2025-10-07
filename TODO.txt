@@ -1,0 +1,18 @@
+-post and delete seem not to be working properly (try max boxy size 1)- doneezo prolly
+-autoindexing
+-stress test the server (apparently checked on eval sheet)
+-check for leaks
+-remove illigal stuff that are not allowed by the subject.
+
+-double listen works
+-if cgi doesnt have execute permission we should give 403 forbidden. should we do that?
+-maybe make root needed as well? what do we do if it's missing? are we hardcoding ./www ?
+-check with error codes (500 and 403 for example) it says it twice.
+-I still have double error code for /images 
+-fix return to check if its inside of the server or diffrent host. absolute path for diffrent host and relative within the same host.
+-if we give chmod 000 to the script we get 404 instead of 403, probem is in cgiPathisValid 
+
+
+
+
+CHECK IF WE CLEANUP FD IN EVERY CASE

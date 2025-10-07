@@ -279,7 +279,6 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
 	std::string index = request.extractLocationVariable(client, "_index");
-	std::cout << "index is: " << index << std::endl;
 	std::string fullPath;
 	_root = request.extractLocationVariable(client, "_root");
 	
@@ -290,7 +289,6 @@ void HttpResponse::populateFullPath(HttpRequest& request, Client& client)
 	else
 	fullPath = _root + uri;
 	
-	std::cout << "full path is: " <<  fullPath << std::endl;
 	_path = fullPath;
 }
 
@@ -298,7 +296,6 @@ void HttpResponse::expandPath(HttpRequest& request, Client& client)
 {
 	std::string uri = request.getUri();
 	handleDirectoryRedirect(uri, _path);
-	//we concatinate the index to the full path
 	
 	std::string indexFileName = request.extractLocationVariable(client, "_index");
 	if(!indexFileName.empty() && indexFileName.front() == '/')
